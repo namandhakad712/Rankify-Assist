@@ -2,6 +2,8 @@
 
 # 🎯 Rankify Assist
 
+<img src="logo.png" alt="Rankify Assist Logo" width="200" height="200" />
+
 ### *Voice-Controlled AI Browser Automation*
 **Powered by Tuya IoT & Eko Agent**
 

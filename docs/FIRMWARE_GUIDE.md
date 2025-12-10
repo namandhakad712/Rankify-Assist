@@ -4,11 +4,9 @@ Guide for programming the Tuya T5-E1 AI Core board.
 
 ---
 
-## ⚠️ Hardware Status
+## 📋 Overview
 
-**Current Status**: Board in transit, arriving soon
-
-**Firmware Status**: Implementation guide ready in `firmware/FIRMWARE_IMPLEMENTATION_GUIDE.md`
+This guide provides instructions for building and flashing firmware to the Tuya T5-E1 AI Core board. The firmware implementation follows the patterns documented in `firmware/FIRMWARE_IMPLEMENTATION_GUIDE.md`.
 
 ---
 
@@ -35,12 +33,14 @@ cd tuya-open-sdk-for-device
 Edit `firmware/include/tuya_config.h`:
 
 ```c
-#define TUYA_PRODUCT_ID "okqfzw6tkrabylcs"
+#define TUYA_PRODUCT_ID "your-product-id-here"
 #define TUYA_OPENSDK_UUID "your-uuid-here"
 #define TUYA_OPENSDK_AUTHKEY "your-authkey-here"
 ```
 
-Get UUID & AuthKey from [Tuya Console](https://platform.tuya.com) → Products → Rankify Assist
+Obtain Product ID, UUID, and AuthKey from [Tuya IoT Platform Console](https://platform.tuya.com):
+- Navigate to **Products** → Select your product → **Device Management**
+- Locate credentials in product Overview section
 
 ---
 
@@ -79,26 +79,26 @@ Output: `output/rankify_assist.bin`
 
 ## 🧪 Testing
 
-### Voice Input Test
+### Voice Input Verification
 
-1. Say: "Hello"
-2. Check device response
-3. Verify STT works
+1. Issue test voice command: "Hello"
+2. Confirm device captures and processes audio
+3. Verify Speech-to-Text (STT) conversion functionality
 
-### DP Update Test
+### Data Point Update Verification
 
-1. Update DP 106 (tts_text) in Tuya Console
-2. Device should speak the text
+1. Manually update DP 106 (`tts_text`) via Tuya Console Debug interface
+2. Confirm device executes Text-to-Speech (TTS) output
 
-### Full Workflow Test
+### Complete Workflow Verification
 
-1. Say: "Check my Gmail"
-2. Device should:
-   - Send to cloud
-   - Receive workflow output
-   - Play TTS confirmation
-   - Wait for "Yes"
-   - Update DP 104 on confirmation
+1. Issue voice command: "Check my Gmail" (or equivalent browser task)
+2. Expected device behavior sequence:
+   - Transmit voice data to cloud
+   - Receive workflow response
+   - Execute TTS confirmation prompt
+   - Await user confirmation ("Yes"/"No")
+   - Update DP 104 upon affirmative response
 
 ---
 
@@ -110,4 +110,4 @@ Output: `output/rankify_assist.bin`
 
 ---
 
-**Hardware arriving soon! Stay tuned for updates.** 🚀
+**For detailed implementation patterns, refer to `firmware/FIRMWARE_IMPLEMENTATION_GUIDE.md`.**
