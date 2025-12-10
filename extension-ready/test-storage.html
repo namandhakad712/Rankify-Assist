@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rankify - Test Storage</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        .output {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Rankify Storage Test</h2>
+    <button id="testSave">Test Save</button>
+    <button id="testLoad">Test Load</button>
+    <button id="clearAll">Clear All</button>
+    <div id="output" class="output">Click buttons to test...</div>
+
+    <script>
+        const output = document.getElementById('output');
+
+        document.getElementById('testSave').addEventListener('click', async () => {
+            try {
+                await chrome.storage.sync.set({
+                    test: 'Hello World',
+                    timestamp: Date.now()
+                });
+                output.textContent = '✓ Save successful!';
+                output.style.color = 'green';
+            } catch (e) {
+                output.textContent = '✗ Save failed: ' + e.message;
+                output.style.color = 'red';
+            }
+        });
+
+        document.getElementById('testLoad').addEventListener('click', async () => {
+            try {
+                const data = await chrome.storage.sync.get(null);
+                output.textContent = 'Stored data:\n' + JSON.stringify(data, null, 2);
+                output.style.color = 'blue';
+            } catch (e) {
+                output.textContent = '✗ Load failed: ' + e.message;
+                output.style.color = 'red';
+            }
+        });
+
+        document.getElementById('clearAll').addEventListener('click', async () => {
+            try {
+                await chrome.storage.sync.clear();
+                output.textContent = '✓ Storage cleared!';
+                output.style.color = 'orange';
+            } catch (e) {
+                output.textContent = '✗ Clear failed: ' + e.message;
+                output.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+
+</html>

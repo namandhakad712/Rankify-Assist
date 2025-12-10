@@ -1,0 +1,29 @@
+{
+  "name": "Rankify Assist",
+  "description": "Tuya Voice Controller Browser Agent",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "icons": {
+    "16": "icon.ico",
+    "48": "icon.ico",
+    "128": "icon.ico"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://openapi.tuyacn.com/*",
+    "https://openapi.tuyaus.com/*",
+    "https://openapi.tuyaeu.com/*",
+    "https://openapi.tuyain.com/*",
+    "<all_urls>"
+  ]
+}

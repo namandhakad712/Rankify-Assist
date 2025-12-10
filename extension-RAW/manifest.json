@@ -1,0 +1,41 @@
+{
+    "name": "Rankify Assist - Eko Agent",
+    "version": "1.0.0",
+    "manifest_version": 3,
+    "description": "Browser Agent for Tuya T5 Voice Controller",
+    "permissions": [
+        "storage",
+        "activeTab",
+        "scripting",
+        "sidePanel",
+        "tabs"
+    ],
+    "host_permissions": [
+        "https://*.openai.com/*",
+        "https://*.anthropic.com/*",
+        "https://*.google.com/*",
+        "https://openapi.tuyacn.com/*",
+        "https://openapi.tuyaus.com/*",
+        "https://openapi.tuyaeu.com/*",
+        "https://openapi.tuyain.com/*"
+    ],
+    "background": {
+        "service_worker": "dist/js/background.js"
+    },
+    "action": {
+        "default_title": "Rankify Assist",
+        "default_popup": "options.html"
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": true
+    },
+    "side_panel": {
+        "default_path": "sidebar.html"
+    },
+    "icons": {
+        "16": "assets/icon.png",
+        "48": "assets/icon.png",
+        "128": "assets/icon.png"
+    }
+}
