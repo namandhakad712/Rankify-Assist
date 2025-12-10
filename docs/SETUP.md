@@ -43,13 +43,13 @@ This guide will walk you through setting up Rankify Assist from scratch.
    - **Data Center**: Select your region (e.g., India, US, EU)
 5. Click **Create**
 
-### Step 2: Get API Credentials
+### Step 2: Obtain API Credentials
 
-1. In your project, go to **Overview** tab
-2. Note down:
+1. Navigate to the project **Overview** tab
+2. Locate and record the following credentials:
    - **Access ID** (Client ID)
    - **Access Secret** (Client Secret)
-3. Keep these **secure** - you'll need them for the extension
+3. Store credentials securely - these will be required for Chrome extension configuration
 
 ### Step 3: Create Product
 
@@ -101,42 +101,43 @@ cd extension-ready
 4. Select the `extension-ready` folder
 5. Extension icon should appear in toolbar
 
-### Step 2: Configure Tuya Settings
+### Step 2: Configure Tuya Cloud Settings
 
-1. **Right-click** extension icon → Click **Options**
-2. Fill in **Tuya Cloud Settings**:
+1. Right-click the extension icon in Chrome toolbar
+2. Select **Options** from context menu
+3. Configure **Tuya Cloud Settings**:
    ```
-   Region: IN (or your datacenter code: US, EU, CN)
-   Access ID: [Your Access ID from Step 2]
-   Access Secret: [Your Access Secret from Step 2]
-   Device ID: [Leave empty for now - add after pairing device]
+   Region: Select datacenter region (IN, US, EU, CN)
+   Access ID: Enter Access ID obtained from Tuya Console
+   Access Secret: Enter Access Secret from Tuya Console
+   Device ID: Leave empty until device pairing is complete
    ```
-3. Click **Test Connection** (if available) to verify
-4. Click **Save** (bottom of page)
+4. Verify connectivity using **Test Connection** button (if available)
+5. Click **Save** to persist configuration
 
-### Step 3: Configure LLM Settings
+### Step 3: Configure LLM Integration
 
-In the same Options page:
+Navigate to the same Options page and complete the following:
 
-1. **LLM Provider**: Select from dropdown
-   - `openai` (OpenAI GPT models)
-   - `anthropic` (Claude models)
-   - `cerebras` (Cerebras Llama models)
-   - `deepseek` (DeepSeek models)
-   - Or use **Custom URL**
+1. **LLM Provider**: Select from available providers:
+   - `openai` - OpenAI GPT models
+   - `anthropic` - Anthropic Claude models
+   - `cerebras` - Cerebras Llama models
+   - `deepseek` - DeepSeek models
+   - Or specify custom endpoint URL
 
-2. **Model Name**:
-   - For OpenAI: `gpt-4o`, `gpt-4-turbo`, `gpt-3.5-turbo`
-   - For Anthropic: `claude-3-5-sonnet-20241022`, `claude-3-opus`
-   - For Cerebras: `llama3.1-70b`, `llama3.1-8b`
+2. **Model Selection**:
+   - OpenAI: `gpt-4o`, `gpt-4-turbo`, `gpt-3.5-turbo`
+   - Anthropic: `claude-3-5-sonnet-20241022`, `claude-3-opus`
+   - Cerebras: `llama3.1-70b`, `llama3.1-8b`
 
-3. **API Key**: Your LLM provider API key
+3. **API Key**: Enter provider-specific API key
 
-4. **Custom Base URL** (optional):
-   - Leave empty for standard providers
-   - Or add custom endpoint URL
+4. **Custom Base URL** (Optional):
+   - Default: Leave empty for standard provider endpoints
+   - Custom: Enter alternative API endpoint if required
 
-5. Click **Save**
+5. Click **Save** to persist LLM configuration
 
 ### Step 4: Verify Extension
 
@@ -178,57 +179,69 @@ Purchase from [Tuya's official store](https://platform.tuya.com) or authorized d
 
 ## Testing
 
-### Test 1: Extension Polling (No Hardware)
+### Test 1: Extension Polling (Without Physical Hardware)
 
-1. Go to [Tuya Console](https://platform.tuya.com)
-2. Navigate to **Products** → **Rankify Assist** → **Debug**
-3. Find DP 104 (`exec_command`)
-4. Manually update with test JSON:
+1. Access [Tuya IoT Platform Console](https://platform.tuya.com)
+2. Navigate to **Products** → Select your product → **Debug** tab
+3. Locate Data Point 104 (`exec_command`)
+4. Submit test payload via manual DP update:
    ```json
    {"intent":"browser","command":"open gmail.com"}
    ```
-5. Click **Send**
-6. Check Chrome - Gmail should open! ✅
+5. Click **Send** to publish DP update
+6. Verify browser automation: Gmail should load automatically in Chrome
 
-### Test 2: Full Workflow (With Hardware)
+**Expected Result:** Extension polls DP 104, detects browser intent, executes command via Eko agent
 
-1. Say to device: **"Check my Gmail"**
-2. Device should:
-   - Play TTS: "I plan to open Gmail. Proceed?"
-   - Wait for "Yes" or "No"
-   - If Yes → Browser opens Gmail
-   - Speaks result: "You have X unread emails"
+### Test 2: Complete Workflow (With Physical Hardware)
+
+1. Issue voice command to T5-E1 device: **"Check my Gmail"**
+2. Expected device behavior sequence:
+   - **TTS Output**: "I plan to open Gmail. Proceed?"
+   - **Await Confirmation**: Device listens for verbal "Yes" or "No"
+   - **On Affirmative**: Browser automation executes (opens Gmail)
+   - **Result Feedback**: Device speaks execution result (e.g., "You have 3 unread emails")
+
+**Workflow Phases Validated:**
+- Phase 1: Voice input capture and STT conversion
+- Phase 2: AI intent classification (browser task)
+- Phase 3: Safety confirmation protocol
+- Phase 4: Browser automation execution
+- Phase 5: TTS result feedback
 
 ---
 
 ## Troubleshooting
 
-### Extension Not Polling
+### Extension Polling Failure
 
-**Problem**: Console shows no polling messages
+**Symptom**: Console displays no polling activity messages
 
-**Solution**:
-- Verify Tuya credentials are correct
-- Check Device ID is set (or leave empty for testing)
-- Reload extension: `chrome://extensions/` → Click reload icon
+**Resolution Steps**:
+- Verify Tuya API credentials accuracy in Options
+- Confirm Device ID configuration (may remain empty for testing)
+- Reload extension via `chrome://extensions/` → Reload button
+- Inspect browser console for error messages
 
-### Browser Not Opening
+### Browser Automation Non-Execution
 
-**Problem**: Extension polls DP but nothing happens
+**Symptom**: Extension polls DP successfully but browser actions do not occur
 
-**Solution**:
-- Check LLM API key is valid
-- Verify Eko is initialized (check console for errors)
-- Ensure DP 104 JSON has `"intent":"browser"`
+**Resolution Steps**:
+- Validate LLM API key authenticity
+- Verify Eko agent initialization status in console logs
+- Confirm DP 104 payload contains `"intent":"browser"` field
+- Test with simplified commands initially
 
-### Device Not Responding
+### Device Non-Responsive
 
-**Problem**: Device paired but doesn't respond to voice
+**Symptom**: Paired device fails to respond to voice input
 
-**Solution**:
-- Check device online status in Tuya app
-- Verify firmware is flashed correctly
-- Check microphone is working (test in app)
+**Resolution Steps**:
+- Verify device online status in Tuya Smart/SmartLife application
+- Confirm firmware flash completion and accuracy
+- Test microphone functionality via application
+- Check device power and network connectivity
 
 ---
 
