@@ -44,3 +44,7 @@ logs/
 
 # Tuya specific
 tuya_config.h.backup
+
+
+HACKATHON_SUBMISSION
+docs/HARDWARE_ARRIVAL_GUIDE.md

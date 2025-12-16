@@ -1,0 +1,84 @@
+sequenceDiagram
+    autonumber
+    participant User as 👤 User
+    participant HW as 🎙️ T5-E1 Board
+    participant Cloud as ☁️ Tuya Platform
+    participant WF as 🔄 Cloud Workflow
+    participant Ext as 🧩 Chrome Extension
+    participant Eko as 🤖 Eko Agent
+
+    rect rgb(230, 240, 255)
+        Note over User, Cloud: 📢 PHASE 1: VOICE INPUT & STT
+        User->>HW: Speak: "Check my Gmail"
+        HW->>Cloud: Stream Audio Data
+        Cloud->>Cloud: STT Engine (Audio -> Text)
+        Cloud->>WF: Trigger Workflow (Input: "Check my Gmail")
+    end
+
+    rect rgb(255, 240, 230)
+        Note over WF: 🧠 PHASE 2: INTENT CLASSIFICATION
+        WF->>WF: "Intent Recognition" Node
+        Note right of WF: LLM Analysis (Gemini/Qwen)
+        
+        alt Intent == "browser"
+            WF->>WF: Route to Browser Path
+            WF->>WF: "Browser LLM" Node
+            Note right of WF: Gen JSON Plan<br/>{"intent":"browser", "command":"..."}
+            WF->>WF: "Browser Output" Node
+            Note right of WF: Format Output for Device
+        else Intent == "iot"
+            WF->>WF: Route to IoT Path
+            WF->>WF: "IoT Output" Node
+        else Intent == "chat"
+            WF->>WF: Route to Chat Path
+            WF->>WF: "Chat LLM" Node
+        else Other
+            WF->>WF: "Other Output" Node
+        end
+        
+        WF-->>Cloud: Return Workflow Output
+        Cloud-->>HW: Receive: {plan, tts_text, intent}
+        HW->>HW: Update DP 101 (intent_type)
+        HW->>HW: Update DP 102 (action_plan)
+    end
+
+    rect rgb(230, 255, 230)
+        Note over HW, User: 🛡️ PHASE 3: SAFETY CHECK
+        HW->>User: TTS Speak: "I plan to open Gmail. Proceed?"
+        User->>HW: Speak: "Yes" (or "No")
+        HW->>HW: Local Keyword Detect / Cloud Verify
+        
+        alt User Verified
+            HW->>Cloud: Update DP 103 (user_confirmed = true)
+            HW->>Cloud: Update DP 104 (exec_command)
+            Note right of Cloud: DP 104 Value:<br/>{"intent":"browser", "command":"open gmail..."}
+        else User Rejected
+            HW->>User: TTS: "Cancelled."
+        end
+    end
+
+    rect rgb(250, 230, 250)
+        Note over Ext, Eko: ⚡ PHASE 4: EXECUTION
+        loop Polling (Every 2s)
+            Ext->>Cloud: GET /v1.0/devices/{id}/status
+            Cloud-->>Ext: Return DP 104 Value
+        end
+        
+        Ext->>Ext: Check if New Command detected
+        Ext->>Ext: Parse JSON (intent="browser")
+        Ext->>Eko: Execute(command)
+        
+        Eko->>Eko: 🌐 Browser Automation
+        Note right of Eko: Open URL, Click, Scrape
+        
+        Eko-->>Ext: Task Result: "You have 3 unread emails"
+        Ext->>Cloud: POST /commands (Update DP 105)
+        Note right of Cloud: DP 105 Value:<br/>"You have 3 unread emails"
+    end
+
+    rect rgb(255, 255, 224)
+        Note over Cloud, User: 🔊 PHASE 5: FEEDBACK
+        Cloud-->>HW: Push Notification (DP 105 Updated)
+        HW->>HW: Read DP 105
+        HW->>User: TTS Speak: "You have 3 unread emails"
+    end
