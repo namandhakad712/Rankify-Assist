@@ -540,9 +540,13 @@ document.getElementById('save').addEventListener('click', async () => {
             }
         });
 
-        status.textContent = `✓ Configuration saved for ${currentProvider}! Extension will restart.`;
+        status.textContent = `✓ Configuration saved for ${currentProvider}! Reloading extension...`;
         status.className = 'status success';
-        setTimeout(() => chrome.runtime.reload(), 1500);
+
+        setTimeout(() => {
+            window.close(); // Close options page first to prevent context invalidation
+            chrome.runtime.reload(); // Then reload extension
+        }, 1000);
     } catch (error) {
         status.textContent = '✗ Error: ' + error.message;
         status.className = 'status error';
