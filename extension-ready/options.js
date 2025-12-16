@@ -1,47 +1,96 @@
-// Model capability definitions
+// Model capability definitions with advanced features
 const MODEL_CAPABILITIES = {
     // OpenAI Models
-    'gpt-4o': { vision: true, text: true },
-    'gpt-4o-mini': { vision: true, text: true },
-    'gpt-4-turbo': { vision: true, text: true },
-    'gpt-4': { vision: false, text: true },
-    'gpt-3.5-turbo': { vision: false, text: true },
-    'o1': { vision: false, text: true },
-    'o1-mini': { vision: false, text: true },
-    'o1-preview': { vision: false, text: true },
+    'gpt-4o': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'gpt-4o-mini': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'gpt-4-turbo': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'gpt-4': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'gpt-3.5-turbo': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'o1': { vision: false, text: true, thinking: true, structuredOutput: false, functionCalling: false },
+    'o1-mini': { vision: false, text: true, thinking: true, structuredOutput: false, functionCalling: false },
+    'o1-preview': { vision: false, text: true, thinking: true, structuredOutput: false, functionCalling: false },
 
     // Anthropic Models
-    'claude-3-5-sonnet': { vision: true, text: true },
-    'claude-3-5-haiku': { vision: true, text: true },
-    'claude-3-opus': { vision: true, text: true },
-    'claude-3-sonnet': { vision: true, text: true },
-    'claude-3-haiku': { vision: true, text: true },
+    'claude-3-5-sonnet': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'claude-3-5-haiku': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'claude-3-opus': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'claude-3-sonnet': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'claude-3-haiku': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
 
-    // Google Models
-    'gemini-2.0-flash-exp': { vision: true, text: true },
-    'gemini-1.5-pro': { vision: true, text: true },
-    'gemini-1.5-flash': { vision: true, text: true },
-    'gemini-pro-vision': { vision: true, text: true },
-    'gemini-pro': { vision: false, text: true },
+    // Google Gemini 2.5 Series (Latest - Most Capable!)
+    'gemini-2.5-pro': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, grounding: true, codeExecution: true },
+    'gemini-2.5-flash': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, grounding: true, codeExecution: true },
+    'gemini-2.5-flash-lite': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, grounding: true, codeExecution: true },
+    'gemini-2.5-flash-preview': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, grounding: true, codeExecution: true },
+    'gemini-2.5-flash-lite-preview': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, grounding: true, codeExecution: true },
+    'gemini-2.5-flash-image': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: false, imageGeneration: true },
+    'gemini-2.5-flash-native-audio': { vision: false, text: true, thinking: true, structuredOutput: false, functionCalling: true, audioGeneration: true },
 
-    // Groq Models (ONLY 3 models have vision capability!)
-    'meta-llama/llama-guard-4-12b': { vision: true, text: true },
-    'meta-llama/llama-4-maverick-17b-128e-instruct': { vision: true, text: true },
-    'meta-llama/llama-4-scout-17b-16e-instruct': { vision: true, text: true },
-    'llama-guard-4-12b': { vision: true, text: true },
-    'llama-4-maverick-17b': { vision: true, text: true },
-    'llama-4-scout-17b': { vision: true, text: true },
-    // All other Groq models are text-only (including llama-3.2 models)
-    'llama-3.2-90b-vision': { vision: false, text: true },
-    'llama-3.2-11b-vision': { vision: false, text: true },
-    'llama-3.3-70b': { vision: false, text: true },
-    'llama-3.1-70b': { vision: false, text: true },
-    'llama-3.1-8b': { vision: false, text: true },
-    'llama3.1-70b': { vision: false, text: true },
-    'llama3.1-8b': { vision: false, text: true },
-    'mixtral-8x7b': { vision: false, text: true },
-    'gemma2-9b': { vision: false, text: true },
-    'gemma-7b': { vision: false, text: true }
+    // Google Gemini 2.0 Series
+    'gemini-2.0-flash': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, codeExecution: true },
+    'gemini-2.0-flash-exp': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, codeExecution: true },
+    'gemini-2.0-flash-001': { vision: true, text: true, thinking: true, structuredOutput: true, functionCalling: true, caching: true, codeExecution: true },
+    'gemini-2.0-flash-lite': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+
+    // Google Gemini 1.5 Series
+    'gemini-1.5-pro': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true, caching: false },
+    'gemini-1.5-pro-latest': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true, caching: false },
+    'gemini-1.5-flash': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true, caching: false },
+    'gemini-1.5-flash-latest': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true, caching: false },
+    'gemini-1.5-flash-8b': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true, caching: false },
+    'gemini-pro-vision': { vision: true, text: true, thinking: false, structuredOutput: false, functionCalling: true },
+    'gemini-pro': { vision: false, text: true, thinking: false, structuredOutput: false, functionCalling: true },
+
+    // Groq Vision Models (3 models with vision)
+    'meta-llama/llama-guard-4-12b': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'meta-llama/llama-4-maverick-17b-128e-instruct': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'meta-llama/llama-4-scout-17b-16e-instruct': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-guard-4-12b': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-4-maverick-17b': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-4-scout-17b': { vision: true, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+
+    // Groq Reasoning Models (GPT-OSS series)
+    'openai/gpt-oss-20b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true },
+    'openai/gpt-oss-120b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true },
+    'openai/gpt-oss-safeguard-20b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true },
+    'gpt-oss-20b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true },
+    'gpt-oss-120b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true },
+
+    // Groq Compound Systems (with built-in tools)
+    'groq/compound': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true, builtInSearch: true, builtInCodeExec: true },
+    'groq/compound-mini': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true, builtInSearch: true, builtInCodeExec: true },
+
+    // Groq Qwen with Reasoning
+    'qwen/qwen3-32b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true },
+
+    // Groq Text-Only Models
+    'llama-3.2-90b-vision': { vision: false, text: true, thinking: false, structuredOutput: false, functionCalling: true },
+    'llama-3.2-11b-vision': { vision: false, text: true, thinking: false, structuredOutput: false, functionCalling: true },
+    'llama-3.3-70b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-3.3-70b-versatile': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-3.1-70b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-3.1-70b-versatile': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-3.1-8b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama-3.1-8b-instant': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama3.1-70b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'llama3.1-8b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'mixtral-8x7b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'mixtral-8x7b-32768': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true },
+    'gemma2-9b': { vision: false, text: true, thinking: false, structuredOutput: false, functionCalling: true },
+    'gemma2-9b-it': { vision: false, text: true, thinking: false, structuredOutput: false, functionCalling: true },
+    'gemma-7b': { vision: false, text: true, thinking: false, structuredOutput: false, functionCalling: true },
+
+    // Cerebras Models - ULTRA FAST! (2000+ tokens/sec)
+    'llama3.1-8b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true, speed: 2200, streaming: true, provider: 'cerebras' },
+    'llama-3.1-8b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true, speed: 2200, streaming: true, provider: 'cerebras' },
+    'llama-3.3-70b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true, parallelToolCalling: true, speed: 2100, streaming: true, provider: 'cerebras' },
+    'llama3.3-70b': { vision: false, text: true, thinking: false, structuredOutput: true, functionCalling: true, parallelToolCalling: true, speed: 2100, streaming: true, provider: 'cerebras' },
+
+    // Cerebras Reasoning Models - FASTEST REASONING!
+    'qwen-3-32b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true, speed: 2600, streaming: true, provider: 'cerebras' },
+    'qwen3-32b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true, speed: 2600, streaming: true, provider: 'cerebras' },
+    'gpt-oss-120b': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true, reasoningEffort: true, provider: 'cerebras' },
+    'zai-glm-4.6': { vision: false, text: true, thinking: true, reasoning: true, structuredOutput: true, functionCalling: true, disableReasoning: true, provider: 'cerebras' }
 };
 
 // Function to get model capabilities
@@ -68,13 +117,40 @@ function createModelOptionHTML(modelId, modelName = null) {
     const displayName = modelName || modelId;
 
     let prefix = '';
+    let badges = [];
+
+    // Core capabilities
     if (capabilities.vision && capabilities.text) {
         prefix = '👁️📝 '; // Vision + Text
     } else if (capabilities.text) {
         prefix = '📝 '; // Text only
     }
 
-    return `<option value="${modelId}" data-vision="${capabilities.vision}" data-text="${capabilities.text}">${prefix}${displayName}</option>`;
+    // Advanced features badges
+    if (capabilities.thinking || capabilities.reasoning) {
+        badges.push('🧠'); // Thinking/Reasoning
+    }
+    if (capabilities.caching) {
+        badges.push('💾'); // Caching
+    }
+    if (capabilities.grounding) {
+        badges.push('🌐'); // Grounding
+    }
+    if (capabilities.builtInSearch) {
+        badges.push('🔍'); // Built-in Search
+    }
+
+    const badgeStr = badges.length > 0 ? ` ${badges.join(' ')}` : '';
+
+    return `<option value="${modelId}" 
+        data-vision="${capabilities.vision || false}" 
+        data-text="${capabilities.text || false}"
+        data-thinking="${capabilities.thinking || false}"
+        data-reasoning="${capabilities.reasoning || false}"
+        data-caching="${capabilities.caching || false}"
+        data-grounding="${capabilities.grounding || false}"
+        data-structured="${capabilities.structuredOutput || false}"
+        data-function="${capabilities.functionCalling || false}">${prefix}${displayName}${badgeStr}</option>`;
 }
 
 // Function to update capability display panel with actual PNG icons
@@ -105,6 +181,20 @@ function updateCapabilityDisplay(modelId) {
         visionCapability.classList.remove('disabled');
     } else {
         visionCapability.classList.add('disabled');
+    }
+
+    // Display advanced capabilities in console for now (UI update later)
+    if (capabilities.thinking || capabilities.reasoning) {
+        console.log(`✨ Model ${modelId} supports Thinking/Reasoning!`);
+    }
+    if (capabilities.caching) {
+        console.log(`💾 Model ${modelId} supports Context Caching!`);
+    }
+    if (capabilities.grounding) {
+        console.log(`🌐 Model ${modelId} supports Grounding (Search/Maps)!`);
+    }
+    if (capabilities.structuredOutput) {
+        console.log(`📋 Model ${modelId} supports Structured Outputs!`);
     }
 }
 
@@ -229,7 +319,19 @@ async function fetchGoogleModels(apiKey, baseURL) {
 
 function getDefaultGoogleModels() {
     return [
+        // Gemini 2.5 Series - Latest and Most Capable!
+        { id: 'gemini-2.5-pro', name: '✨ Gemini 2.5 Pro (Latest - Most Advanced)' },
+        { id: 'gemini-2.5-flash', name: '⚡ Gemini 2.5 Flash (Best Price/Performance)' },
+        { id: 'gemini-2.5-flash-lite', name: '🚀 Gemini 2.5 Flash-Lite (Ultra Fast)' },
+        { id: 'gemini-2.5-flash-preview-09-2025', name: 'Gemini 2.5 Flash Preview' },
+        { id: 'gemini-2.5-flash-lite-preview-09-2025', name: 'Gemini 2.5 Flash-Lite Preview' },
+        { id: 'gemini-2.5-flash-image', name: '🎨 Gemini 2.5 Flash Image (Image Generation)' },
+
+        // Gemini 2.0 Series
         { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Experimental)' },
+        { id: 'gemini-2.0-flash-001', name: 'Gemini 2.0 Flash (Stable)' },
+
+        // Gemini 1.5 Series (Legacy)
         { id: 'gemini-1.5-pro-latest', name: 'Gemini 1.5 Pro (Latest)' },
         { id: 'gemini-1.5-flash-latest', name: 'Gemini 1.5 Flash (Latest)' },
         { id: 'gemini-1.5-flash-8b', name: 'Gemini 1.5 Flash 8B' }
@@ -260,11 +362,40 @@ async function fetchGroqModels(apiKey, baseURL) {
 
 function getDefaultGroqModels() {
     return [
+        // Reasoning Models (GPT-OSS Series) - Advanced Reasoning Capabilities
+        { id: 'openai/gpt-oss-120b', name: '🧠 GPT-OSS 120B (Reasoning - Most Capable)' },
+        { id: 'openai/gpt-oss-20b', name: '🧠 GPT-OSS 20B (Reasoning - Fast)' },
+        { id: 'qwen/qwen3-32b', name: '🧠 Qwen 3 32B (Reasoning)' },
+
+        // Compound Systems - Built-in Search & Code Execution
+        { id: 'groq/compound', name: '🔍 Groq Compound (Search + Code Exec)' },
+        { id: 'groq/compound-mini', name: '🔍 Groq Compound Mini (Search + Code Exec)' },
+
+        // Vision Models
+        { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: '👁️ Llama 4 Scout 17B (Vision)' },
+        { id: 'meta-llama/llama-4-maverick-17b-128e-instruct', name: '👁️ Llama 4 Maverick 17B (Vision)' },
+        { id: 'meta-llama/llama-guard-4-12b', name: '👁️ Llama Guard 4 12B (Vision + Safety)' },
+
+        // Text-Only Models
         { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile' },
         { id: 'llama-3.1-70b-versatile', name: 'Llama 3.1 70B Versatile' },
         { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant' },
         { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
         { id: 'gemma2-9b-it', name: 'Gemma 2 9B' }
+    ];
+}
+
+// Cerebras models - ULTRA FAST INFERENCE!
+function getDefaultCerebrasModels() {
+    return [
+        // Reasoning Models - FASTEST REASONING in the world!
+        { id: 'qwen-3-32b', name: '🧠 ⚡ Qwen 3 32B (2600 T/s - Reasoning)' },
+        { id: 'gpt-oss-120b', name: '🧠 GPT-OSS 120B (Reasoning + effort control)' },
+        { id: 'zai-glm-4.6', name: '🧠 Z.ai GLM 4.6 (Reasoning)' },
+
+        // Ultra-Fast Text Models
+        { id: 'llama-3.3-70b', name: '⚡ Llama 3.3 70B (2100 T/s - Parallel Tools)' },
+        { id: 'llama3.1-8b', name: '⚡ Llama 3.1 8B (2200 T/s - FASTEST!)' }
     ];
 }
 
@@ -552,3 +683,139 @@ document.getElementById('save').addEventListener('click', async () => {
         status.className = 'status error';
     }
 });
+
+// =====================================================
+// ADVANCED CONFIGURATION SYSTEM
+// =====================================================
+
+// Get default advanced config for a provider
+function getDefaultAdvancedConfig(provider) {
+    const baseConfig = {
+        thinking: {
+            enabled: false,
+            budget: -1, // Dynamic for Gemini
+            includeThoughts: true,
+            reasoningFormat: 'parsed', // GROQ
+            reasoningEffort: 'medium' // GROQ
+        },
+        structuredOutput: {
+            enabled: false,
+            mode: 'json_object',
+            schema: null
+        },
+        caching: {
+            enabled: true, // Auto-enable for cost savings
+            implicitCaching: true,
+            explicitCaching: false,
+            ttl: 3600,
+            minTokens: 1024
+        },
+        grounding: {
+            enabled: false,
+            googleSearch: false,
+            googleMaps: false,
+            dynamicRetrieval: false
+        },
+        codeExecution: {
+            enabled: false
+        },
+        vision: {
+            enabled: true,
+            maxImages: 5,
+            maxFileSize: 20971520
+        },
+        functionCalling: {
+            mode: 'auto',
+            parallelCalls: true,
+            maxParallelCalls: 5
+        }
+    };
+
+    // Provider-specific defaults
+    if (provider === 'google') {
+        baseConfig.thinking.enabled = true; // Auto-enable for 2.5 models
+        baseConfig.caching.enabled = true; // Auto implicit caching
+    } else if (provider === 'groq') {
+        baseConfig.thinking.enabled = false; // User opt-in for reasoning models
+    }
+
+    return baseConfig;
+}
+
+// Load advanced config for current provider
+async function loadAdvancedConfig(provider) {
+    const data = await chrome.storage.sync.get(['advancedLLMConfig']);
+    const advancedConfig = data.advancedLLMConfig || {};
+
+    if (!advancedConfig[provider]) {
+        advancedConfig[provider] = getDefaultAdvancedConfig(provider);
+    }
+
+    return advancedConfig[provider];
+}
+
+// Save advanced config for current provider
+async function saveAdvancedConfig(provider, config) {
+    const data = await chrome.storage.sync.get(['advancedLLMConfig']);
+    const advancedConfig = data.advancedLLMConfig || {};
+
+    advancedConfig[provider] = config;
+
+    await chrome.storage.sync.set({ advancedLLMConfig: advancedConfig });
+}
+
+// Get model-specific recommendations
+function getModelRecommendations(modelId, capabilities) {
+    const recommendations = [];
+
+    if (capabilities.thinking) {
+        recommendations.push({
+            feature: 'thinking',
+            title: '🧠 Thinking Available',
+            description: 'This model supports advanced reasoning. Enable thinking for complex tasks.',
+            suggested: true
+        });
+    }
+
+    if (capabilities.caching) {
+        recommendations.push({
+            feature: 'caching',
+            title: '💾 Caching Available',
+            description: 'Save 50-90% on costs with context caching for repeated content.',
+            suggested: true
+        });
+    }
+
+    if (capabilities.grounding) {
+        recommendations.push({
+            feature: 'grounding',
+            title: '🌐 Grounding Available',
+            description: 'Access real-time information via Google Search and Maps.',
+            suggested: false
+        });
+    }
+
+    if (capabilities.reasoning) {
+        recommendations.push({
+            feature: 'reasoning',
+            title: '🧠 Explicit Reasoning',
+            description: 'See step-by-step reasoning process. Great for debugging complex logic.',
+            suggested: true
+        });
+    }
+
+    if (capabilities.structuredOutput) {
+        recommendations.push({
+            feature: 'structured',
+            title: '📋 Structured Outputs',
+            description: 'Guarantee JSON Schema compliance. Perfect for automation.',
+            suggested: false
+        });
+    }
+
+    return recommendations;
+}
+
+console.log('✨ EKO Extension - Advanced Configuration System Loaded');
+console.log('📊 Feature Coverage: Thinking, Caching, Grounding, Structured Outputs');
+console.log('🎯 Ready for Phase 3 API Integration!');
