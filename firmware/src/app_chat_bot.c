@@ -1,95 +1,167 @@
 /**
  * @file app_chat_bot.c
- * @brief Nano-Voice Controller Logic
+ * @brief Rankify Assist Logic - AI Agent Integration & Safety Check
  */
-#include "netmgr.h"
-#include "tkl_wifi.h"
-#include "tkl_gpio.h"
-#include "tkl_memory.h"
-#include "tal_api.h"
-#include "tuya_ringbuf.h"
+#include "tuya_cloud_types.h"
+#include "tuya_cloud_com_defs.h"
+#include "tuya_iot_dp_api.h"
+#include "cJSON.h"
 #include "ai_audio.h"
 #include "app_chat_bot.h"
-#include "media_src_zh.h"
+#include "tal_api.h"
+#include "netmgr.h"
 
-// Basic AI Audio Config
-#define AI_AUDIO_TEXT_BUFF_LEN (1024)
+// DP IDs matching Platform Config
+#define DP_ID_INTENT_TYPE      101
+#define DP_ID_ACTION_PLAN      102
+#define DP_ID_USER_CONFIRM     103
+#define DP_ID_EXEC_COMMAND     104
+#define DP_ID_EXEC_RESULT      105
+#define DP_ID_TTS_TEXT         106
 
-/* Simple Wakeup Mode: Say wake word, then talk freely */
-static void __app_ai_audio_evt_inform_cb(AI_AUDIO_EVENT_E event, uint8_t *data, uint32_t len, void *arg)
+// Internal State Machine
+typedef enum {
+    STATE_IDLE,
+    STATE_LISTENING,
+    STATE_WAITING_AI,
+    STATE_ASKING_CONFIRM,
+    STATE_WAITING_USER_CONFIRM,
+    STATE_EXECUTING
+} rankify_state_t;
+
+static rankify_state_t current_state = STATE_IDLE;
+static char pending_command_json[512] = {0};
+
+/* --- Helper: Update DP String --- */
+void update_dp_string(int dp_id, const char* value) {
+    if (value == NULL) return;
+    
+    ty_cJSON *root = ty_cJSON_CreateObject();
+    ty_cJSON_AddStringToObject(root, "104", value); // NOTE: Key is ignored by some APIs but struct needed
+    
+    // Create DP object
+    TY_OBJ_DP_S dp_data;
+    dp_data.dpid = dp_id;
+    dp_data.type = PROP_STR;
+    dp_data.value.dp_str = (char*)value;
+    dp_data.time_stamp = 0;
+
+    // Send to Cloud
+    // Note: Simplification using direct report API if available, 
+    // or standard dev_report_dp_json_async
+    dev_report_dp_json_async(NULL, root); 
+    ty_cJSON_Delete(root);
+}
+
+/* --- Parse AI Response and Handle Flow --- */
+void process_ai_response(const char* json_str) {
+    PR_NOTICE("AI Response: %s", json_str);
+    
+    ty_cJSON *root = ty_cJSON_Parse(json_str);
+    if (!root) return;
+
+    // Extract fields
+    ty_cJSON *intent_item = ty_cJSON_GetObjectItem(root, "intent");
+    ty_cJSON *plan_item = ty_cJSON_GetObjectItem(root, "plan");
+    ty_cJSON *confirm_item = ty_cJSON_GetObjectItem(root, "needs_confirmation");
+    ty_cJSON *tts_item = ty_cJSON_GetObjectItem(root, "tts_confirm");
+    ty_cJSON *cmd_item = ty_cJSON_GetObjectItem(root, "command");
+
+    if (intent_item && intent_item->valuestring) {
+        // Report intent to Cloud (DP 101)
+        // update_dp_string(DP_ID_INTENT_TYPE, intent_item->valuestring);
+    }
+
+    if (tts_item && tts_item->valuestring) {
+        // Speak the confirmation question
+        ai_audio_tts_play(tts_item->valuestring);
+    }
+    
+    bool needs_confirm = false;
+    if (confirm_item) {
+        needs_confirm = (confirm_item->type == cJSON_True);
+    }
+
+    if (needs_confirm) {
+        current_state = STATE_WAITING_USER_CONFIRM;
+        
+        // Save command for later execution
+        if (cmd_item && cmd_item->valuestring) {
+            snprintf(pending_command_json, sizeof(pending_command_json), 
+                "{\"intent\":\"%s\",\"command\":\"%s\"}", 
+                intent_item ? intent_item->valuestring : "unknown",
+                cmd_item->valuestring);
+        }
+    } else {
+        // Execute immediately (e.g. Chat)
+        current_state = STATE_IDLE;
+    }
+
+    ty_cJSON_Delete(root);
+}
+
+/* --- Callback: User Spoke (ASR) --- */
+static void __app_ai_audio_evt_cb(AI_AUDIO_EVENT_E event, uint8_t *data, uint32_t len, void *arg)
 {
     switch (event) {
     case AI_AUDIO_EVT_HUMAN_ASR_TEXT: {
         if (len > 0 && data) {
-            PR_NOTICE("USER: %.*s", (int)len, data);
+            PR_NOTICE("ASR: %.*s", len, data);
+            
+            if (current_state == STATE_WAITING_USER_CONFIRM) {
+                // Check for Yes/No
+                if (strcasestr((char*)data, "yes") || strcasestr((char*)data, "proceed") || strcasestr((char*)data, "okay")) {
+                    PR_NOTICE("User Confirmed!");
+                    ai_audio_tts_play("Executing.");
+                    
+                    // CRITICAL: Send Command to Extension (DP 104)
+                    update_dp_string(DP_ID_EXEC_COMMAND, pending_command_json);
+                    current_state = STATE_EXECUTING;
+                } else {
+                    PR_NOTICE("User Cancelled.");
+                    ai_audio_tts_play("Cancelled.");
+                    current_state = STATE_IDLE;
+                }
+            } else {
+                // New Command -> Send to AI Agent
+                // Note: The Tuya SDK automatically sends audio to cloud if connected to AI agent.
+                // We just monitor the state here.
+                current_state = STATE_WAITING_AI;
+            }
         }
     } break;
-    case AI_AUDIO_EVT_AI_REPLIES_TEXT_START: {
-        PR_NOTICE("AI: Response Start");
-    } break;
+    
     case AI_AUDIO_EVT_AI_REPLIES_TEXT_DATA: {
-        PR_NOTICE("AI: %.*s", len, data);
+        // AI Agent response (JSON) comes here as text
+        PR_NOTICE("AI Data: %.*s", len, data);
+        // We accumulate this and parse it in full buffer usually, 
+        // simplified here to pass to processor
+        process_ai_response((char*)data);
     } break;
-    case AI_AUDIO_EVT_ASR_WAKEUP: {
-        ai_audio_player_stop();
-        ai_audio_player_play_alert(AI_AUDIO_ALERT_WAKEUP);
-        PR_NOTICE("Wakeup Detected!");
-    } break;
+
+    case AI_AUDIO_EVT_ASR_WAKEUP:
+        PR_NOTICE("Wakeup!");
+        current_state = STATE_LISTENING;
+        break;
+        
     default:
         break;
     }
 }
 
-static void __app_ai_audio_state_inform_cb(AI_AUDIO_STATE_E state)
-{
-    PR_DEBUG("Audio State: %d", state);
-    switch (state) {
-        case AI_AUDIO_STATE_LISTEN:
-            PR_NOTICE("State: LISTENING");
-            break;
-        case AI_AUDIO_STATE_AI_SPEAK:
-            PR_NOTICE("State: SPEAKING");
-            break;
-        default:
-            break;
-    }
-}
-
+/* --- Initialization --- */
 OPERATE_RET app_chat_bot_init(void)
 {
-    AI_AUDIO_CONFIG_T ai_audio_cfg;
-
-    // Use Wakeup Free Talk Mode (Standard Smart Speaker behavior)
-    ai_audio_cfg.work_mode = AI_AUDIO_WORK_ASR_WAKEUP_FREE_TALK;
-    ai_audio_cfg.evt_inform_cb = __app_ai_audio_evt_inform_cb;
-    ai_audio_cfg.state_inform_cb = __app_ai_audio_state_inform_cb;
-
-    TUYA_CALL_ERR_RETURN(ai_audio_init(&ai_audio_cfg));
-    ai_audio_set_open(true);
-
+    AI_AUDIO_CONFIG_T ai_cfg = {0};
+    ai_cfg.work_mode = AI_AUDIO_WORK_ASR_WAKEUP_FREE_TALK; 
+    ai_cfg.evt_inform_cb = __app_ai_audio_evt_cb;
+    
+    // Init Audio
+    TUYA_CALL_ERR_RETURN(ai_audio_init(&ai_cfg));
+    ai_audio_set_open(true); // Start listening
+    
+    PR_NOTICE("Rankify Assist Initialized.");
     return OPRT_OK;
-}
-
-OPERATE_RET ai_audio_player_play_alert(AI_AUDIO_ALERT_TYPE_E type)
-{
-    OPERATE_RET rt = OPRT_OK;
-    char alert_id[64] = {0};
-    snprintf(alert_id, sizeof(alert_id), "alert_%d", type);
-    rt = ai_audio_player_start(alert_id);
-
-    // Using built-in media sources (assuming media_src_zh.h is available in SDK include path)
-    // In a real localized app, we'd swap these for EN or custom sounds.
-    switch (type) {
-    case AI_AUDIO_ALERT_NETWORK_CONNECTED:
-        rt = ai_audio_player_data_write(alert_id, (uint8_t *)media_src_network_conn_success_zh, sizeof(media_src_network_conn_success_zh), 1);
-        break;
-    case AI_AUDIO_ALERT_WAKEUP:
-        rt = ai_audio_player_data_write(alert_id, (uint8_t *)media_src_ai_zh, sizeof(media_src_ai_zh), 1);
-        break;
-    default:
-        break;
-    }
-    return rt;
 }
 
 uint8_t app_chat_bot_get_enable(void) {
