@@ -15,8 +15,7 @@
     "debugger",
     "unlimitedStorage",
     "webNavigation",
-    "sidePanel",
-    "contextMenus"
+    "sidePanel"
   ],
   "options_page": "options/index.html",
   "background": {
@@ -38,8 +37,6 @@
       ],
       "all_frames": true,
       "js": [
-        "extensions/llm-optimizer/llm-optimizer.js",
-        "extensions/tuya-integration/tuya-controller.js",
         "content/index.iife.js"
       ]
     }
@@ -53,36 +50,13 @@
         "icon-128.png",
         "icon-32.png",
         "permission/index.html",
-        "permission/permission.js",
-        "extensions/tuya-integration/tuya-settings.html",
-        "extensions/tuya-integration/tuya-settings.js",
-        "extensions/llm-optimizer/llm-optimizer-settings.html",
-        "extensions/llm-optimizer/llm-optimizer-settings.js"
+        "permission/permission.js"
       ],
       "matches": [
         "*://*/*"
       ]
     }
   ],
-  "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+Y"
-      }
-    },
-    "open_tuya_settings": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+T"
-      },
-      "description": "Open Tuya Smart Home Settings"
-    },
-    "open_llm_optimizer": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+L"
-      },
-      "description": "Open LLM Optimizer Settings"
-    }
-  },
   "side_panel": {
     "default_path": "side-panel/index.html"
   }
