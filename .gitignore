@@ -1,7 +1,6 @@
 # Ignore node_modules and build artifacts
 node_modules/
 dist/
-build/
 output/
 
 # Ignore IDE and editor files
@@ -28,7 +27,6 @@ secrets.json
 logs/
 
 # Ignore firmware builds
-*.bin
 *.hex
 *.elf
 *.map
