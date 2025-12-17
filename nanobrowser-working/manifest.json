@@ -15,7 +15,8 @@
     "debugger",
     "unlimitedStorage",
     "webNavigation",
-    "sidePanel"
+    "sidePanel",
+    "contextMenus"
   ],
   "options_page": "options/index.html",
   "background": {
@@ -51,13 +52,28 @@
         "icon-128.png",
         "icon-32.png",
         "permission/index.html",
-        "permission/permission.js"
+        "permission/permission.js",
+        "extensions/tuya-integration/tuya-settings.html",
+        "extensions/tuya-integration/tuya-settings.js"
       ],
       "matches": [
         "*://*/*"
       ]
     }
   ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      }
+    },
+    "open_tuya_settings": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+T"
+      },
+      "description": "Open Tuya Smart Home Settings"
+    }
+  },
   "side_panel": {
     "default_path": "side-panel/index.html"
   }

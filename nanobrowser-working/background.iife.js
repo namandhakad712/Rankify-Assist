@@ -1237,3 +1237,42 @@ ${i}
  * Copyright 2018 Google Inc.
  * SPDX-License-Identifier: Apache-2.0
  */const vO=class vO{constructor(e){v(this,Ja);J(this,"onmessage");J(this,"onclose");C(this,Ja,e),c(this,Ja).addEventListener("message",t=>{this.onmessage&&this.onmessage.call(null,t.data)}),c(this,Ja).addEventListener("close",()=>{this.onclose&&this.onclose.call(null)}),c(this,Ja).addEventListener("error",()=>{})}static create(e,t){return new Promise((r,s)=>{const i=new Zde(e,[],{followRedirects:!0,perMessageDeflate:!1,allowSynchronousEvents:!1,maxPayload:268435456,headers:{"User-Agent":`Puppeteer ${hN}`,...t}});i.addEventListener("open",()=>r(new vO(i))),i.addEventListener("error",s)})}send(e){c(this,Ja).send(e)}close(){c(this,Ja).close()}};Ja=new WeakMap;let nO=vO;const Yde=Object.freeze(Object.defineProperty({__proto__:null,NodeWebSocketTransport:nO},Symbol.toStringTag,{value:"Module"}))})();
+// Tuya Integration - Background Script Extension
+// This file adds Tuya-specific functionality to Nanobrowser's background service worker
+
+console.log('🏠 [TUYA] Background extension loaded');
+
+// Listen for keyboard shortcut to open Tuya settings
+chrome.commands.onCommand.addListener((command) => {
+    if (command === 'open_tuya_settings') {
+        openTuyaSettings();
+    }
+});
+
+// Listen for context menu or other triggers
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'OPEN_TUYA_SETTINGS') {
+        openTuyaSettings();
+        sendResponse({ success: true });
+    }
+});
+
+function openTuyaSettings() {
+    const settingsUrl = chrome.runtime.getURL('extensions/tuya-integration/tuya-settings.html');
+    chrome.tabs.create({ url: settingsUrl });
+}
+
+// Add context menu item (right-click on extension icon)
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+        id: 'tuya-settings',
+        title: '🏠 Tuya Smart Home Settings',
+        contexts: ['action']
+    });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === 'tuya-settings') {
+        openTuyaSettings();
+    }
+});
