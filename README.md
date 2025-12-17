@@ -2,10 +2,10 @@
 
 # 🎯 Rankify Assist
 
-<img src="logo.png" alt="Rankify Assist Logo" width="200" height="200" />
+<img src="logo.png" alt="Rankify Assist Logo" />
 
 ### *Voice-Controlled AI Browser Automation*
-**Powered by Tuya IoT & Eko Agent**
+**Powered by Tuya IoT & Rankify Agent**
 
 <p align="center">
   <img src="https://img.shields.io/badge/🎙️_Voice-Activated-4CAF50?style=for-the-badge&labelColor=1a1a1a" alt="Voice Activated"/>
@@ -74,7 +74,7 @@ Confirmation protocol for<br/>critical actions
 
 | 🌐 **Browser Tasks** | 🏠 **IoT Control** | 💬 **Knowledge Chat** |
 |:---:|:---:|:---:|
-| Web automation via Eko | Smart device commands | Q&A and calculations |
+| Web automation via Rankify Assist | Smart device commands | Q&A and calculations |
 | *"Check my Gmail"* | *"Turn on lights"* | *"What's 2+2?"* |
 | *"Search Wikipedia"* | *"Set AC to 22°C"* | *"Capital of France?"* |
 
@@ -212,7 +212,7 @@ Right-click extension
                              │
                              ▼
         ┌────────────────────────────────────────────────┐
-        │       🌐 CHROME EXTENSION (EKO)                │
+        │       🌐 CHROME EXTENSION (RANKIFY)            │
         │  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
         │  │ Poll DP  │─▶│  Parse   │─▶│ Execute  │    │
         │  │   104    │  │   JSON   │  │ Browser  │    │
@@ -255,14 +255,14 @@ Right-click extension
 
 **AI/ML**
 
-<img src="https://img.shields.io/badge/OpenAI-GPT--4-412991?style=for-the-badge&logo=openai&logoColor=white"/>
+<img src="https://img.shields.io/badge/Provider-API-412991?style=for-the-badge&logo=aimodel&logoColor=white"/>
 
 </td>
 <td align="center" width="20%">
 
 **Automation**
 
-<img src="https://img.shields.io/badge/Eko-Agent-9C27B0?style=for-the-badge&logo=robot&logoColor=white"/>
+<img src="https://img.shields.io/badge/Rankify-Agent-9C27B0?style=for-the-badge&logo=robot&logoColor=white"/>
 
 </td>
 </tr>
@@ -320,7 +320,7 @@ rankify-assist/
 │   ├── options.html
 │   ├── options.js
 │   └── js/
-│       ├── background.js       # Eko agent
+│       ├── background.js       # Rankify agent
 │       └── tuya_integration.js # DP polling
 │
 ├── 📁 firmware/                 🔧 T5-E1 Board Firmware
@@ -408,13 +408,13 @@ See [LICENSE](LICENSE) file for details
 
 <p>
   <img src="https://img.shields.io/badge/Tuya-IoT_Platform-FF6B00?style=for-the-badge&logo=iot&logoColor=white" alt="Tuya"/>
-  <img src="https://img.shields.io/badge/Eko-Browser_Agent-9C27B0?style=for-the-badge&logo=robot&logoColor=white" alt="Eko"/>
+  <img src="https://img.shields.io/badge/Nanobrowser-Browser_Agent-9C27B0?style=for-the-badge&logo=robot&logoColor=white" alt="Nanobrowser"/>
   <img src="https://img.shields.io/badge/TuyaOpen-SDK-00BCD4?style=for-the-badge&logo=c&logoColor=white" alt="TuyaOpen"/>
 </p>
 
 Thanks to:
 - [Tuya IoT Platform](https://platform.tuya.com) - Cloud infrastructure & AI Agent framework
-- [Eko Browser Agent](https://github.com/EkoLabs/eko) - Browser automation engine
+- [Nanobrowser](https://nanobrowser.ai/) - Browser automation engine
 - [TuyaOpen SDK](https://github.com/tuya/tuya-open-sdk-for-device) - Firmware development tools
 
 </div>
