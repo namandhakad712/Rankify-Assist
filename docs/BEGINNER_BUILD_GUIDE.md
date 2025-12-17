@@ -86,12 +86,14 @@ py ..\..\tos.py config choice
 ### Step 8: Compile the Firmware
 This turns our C code into a `.bin` file the chip understands.
 
+# THE "py ..\..\tos.py build" IS ONLY THE COMMAND, ../../ automtically gets path in python.
+
 **Command:**
 ```powershell
 py ..\..\tos.py build
 ```
 *What happens:*
-1.  **Download:** It downloads "Tools" (GCC Compiler) from the internet (~160MB). *Only the first time.*
+1.  **Download:** It downloads "Tools" (GCC Compiler) named "gcc-arm-none-eabi-10.3-2021.10-win32.zip" or better check while in terminal (cancel) in between after seeing name download .zip from the internet (191 MB). *Only the first time.* and place it in the 'TuyaOpen/platform/tools' folder.
 2.  **Unzip:** It extracts the tools.
 3.  **Compile:** It reads `tuya_config.h` (your IDs) and `tuya_main.c` (logic).
 4.  **Link:** It joins them into one file.
@@ -102,6 +104,8 @@ py ..\..\tos.py build
 ---
 
 ## ⚡ PHASE 5: FLASH (Send to Board)
+
+# Better use this website https://tuyaopen.ai/tools/ to flash, check port debug, even auth the firmware.
 
 ### Step 9: Plugin Your Board
 Connect the T5-E1 to your PC using the USB-C cable.
