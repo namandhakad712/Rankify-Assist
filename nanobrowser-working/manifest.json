@@ -38,6 +38,7 @@
       ],
       "all_frames": true,
       "js": [
+        "extensions/llm-optimizer/llm-optimizer.js",
         "extensions/tuya-integration/tuya-controller.js",
         "content/index.iife.js"
       ]
@@ -54,7 +55,9 @@
         "permission/index.html",
         "permission/permission.js",
         "extensions/tuya-integration/tuya-settings.html",
-        "extensions/tuya-integration/tuya-settings.js"
+        "extensions/tuya-integration/tuya-settings.js",
+        "extensions/llm-optimizer/llm-optimizer-settings.html",
+        "extensions/llm-optimizer/llm-optimizer-settings.js"
       ],
       "matches": [
         "*://*/*"
@@ -72,6 +75,12 @@
         "default": "Ctrl+Shift+T"
       },
       "description": "Open Tuya Smart Home Settings"
+    },
+    "open_llm_optimizer": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L"
+      },
+      "description": "Open LLM Optimizer Settings"
     }
   },
   "side_panel": {
