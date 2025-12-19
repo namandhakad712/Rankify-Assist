@@ -6,6 +6,7 @@ import {
   generalSettingsStore,
   llmProviderStore,
   analyticsSettingsStore,
+  chatHistoryStore,
 } from '@extension/storage';
 import { t } from '@extension/i18n';
 import BrowserContext from './browser/context';
@@ -128,7 +129,25 @@ const onTuyaCommand = async (command: string, commandId: string) => {
       logger.warning('[Tuya Bridge] Side Panel did not connect in time, running headless...');
     }
 
-    currentExecutor = await setupExecutor(`tuya_${commandId}`, command, browserContext);
+    const taskId = `tuya_${commandId}`;
+
+    // Ensure session exists for history storage (Required by Executor)
+    try {
+      const session = await chatHistoryStore.getSession(taskId);
+      if (!session) {
+        logger.info('[Tuya Bridge] Creating new session for task:', taskId);
+        await chatHistoryStore.createSession(`Tuya Task: ${command.substring(0, 30)}...`, taskId);
+      }
+    } catch (e) {
+      logger.warning('[Tuya Bridge] Session check failed, trying to create:', e);
+      try {
+        await chatHistoryStore.createSession(`Tuya Task: ${command.substring(0, 30)}...`, taskId);
+      } catch (createErr) {
+        logger.error('[Tuya Bridge] Could not create session:', createErr);
+      }
+    }
+
+    currentExecutor = await setupExecutor(taskId, command, browserContext);
     subscribeToExecutorEvents(currentExecutor);
     const result = await currentExecutor.execute();
     return { success: true, result };

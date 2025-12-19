@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase.js';
+import { withLogging } from '../lib/logging.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -58,3 +59,5 @@ export default async function handler(req, res) {
         timestamp: command.created_at,
     });
 }
+
+export default withLogging(handler);

@@ -1,8 +1,9 @@
 import { supabase } from '../lib/supabase.js';
+import { withLogging } from '../lib/logging.js';
 
 const MCP_API_KEY = process.env.MCP_API_KEY;
 
-export default async function handler(req, res) {
+async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -118,3 +119,5 @@ async function waitForResult(commandId, timeout) {
 
     return null;
 }
+
+export default withLogging(handler);

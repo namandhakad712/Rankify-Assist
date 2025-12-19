@@ -191,6 +191,7 @@ const SidePanel = () => {
           }
           break;
         case Actors.USER:
+          skip = false;
           break;
         case Actors.PLANNER:
           switch (state) {

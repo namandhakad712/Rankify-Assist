@@ -50,7 +50,7 @@ export interface ChatHistoryStorage {
   getSession: (sessionId: string) => Promise<ChatSession | null>;
 
   // Create a new chat session
-  createSession: (title: string) => Promise<ChatSession>;
+  createSession: (title: string, id?: string) => Promise<ChatSession>;
 
   // Update an existing chat session
   updateTitle: (sessionId: string, title: string) => Promise<ChatSessionMetadata>;

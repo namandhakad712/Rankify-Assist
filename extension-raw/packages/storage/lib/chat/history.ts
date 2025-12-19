@@ -97,8 +97,8 @@ export function createChatHistoryStorage(): ChatHistoryStorage {
       };
     },
 
-    createSession: async (title: string): Promise<ChatSession> => {
-      const newSessionId = crypto.randomUUID();
+    createSession: async (title: string, id?: string): Promise<ChatSession> => {
+      const newSessionId = id || crypto.randomUUID();
       const currentTime = getCurrentTimestamp();
       const newSessionMeta: ChatSessionMetadata = {
         id: newSessionId,

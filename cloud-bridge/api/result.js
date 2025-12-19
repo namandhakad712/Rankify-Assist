@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase.js';
+import { withLogging } from '../lib/logging.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -23,7 +24,21 @@ export default async function handler(req, res) {
     console.log(`[Result] Received result for command ${commandId} (Status: ${status})`);
 
     try {
-        // 1. Update command status
+        // 1. Fetch command to get user_id
+        const { data: commandData, error: fetchError } = await supabase
+            .from('commands')
+            .select('user_id')
+            .eq('command_id', commandId)
+            .single();
+
+        if (fetchError || !commandData) {
+            console.error('[Result] Command not found:', commandId);
+            return res.status(404).json({ error: 'Command not found' });
+        }
+
+        const userId = commandData.user_id;
+
+        // 2. Update command status
         const { error: updateError } = await supabase
             .from('commands')
             .update({
@@ -34,17 +49,18 @@ export default async function handler(req, res) {
 
         if (updateError) {
             console.error('[Result] Error updating command status:', updateError);
-            // Don't fail the request, try to insert result anyway
         }
 
-        // 2. Insert result into results table
+        // 3. Insert result into results table
         const { error: insertError } = await supabase
             .from('results')
-            .upsert([ // Using upsert just in case result already exists
+            .upsert([
                 {
                     command_id: commandId,
-                    result: result, // Can be JSON string or text
-                    created_at: new Date().toISOString(),
+                    user_id: userId,        // REQUIRED by schema
+                    result: result,
+                    success: status !== 'failed', // derive success boolean
+                    completed_at: new Date().toISOString(), // Matches schema (created_at doesn't exist)
                 },
             ], { onConflict: 'command_id' });
 
@@ -61,3 +77,5 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
+
+export default withLogging(handler);
