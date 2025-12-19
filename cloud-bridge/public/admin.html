@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,58 +13,127 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
       min-height: 100vh;
       padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(72, 126, 176, 0.3), transparent 50%);
+      animation: float 20s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      50% {
+        transform: translate(30px, -30px);
+      }
+    }
+
+    /* Noise texture */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Glass cards */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     }
 
     .header {
-      background: white;
-      border-radius: 12px;
-      padding: 30px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+      margin-bottom: 40px;
     }
 
     .header h1 {
-      color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 48px;
       margin-bottom: 10px;
     }
 
     .header p {
-      color: #666;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 18px;
     }
 
     .auth-section {
-      background: white;
-      border-radius: 12px;
-      padding: 40px;
       text-align: center;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 60px;
     }
 
-    .google-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: #4285f4;
-      color: white;
-      padding: 12px 24px;
+    .auth-section h2 {
+      color: #fff;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      padding: 12px 32px;
+      border-radius: 12px;
       border: none;
-      border-radius: 6px;
       font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: all 0.3s ease;
     }
 
-    .google-btn:hover {
-      background: #357ae8;
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-danger {
+      background: rgba(255, 68, 68, 0.2);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+      color: #ff4444;
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 68, 68, 0.3);
     }
 
     .dashboard {
@@ -74,87 +144,97 @@
       display: block;
     }
 
-    .card {
-      background: white;
+    .user-info {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 20px;
       border-radius: 12px;
-      padding: 30px;
       margin-bottom: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.9);
     }
 
-    .card h2 {
-      color: #333;
+    .user-info strong {
+      color: #667eea;
+    }
+
+    .section-title {
+      color: #fff;
+      font-size: 24px;
       margin-bottom: 20px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .mcp-list {
+    .mcp-grid {
       display: grid;
-      gap: 15px;
-    }
-
-    .mcp-item {
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
+    }
+
+    .mcp-card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .mcp-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(102, 126, 234, 0.5);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+
+    .mcp-card.enabled {
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    .mcp-header {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
+      margin-bottom: 15px;
     }
 
-    .mcp-item.enabled {
-      border-color: #4caf50;
-      background: #f1f8f4;
+    .mcp-title {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
     }
 
-    .mcp-info h3 {
-      color: #333;
-      margin-bottom: 5px;
+    .mcp-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
     }
 
-    .mcp-info p {
-      color: #666;
+    .badge-enabled {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+
+    .badge-disabled {
+      background: rgba(255, 68, 68, 0.2);
+      color: #ff4444;
+    }
+
+    .mcp-detail {
+      color: rgba(255, 255, 255, 0.6);
       font-size: 14px;
+      margin-bottom: 8px;
     }
 
     .mcp-actions {
       display: flex;
       gap: 10px;
+      margin-top: 15px;
     }
 
-    .btn {
+    .btn-small {
       padding: 8px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
       font-size: 14px;
-      transition: all 0.3s;
-    }
-
-    .btn-primary {
-      background: #667eea;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #5568d3;
-    }
-
-    .btn-danger {
-      background: #f44336;
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background: #da190b;
-    }
-
-    .btn-success {
-      background: #4caf50;
-      color: white;
     }
 
     .modal {
@@ -164,22 +244,31 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.7);
       z-index: 1000;
-    }
-
-    .modal.active {
-      display: flex;
       align-items: center;
       justify-content: center;
     }
 
+    .modal.active {
+      display: flex;
+    }
+
     .modal-content {
-      background: white;
-      border-radius: 12px;
-      padding: 30px;
-      max-width: 500px;
+      background: rgba(15, 12, 41, 0.95);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 600px;
       width: 90%;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    .modal-title {
+      color: #fff;
+      font-size: 24px;
+      margin-bottom: 30px;
     }
 
     .form-group {
@@ -188,18 +277,20 @@
 
     .form-group label {
       display: block;
-      margin-bottom: 5px;
-      color: #333;
-      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 8px;
+      font-size: 14px;
     }
 
     .form-group input,
     .form-group select,
     .form-group textarea {
       width: 100%;
-      padding: 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 6px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #fff;
       font-size: 14px;
     }
 
@@ -208,51 +299,97 @@
     .form-group textarea:focus {
       outline: none;
       border-color: #667eea;
+      background: rgba(255, 255, 255, 0.08);
     }
 
-    .user-info {
-      background: #f5f5f5;
-      padding: 15px;
-      border-radius: 6px;
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 30px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
       margin-bottom: 20px;
+      opacity: 0.5;
     }
 
-    .user-info strong {
-      color: #667eea;
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 36px;
+      }
+
+      .mcp-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        padding: 30px 20px;
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
-      <h1>🤖 Rankify Assist</h1>
-      <p>Manage your MCP server configurations</p>
+      <h1>⚙️ Admin Panel</h1>
+      <p>Manage your MCP configurations</p>
     </div>
 
     <!-- Auth Section -->
-    <div class="auth-section" id="authSection">
-      <h2 style="margin-bottom: 20px;">Sign in to continue</h2>
-      <button class="google-btn" onclick="signInWithGoogle()">
-        <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><g fill="#000" fill-rule="evenodd"><path d="M9 3.48c1.69 0 2.83.73 3.48 1.34l2.54-2.48C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l2.91 2.26C4.6 5.05 6.62 3.48 9 3.48z" fill="#EA4335"/><path d="M17.64 9.2c0-.74-.06-1.28-.19-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2c1.7-1.57 2.68-3.88 2.68-6.62z" fill="#4285F4"/><path d="M3.88 10.78A5.54 5.54 0 0 1 3.58 9c0-.62.11-1.22.29-1.78L.96 4.96A9.008 9.008 0 0 0 0 9c0 1.45.35 2.82.96 4.04l2.92-2.26z" fill="#FBBC05"/><path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.4-1.57-5.12-3.74L.97 13.04C2.45 15.98 5.48 18 9 18z" fill="#34A853"/><path fill="none" d="M0 0h18v18H0z"/></g></svg>
+    <div class="glass-card auth-section" id="authSection">
+      <h2>🔐 Sign in to continue</h2>
+      <button class="btn btn-primary" onclick="signInWithGoogle()">
         Sign in with Google
       </button>
     </div>
 
     <!-- Dashboard -->
     <div class="dashboard" id="dashboard">
-      <div class="card">
+      <!-- User Info -->
+      <div class="glass-card">
         <div class="user-info" id="userInfo"></div>
         <button class="btn btn-danger" onclick="signOut()">Sign Out</button>
       </div>
 
-      <div class="card">
-        <h2>
-          <span>⚙️</span>
-          MCP Server Configurations
-          <button class="btn btn-primary" onclick="showAddMCPModal()" style="margin-left: auto;">+ Add MCP Server</button>
-        </h2>
-        <div class="mcp-list" id="mcpList">
-          <p style="text-align: center; color: #999;">Loading...</p>
+      <!-- MCP Configurations -->
+      <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <h2 class="section-title">
+            <span>🔌</span>
+            MCP Server Configurations
+          </h2>
+          <button class="btn btn-primary" onclick="showAddMCPModal()">+ Add MCP</button>
+        </div>
+
+        <div class="mcp-grid" id="mcpList">
+          <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <p>No MCP servers configured yet</p>
+            <p style="font-size: 14px; margin-top: 10px;">Click "+ Add MCP" to get started</p>
+          </div>
         </div>
       </div>
     </div>
@@ -261,11 +398,11 @@
   <!-- Add/Edit MCP Modal -->
   <div class="modal" id="mcpModal">
     <div class="modal-content">
-      <h2 id="modalTitle">Add MCP Server</h2>
+      <h2 class="modal-title" id="modalTitle">Add MCP Server</h2>
       <form id="mcpForm" onsubmit="saveMCP(event)">
         <div class="form-group">
           <label>Name</label>
-          <input type="text" id="mcpName" required placeholder="e.g., My Browser MCP">
+          <input type="text" id="mcpName" required placeholder="e.g., Browser Automation">
         </div>
         <div class="form-group">
           <label>Type</label>
@@ -276,90 +413,69 @@
         </div>
         <div class="form-group">
           <label>MCP Endpoint</label>
-          <input type="text" id="mcpEndpoint" placeholder="wss://...">
+          <input type="text" id="mcpEndpoint" placeholder="wss://mcp-us.tuya-inc.com:8443">
         </div>
         <div class="form-group">
           <label>Access ID</label>
-          <input type="text" id="mcpAccessId">
+          <input type="text" id="mcpAccessId" placeholder="p17381234567890abc">
         </div>
         <div class="form-group">
           <label>Access Secret</label>
           <input type="password" id="mcpAccessSecret">
         </div>
-        <div class="form-group">
-          <label>Extra Config (JSON)</label>
-          <textarea id="mcpExtraConfig" rows="4" placeholder='{"key": "value"}'></textarea>
-        </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-          <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
           <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     const API_URL = window.location.origin;
     let currentUser = null;
-    let editingConfigId = null;
 
-    // Initialize Google Sign-In
-    function initGoogleSignIn() {
-      google.accounts.id.initialize({
-        client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', // TODO: Replace
-        callback: handleGoogleCallback,
-      });
-    }
+    // Check auth on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('supabase_token');
+      const userEmail = localStorage.getItem('user_email');
+
+      if (token && userEmail) {
+        currentUser = {
+          email: userEmail,
+          userId: localStorage.getItem('user_id'),
+          name: localStorage.getItem('user_name')
+        };
+        showDashboard();
+        loadMCPConfigs();
+      }
+    });
 
     function signInWithGoogle() {
-      google.accounts.id.prompt();
-    }
-
-    async function handleGoogleCallback(response) {
-      try {
-        const res = await fetch(`${API_URL}/api/auth/google`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken: response.credential }),
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          currentUser = data;
-          showDashboard();
-          loadMCPConfigs();
-        }
-      } catch (error) {
-        alert('Login failed: ' + error.message);
-      }
+      window.location.href = '/api/auth/google';
     }
 
     function showDashboard() {
       document.getElementById('authSection').style.display = 'none';
       document.getElementById('dashboard').classList.add('active');
       document.getElementById('userInfo').innerHTML = `
-        <strong>Logged in as:</strong> ${currentUser.email}<br>
-        <strong>User ID:</strong> ${currentUser.userId}
-      `;
+                <strong>Logged in as:</strong> ${currentUser.email}<br>
+                <strong>Name:</strong> ${currentUser.name || 'N/A'}<br>
+                <strong>User ID:</strong> ${currentUser.userId}
+            `;
     }
 
     function signOut() {
-      currentUser = null;
-      document.getElementById('authSection').style.display = 'block';
-      document.getElementById('dashboard').classList.remove('active');
+      localStorage.clear();
+      window.location.reload();
     }
 
     async function loadMCPConfigs() {
-      // TODO: Implement API to get MCP configs
-      document.getElementById('mcpList').innerHTML = `
-        <p style="text-align: center; color: #999;">No MCP servers configured yet.</p>
-      `;
+      // TODO: Implement API to fetch MCP configs
+      // For now showing empty state
     }
 
     function showAddMCPModal() {
-      editingConfigId = null;
       document.getElementById('modalTitle').textContent = 'Add MCP Server';
       document.getElementById('mcpForm').reset();
       document.getElementById('mcpModal').classList.add('active');
@@ -371,25 +487,20 @@
 
     async function saveMCP(event) {
       event.preventDefault();
-      
+
       const config = {
         name: document.getElementById('mcpName').value,
         type: document.getElementById('mcpType').value,
         endpoint: document.getElementById('mcpEndpoint').value,
         access_id: document.getElementById('mcpAccessId').value,
         access_secret: document.getElementById('mcpAccessSecret').value,
-        extra_config: document.getElementById('mcpExtraConfig').value || '{}',
       };
 
       // TODO: Implement API to save MCP config
-      alert('MCP config saved! (API not yet implemented)');
+      alert('MCP configuration saved! (API endpoint needs implementation)');
       closeModal();
     }
-
-    // Initialize on load
-    window.addEventListener('load', () => {
-      initGoogleSignIn();
-    });
   </script>
 </body>
+
 </html>

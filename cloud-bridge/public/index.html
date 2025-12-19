@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             display: flex;
@@ -32,8 +32,7 @@
             height: 200%;
             background:
                 radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(72, 126, 176, 0.3), transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(138, 35, 135, 0.3), transparent 50%);
+                radial-gradient(circle at 80% 80%, rgba(72, 126, 176, 0.3), transparent 50%);
             animation: float 20s ease-in-out infinite;
         }
 
@@ -41,15 +40,11 @@
 
             0%,
             100% {
-                transform: translate(0, 0) rotate(0deg);
+                transform: translate(0, 0);
             }
 
-            33% {
-                transform: translate(30px, -30px) rotate(120deg);
-            }
-
-            66% {
-                transform: translate(-20px, 20px) rotate(240deg);
+            50% {
+                transform: translate(30px, -30px);
             }
         }
 
@@ -61,7 +56,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
             pointer-events: none;
         }
 
@@ -76,67 +71,36 @@
         .glass-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 24px;
-            padding: 60px;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            padding: 50px;
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow:
-                0 8px 32px 0 rgba(31, 38, 135, 0.37),
-                inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Stained glass effect */
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background:
-                linear-gradient(45deg, transparent 30%, rgba(138, 35, 135, 0.1) 50%, transparent 70%),
-                linear-gradient(-45deg, transparent 30%, rgba(72, 126, 176, 0.1) 50%, transparent 70%);
-            animation: shimmer 15s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-
-            0%,
-            100% {
-                transform: translate(0, 0);
-            }
-
-            50% {
-                transform: translate(30px, 30px);
-            }
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
 
         .header {
             text-align: center;
             margin-bottom: 40px;
-            position: relative;
         }
 
         .logo {
-            font-size: 48px;
+            font-size: 56px;
             font-weight: 700;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+            letter-spacing: -1px;
         }
 
         .subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
             font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
-        /* Status indicators */
+        /* Status grid */
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -150,24 +114,12 @@
             padding: 24px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
 
         .status-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 24px rgba(138, 35, 135, 0.3);
-        }
-
-        .status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, #667eea, #764ba2);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
         }
 
         .status-header {
@@ -178,25 +130,25 @@
         }
 
         .status-icon {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             animation: pulse 2s ease-in-out infinite;
         }
 
         .status-icon.online {
             background: #00ff88;
-            box-shadow: 0 0 20px #00ff88;
+            box-shadow: 0 0 16px #00ff88;
         }
 
         .status-icon.offline {
             background: #ff4444;
-            box-shadow: 0 0 20px #ff4444;
+            box-shadow: 0 0 16px #ff4444;
         }
 
         .status-icon.checking {
             background: #ffaa00;
-            box-shadow: 0 0 20px #ffaa00;
+            box-shadow: 0 0 16px #ffaa00;
         }
 
         @keyframes pulse {
@@ -204,33 +156,31 @@
             0%,
             100% {
                 opacity: 1;
-                transform: scale(1);
             }
 
             50% {
-                opacity: 0.6;
-                transform: scale(1.1);
+                opacity: 0.5;
             }
         }
 
         .status-label {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-weight: 600;
         }
 
         .status-value {
             color: #fff;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
-            margin-top: 8px;
+            margin-bottom: 4px;
         }
 
         .status-detail {
             color: rgba(255, 255, 255, 0.4);
-            font-size: 13px;
-            margin-top: 4px;
+            font-size: 12px;
         }
 
         /* Buttons */
@@ -243,10 +193,10 @@
         }
 
         .btn {
-            padding: 16px 32px;
+            padding: 14px 28px;
             border-radius: 12px;
             border: none;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -266,84 +216,19 @@
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:active::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        /* Info section */
-        .info-section {
-            margin-top: 40px;
-            padding-top: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 24px;
-            text-align: center;
-        }
-
-        .info-item {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .info-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .info-label {
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Loading spinner */
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* User profile */
@@ -380,30 +265,77 @@
             margin-left: auto;
             padding: 8px 16px;
             border-radius: 8px;
-            background: rgba(255, 68, 68, 0.2);
+            background: rgba(255, 68, 68, 0.15);
             border: 1px solid rgba(255, 68, 68, 0.3);
-            color: #ff4444;
+            color: #ff6666;
             cursor: pointer;
             font-size: 12px;
             transition: all 0.3s ease;
         }
 
         .logout-btn:hover {
-            background: rgba(255, 68, 68, 0.3);
+            background: rgba(255, 68, 68, 0.25);
+        }
+
+        /* Info section */
+        .info-section {
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+
+        .info-value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .hidden {
             display: none !important;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .glass-card {
-                padding: 30px;
+                padding: 30px 20px;
             }
 
             .logo {
-                font-size: 36px;
+                font-size: 42px;
             }
 
             .status-grid {
@@ -436,13 +368,12 @@
 
             <!-- Header -->
             <div class="header">
-                <h1 class="logo">🚀 Rankify Assist</h1>
-                <p class="subtitle">Cloud Bridge • Voice-Controlled Browser + IoT</p>
+                <h1 class="logo">Rankify Assist</h1>
+                <p class="subtitle">Cloud Bridge</p>
             </div>
 
             <!-- Status Grid -->
             <div class="status-grid">
-                <!-- API Status -->
                 <div class="status-card">
                     <div class="status-header">
                         <span id="apiStatusIcon" class="status-icon checking"></span>
@@ -452,7 +383,6 @@
                     <div id="apiDetail" class="status-detail">Connecting to server</div>
                 </div>
 
-                <!-- Supabase Status -->
                 <div class="status-card">
                     <div class="status-header">
                         <span id="dbStatusIcon" class="status-icon checking"></span>
@@ -462,7 +392,6 @@
                     <div id="dbDetail" class="status-detail">Connecting to Supabase</div>
                 </div>
 
-                <!-- Auth Status -->
                 <div class="status-card">
                     <div class="status-header">
                         <span id="authStatusIcon" class="status-icon offline"></span>
@@ -472,7 +401,6 @@
                     <div id="authDetail" class="status-detail">Sign in to continue</div>
                 </div>
 
-                <!-- Requests -->
                 <div class="status-card">
                     <div class="status-header">
                         <span class="status-icon online"></span>
@@ -499,19 +427,19 @@
             <!-- Info Section -->
             <div class="info-section">
                 <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-value">$0</div>
+                    <div>
+                        <div class="info-value">Free</div>
                         <div class="info-label">Monthly Cost</div>
                     </div>
-                    <div class="info-item">
+                    <div>
                         <div class="info-value">∞</div>
                         <div class="info-label">Scalability</div>
                     </div>
-                    <div class="info-item">
+                    <div>
                         <div class="info-value">100%</div>
                         <div class="info-label">Open Source</div>
                     </div>
-                    <div class="info-item">
+                    <div>
                         <div class="info-value">24/7</div>
                         <div class="info-label">Uptime</div>
                     </div>
@@ -521,25 +449,21 @@
     </div>
 
     <script>
-        // Configuration
-        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // Will be replaced at runtime
-
         // Check status on load
         window.addEventListener('DOMContentLoaded', async () => {
             await checkAPIStatus();
             await checkSupabaseStatus();
             await checkAuth();
-            loadRequestCount();
+            await loadRequestCount();
         });
 
-        // Check API status
         async function checkAPIStatus() {
             try {
                 const response = await fetch('/api/ping');
                 const data = await response.json();
 
                 if (data.status === 'ok') {
-                    updateStatus('api', 'online', 'Online', data.service);
+                    updateStatus('api', 'online', 'Online', data.service || 'Cloud Bridge');
                 } else {
                     updateStatus('api', 'offline', 'Error', 'Service unavailable');
                 }
@@ -548,93 +472,69 @@
             }
         }
 
-        // Check Supabase status
         async function checkSupabaseStatus() {
             try {
                 const response = await fetch('/api/health/supabase');
                 const data = await response.json();
 
                 if (data.connected) {
-                    updateStatus('db', 'online', 'Connected', `Latency: ${data.latency || 'N/A'}ms`);
+                    updateStatus('db', 'online', 'Connected', `${data.latency}ms`);
                 } else {
-                    updateStatus('db', 'offline', 'Disconnected', data.error || 'Connection failed');
+                    updateStatus('db', 'offline', 'Disconnected', data.error || 'Failed');
                 }
             } catch (error) {
                 updateStatus('db', 'offline', 'Offline', error.message);
             }
         }
 
-        // Check authentication
         async function checkAuth() {
-            // Check if user is logged in (from localStorage or cookie)
-            const token = localStorage.getItem('google_token');
+            const token = localStorage.getItem('supabase_token');
             if (token) {
-                try {
-                    const response = await fetch('/api/auth/verify', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const data = await response.json();
+                const email = localStorage.getItem('user_email');
+                const name = localStorage.getItem('user_name');
+                const avatar = localStorage.getItem('user_avatar');
 
-                    if (data.valid) {
-                        showUserProfile(data.user);
-                        updateStatus('auth', 'online', 'Authenticated', data.user.email);
-                    } else {
-                        localStorage.removeItem('google_token');
-                        updateStatus('auth', 'offline', 'Not Signed In', 'Sign in required');
-                    }
-                } catch (error) {
-                    updateStatus('auth', 'offline', 'Not Signed In', 'Click to sign in');
+                if (email) {
+                    showUserProfile({ email, name, avatar });
+                    updateStatus('auth', 'online', 'Authenticated', email);
+                    return;
                 }
-            } else {
-                updateStatus('auth', 'offline', 'Not Signed In', 'Click to sign in');
             }
+            updateStatus('auth', 'offline', 'Not Signed In', 'Click to sign in');
         }
 
-        // Update status UI
         function updateStatus(type, status, value, detail) {
-            const icon = document.getElementById(`${type}StatusIcon`);
-            const valueEl = document.getElementById(`${type}Status`);
-            const detailEl = document.getElementById(`${type}Detail`);
-
-            icon.className = `status-icon ${status}`;
-            valueEl.textContent = value;
-            detailEl.textContent = detail;
+            document.getElementById(`${type}StatusIcon`).className = `status-icon ${status}`;
+            document.getElementById(`${type}Status`).textContent = value;
+            document.getElementById(`${type}Detail`).textContent = detail;
         }
 
-        // Sign in with Google
         function signInWithGoogle() {
             const btn = document.getElementById('signInBtn');
             btn.disabled = true;
             document.getElementById('signInText').innerHTML = '<span class="spinner"></span> Signing in...';
-
-            // Redirect to Google OAuth
-            window.location.href = `/api/auth/google`;
+            window.location.href = '/api/auth/google';
         }
 
-        // Show user profile
         function showUserProfile(user) {
             document.getElementById('userProfile').classList.remove('hidden');
-            document.getElementById('userAvatar').src = user.avatar || 'https://via.placeholder.com/40';
+            document.getElementById('userAvatar').src = user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || user.email);
             document.getElementById('userName').textContent = user.name || 'User';
             document.getElementById('userEmail').textContent = user.email || '';
-
             document.getElementById('signInBtn').classList.add('hidden');
         }
 
-        // Logout
         function logout() {
-            localStorage.removeItem('google_token');
+            localStorage.clear();
             window.location.reload();
         }
 
-        // Test connection
         async function testConnection() {
             await checkAPIStatus();
             await checkSupabaseStatus();
-            alert('Connection test complete! Check status indicators above.');
+            alert('✅ Connection test complete!\nCheck status indicators above.');
         }
 
-        // Load request count (from Supabase logs)
         async function loadRequestCount() {
             try {
                 const response = await fetch('/api/stats/requests');
@@ -649,7 +549,7 @@
         setInterval(async () => {
             await checkAPIStatus();
             await checkSupabaseStatus();
-            loadRequestCount();
+            await loadRequestCount();
         }, 30000);
     </script>
 </body>
