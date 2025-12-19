@@ -109,24 +109,7 @@ pip install -r requirements.txt
 
    Save to: `c:\TUYA\RankifyAssist\mcp-servers\device-controller\.env`
 
-### **Step 3: Get Tuya API Credentials**
-
-1. Go to: https://iot.tuya.com/
-2. Navigate to: **Cloud → Your Projects → [Your Project]**
-3. Go to: **Overview** tab
-4. Copy:
-   - **Client ID:** `aaaaaaaaaa`
-   - **Client Secret:** `bbbbbbbbbb`
-
-5. Go to: **Devices** tab
-6. Copy device IDs for your devices
-
-7. Generate Access Token:
-   - Go to: **API** tab
-   - Click: **Generate Token**
-   - Copy: **Access Token**
-
-### **Step 4: Create Device Controller Code**
+### **Step 3: Create Device Controller Code**
 
 Create: `c:\TUYA\RankifyAssist\mcp-servers\device-controller\server.py`
 
@@ -146,11 +129,6 @@ load_dotenv()
 MCP_ENDPOINT = os.getenv('MCP_ENDPOINT')
 MCP_ACCESS_ID = os.getenv('MCP_ACCESS_ID')
 MCP_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
-
-# Tuya API Configuration
-TUYA_CLIENT_ID = os.getenv('TUYA_CLIENT_ID')
-TUYA_CLIENT_SECRET = os.getenv('TUYA_CLIENT_SECRET')
-TUYA_API_URL = os.getenv('TUYA_API_URL', 'https://openapi.tuyain.com')  # India
 
 class TuyaDeviceController:
     def __init__(self):

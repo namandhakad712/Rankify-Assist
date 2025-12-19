@@ -1,9 +1,9 @@
-# Tuya MCP SDK (install from GitHub)
-# Installation:
-# git clone https://github.com/tuya/tuya-mcp-sdk.git
-# cd tuya-mcp-sdk/mcp-python
-# pip install -e .
+# Tuya MCP SDK
+# Install from: git clone https://github.com/tuya/tuya-mcp-sdk.git
+# Then: cd tuya-mcp-sdk/mcp-python && pip install -e .
 
-# Additional dependencies
-python-dotenv==1.0.0
-requests==2.31.0
+# MCP Library (for local tools server)
+mcp>=1.0.0
+
+# Other dependencies
+python-dotenv>=1.0.0
