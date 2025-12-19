@@ -8,246 +8,263 @@ import { useState, useEffect } from 'react';
 import { testBridgeConnection, getBridgeStatus, startBridgePolling, stopBridgePolling, pauseBridgePolling, resumeBridgePolling } from '@extension/chrome-extension/src/background/services/tuyaBridge';
 
 export default function TuyaBridgeSettings() {
-    const [status, setStatus] = useState({
+  const [status, setStatus] = useState({
+    connected: false,
+    message: 'Testing connection...',
+    isPolling: false,
+    isPaused: false,
+    bridgeUrl: 'http://localhost:3000',
+    pollInterval: 2000,
+  });
+
+  const [testing, setTesting] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+
+  // Check connection on mount
+  useEffect(() => {
+    checkConnection();
+
+    // Auto-refresh status every 5 seconds
+    const interval = setInterval(refreshStatus, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkConnection = async () => {
+    setTesting(true);
+    try {
+      const result = await testBridgeConnection();
+      const bridgeStatus = getBridgeStatus();
+
+      setStatus({
+        ...bridgeStatus,
+        connected: result.connected,
+        message: result.message,
+      });
+
+      setLastChecked(new Date());
+    } catch (error) {
+      setStatus(prev => ({
+        ...prev,
         connected: false,
-        message: 'Testing connection...',
-        isPolling: false,
-        isPaused: false,
-        bridgeUrl: 'http://localhost:3000',
-        pollInterval: 2000,
-    });
+        message: `Error: ${(error as Error).message}`,
+      }));
+    } finally {
+      setTesting(false);
+    }
+  };
 
-    const [testing, setTesting] = useState(false);
-    const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const refreshStatus = () => {
+    const bridgeStatus = getBridgeStatus();
+    setStatus(prev => ({
+      ...prev,
+      ...bridgeStatus,
+    }));
+  };
 
-    // Check connection on mount
-    useEffect(() => {
-        checkConnection();
+  const handleStartPolling = () => {
+    startBridgePolling();
+    setTimeout(refreshStatus, 100);
+  };
 
-        // Auto-refresh status every 5 seconds
-        const interval = setInterval(refreshStatus, 5000);
+  const handleStopPolling = () => {
+    stopBridgePolling();
+    setTimeout(refreshStatus, 100);
+  };
 
-        return () => clearInterval(interval);
-    }, []);
+  const handlePausePolling = () => {
+    pauseBridgePolling();
+    setTimeout(refreshStatus, 100);
+  };
 
-    const checkConnection = async () => {
-        setTesting(true);
-        try {
-            const result = await testBridgeConnection();
-            const bridgeStatus = getBridgeStatus();
+  const handleResumePolling = () => {
+    resumeBridgePolling();
+    setTimeout(refreshStatus, 100);
+  };
 
-            setStatus({
-                ...bridgeStatus,
-                connected: result.connected,
-                message: result.message,
-            });
+  return (
+    <div className="tuya-bridge-settings">
+      <h2>🌉 Tuya AI Bridge Connection</h2>
 
-            setLastChecked(new Date());
-        } catch (error) {
-            setStatus(prev => ({
-                ...prev,
-                connected: false,
-                message: `Error: ${(error as Error).message}`,
-            }));
-        } finally {
-            setTesting(false);
-        }
-    };
+      <div className="bridge-info">
+        <p>
+          The Tuya AI Bridge connects this extension to your Tuya AI Workflow,
+          enabling voice-controlled browser automation via the SmartLife app.
+        </p>
+      </div>
 
-    const refreshStatus = () => {
-        const bridgeStatus = getBridgeStatus();
-        setStatus(prev => ({
-            ...prev,
-            ...bridgeStatus,
-        }));
-    };
+      {/* Connection Status */}
+      <div className={`status-card ${status.connected ? 'connected' : 'disconnected'}`}>
+        <div className="status-header">
+          <span className={`status-indicator ${status.connected ? 'green' : 'red'}`}>
+            {status.connected ? '✓' : '✗'}
+          </span>
+          <h3>{status.connected ? 'Connected' : 'Disconnected'}</h3>
+        </div>
 
-    const handleStartPolling = () => {
-        startBridgePolling();
-        setTimeout(refreshStatus, 100);
-    };
+        <div className="status-details">
+          <div className="status-row">
+            <strong>Status:</strong>
+            <span>{status.message}</span>
+          </div>
 
-    const handleStopPolling = () => {
-        stopBridgePolling();
-        setTimeout(refreshStatus, 100);
-    };
+          <div className="status-row">
+            <strong>Bridge URL:</strong>
+            <input
+              type="url"
+              className="bridge-url-input"
+              value={status.bridgeUrl}
+              onChange={(e) => {
+                setStatus(prev => ({ ...prev, bridgeUrl: e.target.value }));
+              }}
+              onBlur={async () => {
+                // Save to storage when user finishes editing
+                await chrome.storage.local.set({ cloudBridgeUrl: status.bridgeUrl });
+                // Update in background service
+                chrome.runtime.sendMessage({
+                  type: 'update_bridge_url',
+                  url: status.bridgeUrl
+                });
+              }}
+              placeholder="https://your-project.vercel.app"
+            />
+          </div>
 
-    const handlePausePolling = () => {
-        pauseBridgePolling();
-        setTimeout(refreshStatus, 100);
-    };
+          <div className="status-row">
+            <strong>Polling:</strong>
+            <span className={status.isPolling ? 'text-success' : 'text-muted'}>
+              {status.isPolling ? (status.isPaused ? '⏸ Paused' : '▶ Active') : '⏹ Stopped'}
+            </span>
+          </div>
 
-    const handleResumePolling = () => {
-        resumeBridgePolling();
-        setTimeout(refreshStatus, 100);
-    };
+          <div className="status-row">
+            <strong>Poll Interval:</strong>
+            <span>{status.pollInterval}ms</span>
+          </div>
 
-    return (
-        <div className="tuya-bridge-settings">
-            <h2>🌉 Tuya AI Bridge Connection</h2>
-
-            <div className="bridge-info">
-                <p>
-                    The Tuya AI Bridge connects this extension to your Tuya AI Workflow,
-                    enabling voice-controlled browser automation via the SmartLife app.
-                </p>
+          {lastChecked && (
+            <div className="status-row">
+              <strong>Last Checked:</strong>
+              <span>{lastChecked.toLocaleTimeString()}</span>
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Connection Status */}
-            <div className={`status-card ${status.connected ? 'connected' : 'disconnected'}`}>
-                <div className="status-header">
-                    <span className={`status-indicator ${status.connected ? 'green' : 'red'}`}>
-                        {status.connected ? '✓' : '✗'}
-                    </span>
-                    <h3>{status.connected ? 'Connected' : 'Disconnected'}</h3>
-                </div>
+      {/* Control Buttons */}
+      <div className="bridge-controls">
+        <button
+          onClick={checkConnection}
+          disabled={testing}
+          className="btn btn-primary"
+        >
+          {testing ? 'Testing...' : '🔄 Test Connection'}
+        </button>
 
-                <div className="status-details">
-                    <div className="status-row">
-                        <strong>Status:</strong>
-                        <span>{status.message}</span>
-                    </div>
+        {!status.isPolling ? (
+          <button
+            onClick={handleStartPolling}
+            className="btn btn-success"
+          >
+            ▶ Start Polling
+          </button>
+        ) : (
+          <button
+            onClick={handleStopPolling}
+            className="btn btn-danger"
+          >
+            ⏹ Stop Polling
+          </button>
+        )}
 
-                    <div className="status-row">
-                        <strong>Bridge URL:</strong>
-                        <code>{status.bridgeUrl}</code>
-                    </div>
+        {status.isPolling && !status.isPaused && (
+          <button
+            onClick={handlePausePolling}
+            className="btn btn-warning"
+          >
+            ⏸ Pause
+          </button>
+        )}
 
-                    <div className="status-row">
-                        <strong>Polling:</strong>
-                        <span className={status.isPolling ? 'text-success' : 'text-muted'}>
-                            {status.isPolling ? (status.isPaused ? '⏸ Paused' : '▶ Active') : '⏹ Stopped'}
-                        </span>
-                    </div>
+        {status.isPolling && status.isPaused && (
+          <button
+            onClick={handleResumePolling}
+            className="btn btn-success"
+          >
+            ▶ Resume
+          </button>
+        )}
+      </div>
 
-                    <div className="status-row">
-                        <strong>Poll Interval:</strong>
-                        <span>{status.pollInterval}ms</span>
-                    </div>
+      {/* Setup Instructions */}
+      {!status.connected && (
+        <div className="setup-instructions">
+          <h4>📋 Setup Instructions</h4>
+          <ol>
+            <li>
+              <strong>Install bridge server:</strong>
+              <pre>cd c:\TUYA\RankifyAssist\bridge-server{'\n'}node server.js</pre>
+            </li>
+            <li>
+              <strong>Start ngrok (optional, for Tuya MCP):</strong>
+              <pre>ngrok http 3000</pre>
+            </li>
+            <li>
+              Click "Test Connection" above
+            </li>
+            <li>
+              If connected, click "Start Polling"
+            </li>
+          </ol>
 
-                    {lastChecked && (
-                        <div className="status-row">
-                            <strong>Last Checked:</strong>
-                            <span>{lastChecked.toLocaleTimeString()}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
+          <p>
+            <strong>Note:</strong> Bridge server is optional. Extension works normally without it.
+            It's only needed for Tuya AI Workflow integration.
+          </p>
+        </div>
+      )}
 
-            {/* Control Buttons */}
-            <div className="bridge-controls">
-                <button
-                    onClick={checkConnection}
-                    disabled={testing}
-                    className="btn btn-primary"
-                >
-                    {testing ? 'Testing...' : '🔄 Test Connection'}
-                </button>
+      {/* Connection Success */}
+      {status.connected && status.isPolling && (
+        <div className="success-message">
+          <h4>✅ Ready for Tuya AI Commands</h4>
+          <p>
+            Your extension is now listening for commands from Tuya AI Workflow.
+            Try saying "check my gmail" in the SmartLife app!
+          </p>
+        </div>
+      )}
 
-                {!status.isPolling ? (
-                    <button
-                        onClick={handleStartPolling}
-                        className="btn btn-success"
-                    >
-                        ▶ Start Polling
-                    </button>
-                ) : (
-                    <button
-                        onClick={handleStopPolling}
-                        className="btn btn-danger"
-                    >
-                        ⏹ Stop Polling
-                    </button>
-                )}
+      {/* Troubleshooting */}
+      <details className="troubleshooting">
+        <summary>🔧 Troubleshooting</summary>
 
-                {status.isPolling && !status.isPaused && (
-                    <button
-                        onClick={handlePausePolling}
-                        className="btn btn-warning"
-                    >
-                        ⏸ Pause
-                    </button>
-                )}
+        <div className="troubleshooting-content">
+          <h5>Bridge server not starting?</h5>
+          <ul>
+            <li>Check Node.js installed: <code>node --version</code></li>
+            <li>Install dependencies: <code>npm install</code></li>
+            <li>Check port 3000 not in use: <code>netstat -ano | findstr :3000</code></li>
+          </ul>
 
-                {status.isPolling && status.isPaused && (
-                    <button
-                        onClick={handleResumePolling}
-                        className="btn btn-success"
-                    >
-                        ▶ Resume
-                    </button>
-                )}
-            </div>
+          <h5>Connection test fails?</h5>
+          <ul>
+            <li>Verify bridge server running at http://localhost:3000/health</li>
+            <li>Check Windows Firewall settings</li>
+            <li>Try different port (edit tuyaBridge.ts)</li>
+          </ul>
 
-            {/* Setup Instructions */}
-            {!status.connected && (
-                <div className="setup-instructions">
-                    <h4>📋 Setup Instructions</h4>
-                    <ol>
-                        <li>
-                            <strong>Install bridge server:</strong>
-                            <pre>cd c:\TUYA\RankifyAssist\bridge-server{'\n'}node server.js</pre>
-                        </li>
-                        <li>
-                            <strong>Start ngrok (optional, for Tuya MCP):</strong>
-                            <pre>ngrok http 3000</pre>
-                        </li>
-                        <li>
-                            Click "Test Connection" above
-                        </li>
-                        <li>
-                            If connected, click "Start Polling"
-                        </li>
-                    </ol>
+          <h5>Commands not executing?</h5>
+          <ul>
+            <li>Check polling is active (not paused)</li>
+            <li>Verify MCP server running</li>
+            <li>Check ngrok tunnel active</li>
+            <li>Look at console logs for errors</li>
+          </ul>
+        </div>
+      </details>
 
-                    <p>
-                        <strong>Note:</strong> Bridge server is optional. Extension works normally without it.
-                        It's only needed for Tuya AI Workflow integration.
-                    </p>
-                </div>
-            )}
-
-            {/* Connection Success */}
-            {status.connected && status.isPolling && (
-                <div className="success-message">
-                    <h4>✅ Ready for Tuya AI Commands</h4>
-                    <p>
-                        Your extension is now listening for commands from Tuya AI Workflow.
-                        Try saying "check my gmail" in the SmartLife app!
-                    </p>
-                </div>
-            )}
-
-            {/* Troubleshooting */}
-            <details className="troubleshooting">
-                <summary>🔧 Troubleshooting</summary>
-
-                <div className="troubleshooting-content">
-                    <h5>Bridge server not starting?</h5>
-                    <ul>
-                        <li>Check Node.js installed: <code>node --version</code></li>
-                        <li>Install dependencies: <code>npm install</code></li>
-                        <li>Check port 3000 not in use: <code>netstat -ano | findstr :3000</code></li>
-                    </ul>
-
-                    <h5>Connection test fails?</h5>
-                    <ul>
-                        <li>Verify bridge server running at http://localhost:3000/health</li>
-                        <li>Check Windows Firewall settings</li>
-                        <li>Try different port (edit tuyaBridge.ts)</li>
-                    </ul>
-
-                    <h5>Commands not executing?</h5>
-                    <ul>
-                        <li>Check polling is active (not paused)</li>
-                        <li>Verify MCP server running</li>
-                        <li>Check ngrok tunnel active</li>
-                        <li>Look at console logs for errors</li>
-                    </ul>
-                </div>
-            </details>
-
-            <style>{`
+      <style>{`
         .tuya-bridge-settings {
           padding: 20px;
           max-width: 800px;
@@ -316,6 +333,29 @@ export default function TuyaBridgeSettings() {
 
         .status-row strong {
           min-width: 120px;
+        }
+
+        .bridge-url-input {
+          flex: 1;
+          padding: 8px 12px;
+          border: 2px solid #ddd;
+          border-radius: 4px;
+          font-size: 13px;
+          font-family: 'Courier New', monospace;
+          transition: border-color 0.2s;
+        }
+
+        .bridge-url-input:focus {
+          outline: none;
+          border-color: #2196f3;
+        }
+
+        .bridge-url-input:valid {
+          border-color: #4caf50;
+        }
+
+        .bridge-url-input:invalid {
+          border-color: #f44336;
         }
 
         .bridge-controls {
@@ -429,6 +469,6 @@ export default function TuyaBridgeSettings() {
           font-size: 12px;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

@@ -9,7 +9,7 @@
  */
 
 // Cloud bridge configuration - loaded from storage
-let CLOUD_BRIDGE_URL = 'https://tuya-cloud-bridge.vercel.app'; // Default, can be customized
+let CLOUD_BRIDGE_URL = 'https://your-cloud-bridge-server.vercel.app'; // Default, can be customized
 const POLL_INTERVAL = 3000; // 3 seconds
 
 // Authentication credentials - loaded from storage
@@ -21,6 +21,27 @@ let credentials = {
 // State
 let isPolling = false;
 let isPaused = false;
+
+// Load configuration from storage on startup
+async function loadConfig() {
+    const result = await chrome.storage.local.get(['cloudBridgeUrl']);
+    if (result.cloudBridgeUrl) {
+        CLOUD_BRIDGE_URL = result.cloudBridgeUrl;
+        console.log('[Tuya Bridge] Loaded bridge URL:', CLOUD_BRIDGE_URL);
+    }
+}
+
+// Initialize config
+loadConfig();
+
+// Listen for URL updates from options page
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'update_bridge_url') {
+        CLOUD_BRIDGE_URL = message.url;
+        console.log('[Tuya Bridge] Updated bridge URL:', CLOUD_BRIDGE_URL);
+        sendResponse({ success: true });
+    }
+});
 
 /**
  * Sleep helper
