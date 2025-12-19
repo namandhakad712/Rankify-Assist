@@ -280,11 +280,13 @@ chrome.runtime.onConnect.addListener(port => {
     const senderUrl = port.sender?.url;
     const senderId = port.sender?.id;
 
-    if (!senderUrl || senderId !== chrome.runtime.id || senderUrl !== SIDE_PANEL_URL) {
+    if (!senderUrl || senderId !== chrome.runtime.id || !senderUrl.startsWith(SIDE_PANEL_URL)) {
       logger.warning('Blocked unauthorized side-panel-connection', senderId, senderUrl);
       port.disconnect();
       return;
     }
+
+    logger.info('Accepted side-panel-connection from', senderUrl);
 
     currentPort = port;
 
