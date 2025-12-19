@@ -43,6 +43,10 @@ logs/
 # Tuya specific
 tuya_config.h.backup
 
+#MINE FILES 
 
 HACKATHON_SUBMISSION
 docs/HARDWARE_ARRIVAL_GUIDE.md
+flash_firmware.bat
+monitor.bat
+

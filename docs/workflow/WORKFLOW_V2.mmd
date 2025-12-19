@@ -1,0 +1,62 @@
+flowchart TD
+    Start["START node"]
+    
+    MemLoad["Node: Event Memory<br/>Location: Knowledge base & Data<br/>━━━━━━━━━━━━━━<br/>Input query = conversation_context<br/>Output data = string"]
+    
+    Intent["Node: Intent Recognition<br/>Location: Service logic<br/>━━━━━━━━━━━━━━<br/>Model: Gemini 2.5 Flash<br/>Input query = ${USER_TEXT}<br/>Output classificationId = int<br/>Intents: 0,1,2"]
+    
+    BrowserPlan["Node: Large Model<br/>Location: Recommend<br/>━━━━━━━━━━━━━━<br/>Model: Gemini 2.0 Flash<br/>Input: input=${USER_TEXT}<br/>NO Toolset<br/>Output: browser_plan"]
+    
+    AskConfirm["Node: Output<br/>Location: Input & Output<br/>━━━━━━━━━━━━━━<br/>Variable: output<br/>Content: I plan to {{browser_plan}}. Proceed?"]
+    
+    Selector["Node: selector<br/>Location: Service logic<br/>━━━━━━━━━━━━━━<br/>Condition 1: if yes → Executor<br/>Default: → Cancelled"]
+    
+    BrowserExec["Node: Large Model<br/>Location: Recommend<br/>━━━━━━━━━━━━━━<br/>Model: Gemini 2.0 Flash<br/>Input: plan=${browser_plan}<br/>Toolset: MCP Browser Automation<br/>Output: output"]
+    
+    Cancelled["Node: Output<br/>Location: Input & Output<br/>━━━━━━━━━━━━━━<br/>Variable: output<br/>Content: Cancelled"]
+    
+    IoTExec["Node: Large Model<br/>Location: Recommend<br/>━━━━━━━━━━━━━━<br/>Model: Gemini 2.0 Flash<br/>Input: input=${USER_TEXT}<br/>Toolset: MCP Device Controller<br/>Output: output"]
+    
+    ChatLLM["Node: Large Model<br/>Location: Recommend<br/>━━━━━━━━━━━━━━<br/>Model: Gemini 2.0 Flash<br/>Input: input=${USER_TEXT}, context=${data}<br/>NO Toolset<br/>Output: output"]
+    
+    Fallback["Node: Output<br/>Location: Input & Output<br/>━━━━━━━━━━━━━━<br/>Variable: output<br/>Content: Help message"]
+    
+    MemSave["Node: Event Memory<br/>Location: Knowledge base & Data<br/>━━━━━━━━━━━━━━<br/>Input query = conversation<br/>Output data = string"]
+    
+    End["END node"]
+    
+    Start --> MemLoad
+    MemLoad --> Intent
+    
+    Intent -->|0| BrowserPlan
+    Intent -->|1| IoTExec
+    Intent -->|2| ChatLLM
+    Intent -->|-1| Fallback
+    
+    BrowserPlan --> AskConfirm
+    AskConfirm --> Selector
+    
+    Selector -->|yes| BrowserExec
+    Selector -->|no| Cancelled
+    
+    BrowserExec --> MemSave
+    Cancelled --> MemSave
+    IoTExec --> MemSave
+    ChatLLM --> MemSave
+    Fallback --> MemSave
+    
+    MemSave --> End
+    
+    classDef startEnd fill:#1a237e,color:#fff
+    classDef memory fill:#0277bd,color:#fff
+    classDef intent fill:#e65100,color:#fff
+    classDef llm fill:#6a1b9a,color:#fff
+    classDef output fill:#c62828,color:#fff
+    classDef selector fill:#ffa000,color:#000
+    
+    class Start,End startEnd
+    class MemLoad,MemSave memory
+    class Intent intent
+    class BrowserPlan,BrowserExec,IoTExec,ChatLLM llm
+    class Cancelled,Fallback,AskConfirm output
+    class Selector selector

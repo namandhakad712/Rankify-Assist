@@ -1,7 +1,7 @@
 # Firmware Implementation Guide
 ## AI Agent API Integration for T5-E1
 
-> **Note:** Full firmware code requires T5-E1 hardware to test. This guide provides the implementation pattern for when your board arrives.
+> **Note:** Full firmware code requires T5-AI hardware to test. This guide provides the implementation pattern for when your board arrives.
 
 ---
 

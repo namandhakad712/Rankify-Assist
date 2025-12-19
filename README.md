@@ -1,453 +1,326 @@
-<div align="center">
+# 🤖 Rankify Assist - Voice-Controlled AI Assistant
 
-# 🎯 Rankify Assist
+**Voice-controlled browser automation + smart home control with safety confirmation!**
 
-<img src="logo.png" alt="Rankify Assist Logo" />
-
-### *Voice-Controlled AI Browser Automation*
-**Powered by Tuya IoT & Rankify Agent**
-
-<p align="center">
-  <img src="https://img.shields.io/badge/🎙️_Voice-Activated-4CAF50?style=for-the-badge&labelColor=1a1a1a" alt="Voice Activated"/>
-  <img src="https://img.shields.io/badge/🤖_AI-Powered-2196F3?style=for-the-badge&labelColor=1a1a1a" alt="AI Powered"/>
-  <img src="https://img.shields.io/badge/🌐_Browser-Automation-FF9800?style=for-the-badge&labelColor=1a1a1a" alt="Browser Automation"/>
-</p>
-
-<p align="center">
-  <a href="#-features"><img src="https://img.shields.io/badge/Features-✨-9C27B0?style=flat-square" alt="Features"/></a>
-  <a href="#-quick-start"><img src="https://img.shields.io/badge/Quick_Start-🚀-00BCD4?style=flat-square" alt="Quick Start"/></a>
-  <a href="#-architecture"><img src="https://img.shields.io/badge/Architecture-🏗️-FF5722?style=flat-square" alt="Architecture"/></a>
-  <a href="#-documentation"><img src="https://img.shields.io/badge/Docs-📚-673AB7?style=flat-square" alt="Documentation"/></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome"/>
-  <img src="https://img.shields.io/badge/Tuya-IoT_Platform-FF6B00?style=flat-square&logo=smart-home&logoColor=white" alt="Tuya"/>
-  <img src="https://img.shields.io/badge/Hardware-T5--E1-E91E63?style=flat-square&logo=raspberry-pi&logoColor=white" alt="T5-E1"/>
-  <img src="https://img.shields.io/badge/License-MIT-03A9F4?style=flat-square" alt="MIT License"/>
-</p>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-### 💬 *"Check my Gmail"* → 🤖 AI Classification → ✅ Safety Check → 🌐 Browser Opens → 📧 *"You have 3 unread emails"*
+## 🌟 Features
 
-</div>
+✅ **Voice-Controlled Browser Automation** - with safety confirmation before execution  
+✅ **Smart Home Control** - direct IoT device control via Tuya  
+✅ **Conversational AI** - chat with memory and context  
+✅ **Multi-User Support** - Google OAuth authentication  
+✅ **Always-On Cloud** - FREE tier deployment  
+✅ **100% Open Source** - all code included
 
-<br/>
+---
 
-## ✨ Features
+## 🎯 What Can It Do?
 
-<table>
-<tr>
-<td width="33%" align="center">
+### 🌐 Browser Tasks (With Safety Confirmation):
+- **"Check my Gmail"** → Asks permission → Opens browser → "You have 5 unread emails"
+- **"Search for AI news"** → Asks permission → Opens Google → Searches
+- **"Open YouTube"** → Asks permission → Navigates to YouTube
+- **User must approve before ANY browser action!** 🔒
 
-### 🎙️ **Voice-First**
-Natural language commands via<br/>Tuya T5-E1 AI Core
+### 🏠 Smart Home (Direct Execution):
+- **"Turn on living room light"** → Executes immediately
+- **"Set AC to 22 degrees"** → Adjusts temperature
+- **"Lock the front door"** → Activates lock
+- **"What's the status of my devices?"** → Reports device states
 
-<img src="https://img.shields.io/badge/STT-Speech_to_Text-4CAF50?style=for-the-badge&logo=google-assistant&logoColor=white"/>
+### 💬 General Chat:
+- **"What is 2+2?"** → "4"
+- **"Tell me a joke"** → Responds with humor
+- **Remembers conversation context!**
 
-</td>
-<td width="33%" align="center">
-
-### 🧠 **AI-Powered**
-Smart intent classification<br/>Browser • IoT • Chat
-
-<img src="https://img.shields.io/badge/LLM-GPT_•_Claude-2196F3?style=for-the-badge&logo=openai&logoColor=white"/>
-
-</td>
-<td width="33%" align="center">
-
-### 🛡️ **Safety First**
-Confirmation protocol for<br/>critical actions
-
-<img src="https://img.shields.io/badge/TTS-Text_to_Speech-FF9800?style=for-the-badge&logo=google-home&logoColor=white"/>
-
-</td>
-</tr>
-</table>
-
-<br/>
-
-## 🎯 Multi-Intent Processing
-
-<div align="center">
-
-| 🌐 **Browser Tasks** | 🏠 **IoT Control** | 💬 **Knowledge Chat** |
-|:---:|:---:|:---:|
-| Web automation via Rankify Assist | Smart device commands | Q&A and calculations |
-| *"Check my Gmail"* | *"Turn on lights"* | *"What's 2+2?"* |
-| *"Search Wikipedia"* | *"Set AC to 22°C"* | *"Capital of France?"* |
-
-</div>
-
-<br/>
-
-## 🔄 5-Phase Workflow
-
-<div align="center">
-
-```
-┌─────────────┐      ┌─────────────┐      ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
-│  🎙️ PHASE 1 │ ───▶ │  🤖 PHASE 2 │ ───▶ │  ✅ PHASE 3 │ ───▶ │  ⚡ PHASE 4 │ ───▶ │  🔊 PHASE 5 │
-│             │      │             │      │             │      │             │      │             │
-│    Voice    │      │     AI      │      │   Safety    │      │  Execute    │      │     TTS     │
-│    Input    │      │  Classify   │      │    Check    │      │   Action    │      │  Feedback   │
-└─────────────┘      └─────────────┘      └─────────────┘      └─────────────┘      └─────────────┘
-  T5-E1 Board       Tuya Workflow        Confirmation         Browser/IoT         Spoken Result
-```
-
-</div>
-
-<details>
-<summary><b>📊 Detailed Phase Breakdown</b></summary>
-
-| Phase | Component | Input | Output | Duration |
-|:---:|-----------|-------|--------|----------|
-| **1️⃣** | T5-E1 Board | Voice audio | Text command | ~1s |
-| **2️⃣** | Tuya Workflow | Text | Intent + Plan | ~2s |
-| **3️⃣** | T5-E1 + User | Plan | Confirmation | ~3-5s |
-| **4️⃣** | Extension/IoT | Command | Result | ~2-10s |
-| **5️⃣** | T5-E1 Board | Result text | Voice output | ~1s |
-
-</details>
-
-<br/>
-
-## 🚀 Quick Start
-
-<div align="center">
-
-### 📦 Installation in 3 Steps
-
-</div>
-
-<table>
-<tr>
-<td width="33%" align="center" valign="top">
-
-#### 1️⃣ Clone Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/rankify-assist.git
-cd rankify-assist
-```
-
-</td>
-<td width="33%" align="center" valign="top">
-
-#### 2️⃣ Load Extension
-
-```bash
-chrome://extensions/
-→ Developer mode: ON
-→ Load unpacked
-→ Select: extension-ready/
-```
-
-</td>
-<td width="33%" align="center" valign="top">
-
-#### 3️⃣ Configure
-
-```bash
-Right-click extension
-→ Options
-→ Enter credentials
-→ Save
-```
-
-</td>
-</tr>
-</table>
-
-<div align="center">
-
-### 🔑 Required Credentials
-
-| Service | Required | Get From |
-|---------|----------|----------|
-| **Tuya Cloud** | Access ID + Secret | [Tuya Console](https://platform.tuya.com) |
-| **LLM Provider** | API Key | OpenAI / Anthropic / Cerebras |
-| **T5-E1 Device** | Device ID | Tuya Smart App (after pairing) |
-
-</div>
-
-<br/>
+---
 
 ## 🏗️ Architecture
 
-<div align="center">
-
-### 🔗 Component Flow
-
-</div>
-
 ```
-                    ┌─────────────────────────────────┐
-                    │     👤 USER SPEAKS              │
-                    │   "Check my Gmail"              │
-                    └────────────┬────────────────────┘
-                                 │
-                                 ▼
-        ┌────────────────────────────────────────────────┐
-        │         🎙️ T5-E1 AI CORE BOARD                │
-        │  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-        │  │  Voice   │─▶│ Cloud    │─▶│   TTS    │    │
-        │  │ Capture  │  │   STT    │  │ Playback │    │
-        │  └──────────┘  └──────────┘  └──────────┘    │
-        └────────────────────┬───────────────────────────┘
-                             │
-                             ▼
-        ┌────────────────────────────────────────────────┐
-        │         ☁️ TUYA CLOUD PLATFORM                 │
-        │  ┌─────────────────────────────────────┐      │
-        │  │  🔄 VISUAL WORKFLOW                  │      │
-        │  │                                      │      │
-        │  │  Intent Recognition                  │      │
-        │  │     ├─▶ 🌐 Browser → LLM → DP 104   │      │
-        │  │     ├─▶ 🏠 IoT     → Agent → CMD    │      │
-        │  │     └─▶ 💬 Chat    → LLM → Answer   │      │
-        │  └─────────────────────────────────────┘      │
-        └────────────────────┬───────────────────────────┘
-                             │
-                             ▼
-        ┌────────────────────────────────────────────────┐
-        │       🌐 CHROME EXTENSION (RANKIFY)            │
-        │  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-        │  │ Poll DP  │─▶│  Parse   │─▶│ Execute  │    │
-        │  │   104    │  │   JSON   │  │ Browser  │    │
-        │  └──────────┘  └──────────┘  └──────────┘    │
-        │                     │                          │
-        │                     └─▶ Report DP 105         │
-        └────────────────────────────────────────────────┘
+SmartLife App (Voice)
+    ↓
+Tuya AI Workflow (Cloud - Always On)
+    ├─ Intent Recognition
+    ├─ Browser: Plan → Ask User → Execute (if approved) ✅
+    ├─ IoT: Execute Directly (no ask)
+    └─ Chat: Conversational
+    ↓
+MCP Servers (Python - Run on Your PC When Using)
+    ├─ Browser MCP → Vercel Cloud Bridge → Chrome Extension
+    └─ Device MCP → Tuya OpenAPI → Smart Devices
 ```
 
-<br/>
-
-## 🛠️ Tech Stack
-
-<div align="center">
-
-<table>
-<tr>
-<td align="center" width="20%">
-
-**Hardware**
-
-<img src="https://img.shields.io/badge/Tuya-T5--E1-E91E63?style=for-the-badge&logo=raspberry-pi&logoColor=white"/>
-
-</td>
-<td align="center" width="20%">
-
-**Cloud**
-
-<img src="https://img.shields.io/badge/Tuya-Platform-FF6B00?style=for-the-badge&logo=icloud&logoColor=white"/>
-
-</td>
-<td align="center" width="20%">
-
-**Frontend**
-
-<img src="https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white"/>
-
-</td>
-<td align="center" width="20%">
-
-**AI/ML**
-
-<img src="https://img.shields.io/badge/Provider-API-412991?style=for-the-badge&logo=aimodel&logoColor=white"/>
-
-</td>
-<td align="center" width="20%">
-
-**Automation**
-
-<img src="https://img.shields.io/badge/Rankify-Agent-9C27B0?style=for-the-badge&logo=robot&logoColor=white"/>
-
-</td>
-</tr>
-</table>
-
-</div>
-
-<br/>
-
-## 📚 Documentation
-
-<div align="center">
-
-<table>
-<tr>
-<td width="50%" align="center">
-
-### 📖 **Core Guides**
-
-📘 [Complete Setup Guide](docs/SETUP.md)<br/>
-🎯 [Platform Configuration](docs/PLATFORM_CONFIG.md)<br/>
-🔄 [Workflow Builder](docs/WORKFLOW_GUIDE.md)<br/>
-🔧 [Extension Development](docs/EXTENSION_DEV.md)<br/>
-💻 [Firmware Guide](docs/FIRMWARE_GUIDE.md)
-
-</td>
-<td width="50%" align="center">
-
-### 🎓 **Resources**
-
-🔐 Security & Privacy Best Practices<br/>
-🧪 Testing Without Hardware<br/>
-🐛 Troubleshooting Common Issues<br/>
-🤝 Contributing Guidelines<br/>
-📜 MIT License
-
-</td>
-</tr>
-</table>
-
-</div>
-
-<br/>
-
-## 📂 Project Structure
-
-<details>
-<summary><b>🗂️ Click to expand directory tree</b></summary>
-
-```
-rankify-assist/
-│
-├── 📁 extension-ready/         ⭐ Main Chrome Extension
-│   ├── manifest.json
-│   ├── options.html
-│   ├── options.js
-│   └── js/
-│       ├── background.js       # Rankify agent
-│       └── tuya_integration.js # DP polling
-│
-├── 📁 firmware/                 🔧 T5-E1 Board Firmware
-│   ├── src/
-│   │   ├── tuya_main.c
-│   │   └── app_chat_bot.c
-│   ├── include/
-│   │   └── tuya_config.h
-│   └── project_build.ini
-│
-├── 📁 docs/                     📚 Documentation
-│   ├── SETUP.md
-│   ├── PLATFORM_CONFIG.md
-│   ├── WORKFLOW_GUIDE.md
-│   └── images/
-│
-├── README.md                    📄 This file
-├── LICENSE                      ⚖️ MIT License
-└── .gitignore
-```
-
-</details>
-
-<br/>
-
-## 🔐 Security & Privacy
-
-<div align="center">
-
-| Feature | Implementation | Status |
-|:---:|---|:---:|
-| 🔒 | API keys stored locally (Chrome sync storage) | ✅ |
-| 🛡️ | No telemetry - your data stays private | ✅ |
-| ✅ | Safety confirmation for critical actions | ✅ |
-| 🔑 | Credentials never exposed in code | ✅ |
-
-</div>
-
-<br/>
-
-## 🤝 Contributing
-
-<div align="center">
-
-Contributions are **welcome**! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
-
-<img src="https://img.shields.io/badge/PRs-Welcome-4CAF50?style=for-the-badge&logo=github" alt="PRs Welcome"/>
-
-</div>
-
-```bash
-# Fork & clone
-git clone https://github.com/YOUR_USERNAME/rankify-assist.git
-cd rankify-assist
-
-# Create feature branch
-git checkout -b feature/amazing-feature
-
-# Make changes, test, commit
-git commit -m "Add amazing feature"
-
-# Push & create PR
-git push origin feature/amazing-feature
-```
-
-<br/>
-
-## 📜 License
-
-<div align="center">
-
-This project is licensed under the **MIT License**
-
-See [LICENSE](LICENSE) file for details
-
-</div>
-
-<br/>
-
-## 🙏 Acknowledgments
-
-<div align="center">
-
-**Built with ❤️ using**
-
-<p>
-  <img src="https://img.shields.io/badge/Tuya-IoT_Platform-FF6B00?style=for-the-badge&logo=iot&logoColor=white" alt="Tuya"/>
-  <img src="https://img.shields.io/badge/Nanobrowser-Browser_Agent-9C27B0?style=for-the-badge&logo=robot&logoColor=white" alt="Nanobrowser"/>
-  <img src="https://img.shields.io/badge/TuyaOpen-SDK-00BCD4?style=for-the-badge&logo=c&logoColor=white" alt="TuyaOpen"/>
-</p>
-
-Thanks to:
-- [Tuya IoT Platform](https://platform.tuya.com) - Cloud infrastructure & AI Agent framework
-- [Nanobrowser](https://nanobrowser.ai/) - Browser automation engine
-- [TuyaOpen SDK](https://github.com/tuya/tuya-open-sdk-for-device) - Firmware development tools
-
-</div>
-
-<br/>
-
-## 📧 Contact & Support
-
-<div align="center">
-
-**Need Help?**
-
-<p>
-  <a href="https://github.com/YOUR_USERNAME/rankify-assist/issues">
-    <img src="https://img.shields.io/badge/Issues-Report_Bug-E91E63?style=for-the-badge&logo=github" alt="Issues"/>
-  </a>
-  <a href="https://github.com/YOUR_USERNAME/rankify-assist/discussions">
-    <img src="https://img.shields.io/badge/Discussions-Ask_Question-2196F3?style=for-the-badge&logo=github" alt="Discussions"/>
-  </a>
-</p>
-
-**Pull Requests Contributions Welcome!**
-
-</div>
-
-<br/>
+**See:** [FINAL-ARCHITECTURE.md](FINAL-ARCHITECTURE.md) for detailed architecture
 
 ---
 
-<div align="center">
+## 🚀 Quick Start (30 minutes)
 
-### ⭐ **Star this repo if you find it helpful!**
+### **Prerequisites:**
+- ✅ Python 3.10+
+- ✅ Node.js & pnpm
+- ✅ Chrome browser
+- ✅ Accounts: Supabase, Vercel, Google Cloud, Tuya IoT (all FREE!)
 
-<sub>Made with 💜 by the community | Powered by Tuya IoT | Licensed under MIT</sub>
+### **Deploy in 4 Steps:**
 
-</div>
+**1. Deploy Cloud Bridge** (10 mins)
+```bash
+# Create Supabase project → Run cloud-bridge/supabase-schema.sql
+# Deploy to Vercel:
+cd cloud-bridge
+npm install
+vercel --prod
+# Set env vars in Vercel dashboard
+```
+
+**2. Build Extension** (5 mins)
+```bash
+pnpm install
+pnpm build
+# Load dist/chrome-mv3-prod in Chrome
+```
+
+**3. Install MCP SDK** (5 mins)
+```bash
+git clone https://github.com/tuya/tuya-mcp-sdk.git
+cd tuya-mcp-sdk/mcp-python
+pip install -e .
+```
+
+**4. Configure & Run MCPs** (10 mins)
+```bash
+# Create MCPs in Tuya Platform → Get credentials
+# Configure .env files
+# Run both servers:
+cd mcp-servers/browser-automation && python server.py
+cd mcp-servers/device-controller && python server.py
+```
+
+**Done! Use SmartLife app to test!** 🎉
+
+**Detailed Guide:** [docs/deployment/00-QUICK-START.md](docs/deployment/00-QUICK-START.md)
+
+---
+
+## 📂 Project Structure
+
+```
+RankifyAssist/
+├── README.md                     # This file
+├── FINAL-ARCHITECTURE.md         # Complete architecture
+├── FINAL-CHECKLIST.md            # Pre-commit checklist
+│
+├── cloud-bridge/                 # Deploy to Vercel (once)
+│   ├── api/                      # API endpoints
+│   ├── public/admin.html         # Admin UI
+│   ├── supabase-schema.sql       # Database schema
+│   └── package.json
+│
+├── mcp-servers/                  # Run locally when using
+│   ├── browser-automation/       # Browser MCP (Python)
+│   └── device-controller/        # Device MCP (Python)
+│
+├── extension-raw/                # Build once, load in Chrome
+│   └── (Chrome extension source)
+│
+├── docs/                         # Documentation
+│   ├── deployment/               # Deployment guides
+│   ├── cloud-bridge/             # Cloud bridge docs
+│   ├── mcp/                      # MCP setup guides
+│   ├── extension/                # Extension build guide
+│   └── workflow/                 # Workflow configuration
+│
+└── firmware/                     # T5 AI Core firmware (optional)
+```
+
+---
+
+## 🎨 Key Design Decisions
+
+### **1. Browser Confirmation Flow** 🔒
+**Safety First!** Users must approve before ANY browser action.
+
+**Flow:**
+```
+User: "check gmail"
+AI: "I plan to open Gmail. Proceed?" 
+User: "yes"
+AI: [Executes] "You have 5 unread emails"
+```
+
+### **2. IoT Direct Execution** ⚡
+**Convenience!** No confirmation for device control.
+
+**Flow:**
+```
+User: "turn on lights"
+AI: [Executes immediately] "Light is now on"
+```
+
+### **3. Local MCP Servers + Cloud Bridge**
+**Why:**
+- ✅ MCP SDK requires persistent WebSocket → Must run locally
+- ✅ Cloud bridge handles message queue → Always-on
+- ✅ Extension executes in browser → Natural execution environment
+- ✅ Zero cost! Runs on your PC when needed
+
+### **4. Supabase vs Vercel KV**
+**Why Supabase:**
+- ❌ Vercel KV: 8KB limit (too small!)
+- ✅ Supabase: 500MB database, unlimited requests, FREE!
+
+---
+
+## 📊 Technology Stack
+
+**Backend:**
+- Tuya AI Workflow (Gemini 2.0 Flash)
+- Tuya MCP SDK (Python, WebSocket)
+- Vercel (Serverless API)
+- Supabase (PostgreSQL)
+
+**Frontend:**
+- Chrome Extension (TypeScript + React)
+- Google OAuth
+
+**APIs:**
+- Tuya OpenAPI (IoT devices)
+- Custom MCP (browser automation)
+
+---
+
+## 💰 Costs (FREE Tier)
+
+| Service | Free Tier | Our Usage | Cost |
+|---------|-----------|-----------|------|
+| Supabase | 500MB DB, ∞ requests | ~10MB | $0 |
+| Vercel | 100k requests/mo | ~1k/mo | $0 |
+| Tuya IoT | 1000 calls/day | ~50/day | $0 |
+| MCP Servers | Runs on PC | Local | $0 |
+| **Total** | | | **$0/month** |
+
+---
+
+## 🧪 Testing
+
+### **Browser Confirmation:**
+```
+Say: "check my gmail"
+Expected: Asks permission → User says "yes" → Executes
+```
+
+### **Browser Decline:**
+```
+Say: "search AI news"
+Expected: Asks permission → User says "no" → Cancels
+```
+
+### **IoT Direct:**
+```
+Say: "turn on lights"
+Expected: Executes immediately (no confirmation)
+```
+
+### **Chat:**
+```
+Say: "what is 2+2"
+Expected: "4"
+```
+
+---
+
+## 📝 Documentation
+
+- **[Quick Start](docs/deployment/00-QUICK-START.md)** - 30-minute deployment
+- **[Architecture](FINAL-ARCHITECTURE.md)** - System design
+- **[MCP Setup](docs/mcp/SETUP-GUIDE.md)** - Configure MCP servers
+- **[Extension Guide](docs/extension/BUILD-GUIDE.md)** - Build extension
+- **[Workflow Guide](docs/workflow/COMPLETE-GUIDE.md)** - Configure workflow
+- **[Final Checklist](FINAL-CHECKLIST.md)** - Pre-commit checklist
+
+---
+
+## 🆘 Troubleshooting
+
+**MCP server won't connect:**
+- Check .env has correct Tuya MCP credentials
+- Verify tuya-mcp-sdk is installed
+- Ensure network allows WebSocket connections
+
+**Extension can't connect:**
+- Verify Google sign-in worked
+- Check Vercel URL is correct
+- Extension console (F12) should show polling logs
+
+**Browser command times out:**
+- Extension must be loaded and signed in
+- Check Supabase commands table for queued commands
+- Verify MCP server is running
+
+**Device control fails:**
+- Check Tuya API credentials correct
+- Verify devices linked in iot.tuya.com
+- Test device control in Tuya app first
+
+---
+
+## 🎯 Roadmap
+
+- [x] Voice-controlled browser automation
+- [x] Smart home device control
+- [x] Google OAuth multi-user support
+- [x] Browser safety confirmation
+- [x] Cloud-based architecture
+- [ ] Real-time updates (replace polling)
+- [ ] Mobile app support
+- [ ] Voice feedback (TTS)
+- [ ] Analytics dashboard
+- [ ] More smart home integrations
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repo
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open Pull Request
+
+---
+
+## 📜 License
+
+MIT License - see [LICENSE](LICENSE) file
+
+---
+
+## 🙏 Acknowledgments
+
+- **Tuya** - AI Platform & IoT Cloud
+- **Supabase** - Database infrastructure
+- **Vercel** - Cloud hosting
+- **Google** - OAuth & Gemini LLM
+
+---
+
+## 📞 Support
+
+**GitHub Issues:** [Report bugs or request features](https://github.com/your-username/rankify-assist/issues)
+
+**Documentation:** See `docs/` folder
+
+---
+
+**Made with ❤️ by the Rankify Assist Team**
+
+**⭐ Star this repo if you find it useful!**
+
+**Deploy now:** [docs/deployment/00-QUICK-START.md](docs/deployment/00-QUICK-START.md) 🚀

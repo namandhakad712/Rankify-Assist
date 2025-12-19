@@ -18,6 +18,14 @@ import { DEFAULT_AGENT_OPTIONS } from './agent/types';
 import { SpeechToTextService } from './services/speechToText';
 import { injectBuildDomTreeScripts } from './browser/dom/service';
 import { analytics } from './services/analytics';
+import {
+  startBridgePolling,
+  stopBridgePolling,
+  pauseBridgePolling,
+  resumeBridgePolling,
+  testBridgeConnection,
+  getBridgeStatus
+} from './services/tuyaBridge';
 
 const logger = createLogger('background');
 
@@ -66,11 +74,63 @@ logger.info('background loaded');
 //   });
 // });
 
+// Initialize Tuya Bridge for AI workflow integration
+logger.info('[Tuya Bridge] Initializing...');
+testBridgeConnection().then(result => {
+  if (result.connected) {
+    logger.info('[Tuya Bridge] ✓ Connected:', result.message);
+    startBridgePolling();
+    logger.info('[Tuya Bridge] Started polling for commands');
+  } else {
+    logger.info('[Tuya Bridge] ✗ Not connected:', result.message);
+    logger.info('[Tuya Bridge] Bridge server optional - extension works normally without it');
+    logger.info('[Tuya Bridge] To enable Tuya AI integration: Start bridge server at http://localhost:3000');
+  }
+}).catch(error => {
+  logger.error('[Tuya Bridge] Initialization error:', error);
+});
+
 // Listen for simple messages (e.g., from options page)
-chrome.runtime.onMessage.addListener(() => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Handle Tuya Bridge control messages
+  if (message.type === 'test_bridge_connection') {
+    testBridgeConnection().then(result => sendResponse(result));
+    return true; // Keep channel open for async response
+  }
+
+  if (message.type === 'get_bridge_status') {
+    const status = getBridgeStatus();
+    sendResponse(status);
+    return false;
+  }
+
+  if (message.type === 'bridge_start_polling') {
+    startBridgePolling();
+    sendResponse({ success: true });
+    return false;
+  }
+
+  if (message.type === 'bridge_stop_polling') {
+    stopBridgePolling();
+    sendResponse({ success: true });
+    return false;
+  }
+
+  if (message.type === 'bridge_pause_polling') {
+    pauseBridgePolling();
+    sendResponse({ success: true });
+    return false;
+  }
+
+  if (message.type === 'bridge_resume_polling') {
+    resumeBridgePolling();
+    sendResponse({ success: true });
+    return false;
+  }
+
   // Handle other message types if needed in the future
   // Return false if response is not sent asynchronously
-  // return false;
+  return false;
 });
 
 // Setup connection listener for long-lived connections (e.g., side panel)

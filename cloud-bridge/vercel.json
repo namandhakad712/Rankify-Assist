@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "functions": {
+        "api/**/*.js": {
+            "maxDuration": 60
+        }
+    },
+    "env": {
+        "MCP_API_KEY": "@mcp_api_key"
+    }
+}

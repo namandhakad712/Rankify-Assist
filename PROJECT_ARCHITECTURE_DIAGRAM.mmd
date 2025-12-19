@@ -1,0 +1,71 @@
+sequenceDiagram
+    participant User as 👤 User (SmartLife App)
+    participant Cloud as ☁️ Tuya AI Workflow
+    participant MCP_Browser as 🌐 Browser MCP (Local)
+    participant MCP_Device as 🏠 Device MCP (Local)
+    participant Vercel as 🚀 Vercel Cloud Bridge
+    participant Supabase as 💾 Supabase DB
+    participant Extension as 🧩 Chrome Extension
+    participant Browser as 🌐 Browser
+    participant Devices as 💡 Smart Devices
+
+    rect rgb(230, 240, 255)
+        Note over User, Cloud: 📢 PHASE 1: VOICE INPUT
+        User->>Cloud: Voice: "check my gmail"
+        Cloud->>Cloud: Speech-to-Text (STT)
+    end
+
+    rect rgb(255, 240, 230)
+        Note over Cloud: 🧠 PHASE 2: INTENT & PLANNING
+        Cloud->>Cloud: Intent Recognition → 0 (browser)
+        Cloud->>Cloud: Browser Planner LLM
+        Note right of Cloud: "I plan to open Gmail<br/>and count unread emails"
+    end
+
+    rect rgb(255, 250, 230)
+        Note over Cloud, User: 🔒 PHASE 3: SAFETY CONFIRMATION
+        Cloud->>User: TTS: "I plan to open Gmail. Proceed?"
+        User->>Cloud: Voice: "yes"
+        Cloud->>Cloud: selector checks response
+    end
+
+    rect rgb(230, 255, 240)
+        Note over Cloud, Extension: ⚡ PHASE 4: EXECUTION (BROWSER)
+        Cloud->>MCP_Browser: execute_browser_task("check gmail")
+        MCP_Browser->>Vercel: POST /api/execute
+        Vercel->>Supabase: INSERT command (status=pending)
+        
+        loop Extension Polling (every 3s)
+            Extension->>Vercel: GET /api/poll
+            Vercel->>Supabase: SELECT pending commands
+        end
+        
+        Vercel-->>Extension: Return command
+        Extension->>Browser: Open Gmail, count emails
+        Browser-->>Extension: Result: "5 unread"
+        
+        Extension->>Vercel: POST /api/result
+        Vercel->>Supabase: INSERT result, UPDATE command
+        Vercel-->>MCP_Browser: Return result
+        MCP_Browser-->>Cloud: {"success": true, "result": "5 unread"}
+        Cloud->>User: TTS: "You have 5 unread emails"
+    end
+
+    rect rgb(240, 255, 240)
+        Note over Cloud, Devices: 🏠 ALTERNATIVE: IOT FLOW (Direct, No Confirmation)
+        User->>Cloud: Voice: "turn on lights"
+        Cloud->>Cloud: Intent: 1 (iot)
+        Cloud->>MCP_Device: control_device(...)
+        MCP_Device->>Devices: Tuya OpenAPI
+        Devices-->>MCP_Device: Success
+        MCP_Device-->>Cloud: {"success": true}
+        Cloud->>User: TTS: "Light is on"
+    end
+
+    rect rgb(250, 240, 255)
+        Note over Cloud, User: 💬 ALTERNATIVE: CHAT FLOW
+        User->>Cloud: Voice: "what is 2+2"
+        Cloud->>Cloud: Intent: 2 (chat)
+        Cloud->>Cloud: Chat LLM (no tools)
+        Cloud->>User: TTS: "4"
+    end
