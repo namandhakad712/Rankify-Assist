@@ -408,16 +408,6 @@ function checkRateLimit(userId) {
 
 ---
 
-## Migration from Old Setup
-
-If you were using local bridge:
-
-1. ✅ Deploy Supabase setup (done!)
-2. ✅ Register users
-3. ✅ Update extension settings
-4. ✅ Update MCP `.env`
-5. ❌ **DELETE** `bridge-server/` folder (not needed!)
-6. ❌ Stop ngrok (not needed!)
 
 **Your setup is now:**
 - Always on ✅

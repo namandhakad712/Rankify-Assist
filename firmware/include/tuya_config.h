@@ -15,7 +15,7 @@
  */
 
 #ifndef TUYA_PRODUCT_ID
-#define TUYA_PRODUCT_ID "okqfzw6tkrabylcs"
+#define TUYA_PRODUCT_ID "product-idxxxxxxxxx"
 #endif
 
 // User should replace these with their own license keys or use Auth Token Management
