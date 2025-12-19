@@ -1,18 +1,5 @@
 {
-    "name": "tuya-cloud-bridge",
-    "version": "2.0.0",
-    "description": "Cloud-based bridge service for Tuya AI Workflow and Browser Extension - Powered by Supabase",
-    "main": "api/index.js",
-    "type": "module",
-    "scripts": {
-        "dev": "vercel dev",
-        "deploy": "vercel --prod"
-    },
     "dependencies": {
-        "@supabase/supabase-js": "^2.39.0",
-        "bcrypt": "^5.1.1"
-    },
-    "devDependencies": {
-        "vercel": "^33.0.0"
+        "@supabase/supabase-js": "^2.39.3"
     }
 }
