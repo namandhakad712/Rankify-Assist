@@ -7,6 +7,7 @@ import {
   llmProviderStore,
   analyticsSettingsStore,
   chatHistoryStore,
+  Actors,
 } from '@extension/storage';
 import { t } from '@extension/i18n';
 import BrowserContext from './browser/context';
@@ -116,26 +117,38 @@ const onTuyaCommand = async (command: string, commandId: string) => {
 
     const taskId = `tuya_${commandId}`;
 
-    // Ensure session exists FIRST
+    // Ensure session exists FIRST and SEED User Message
     try {
       const session = await chatHistoryStore.getSession(taskId);
       if (!session) {
-        logger.info('[Tuya Bridge] Creating new session for task:', taskId);
+        logger.info('[Tuya Bridge] Creating new session and seeding message:', taskId);
         await chatHistoryStore.createSession(`Tuya Task: ${command.substring(0, 30)}...`, taskId);
+
+        // Seed the User message directly to DB
+        await chatHistoryStore.addMessage(taskId, {
+          actor: Actors.USER,
+          content: command,
+          timestamp: Date.now()
+        });
       }
     } catch (e) {
       logger.warning('[Tuya Bridge] Session check failed, trying to create:', e);
       try {
         await chatHistoryStore.createSession(`Tuya Task: ${command.substring(0, 30)}...`, taskId);
+        await chatHistoryStore.addMessage(taskId, {
+          actor: Actors.USER,
+          content: command,
+          timestamp: Date.now()
+        });
       } catch (createErr) {
-        logger.error('[Tuya Bridge] Could not create session:', createErr);
+        logger.error('[Tuya Bridge] Could not create session/message:', createErr);
       }
     }
 
     if (currentPort) {
       logger.info('[Tuya Bridge] Side Panel connected, syncing UI...');
 
-      // 4. Send "Init Session"
+      // 4. Send "Init Session" (Loads history -> Sees Seeded Message)
       currentPort.postMessage({
         type: 'init_session',
         sessionId: taskId
@@ -150,14 +163,7 @@ const onTuyaCommand = async (command: string, commandId: string) => {
       // Wait for the "typing" and "auto-send" animation/delay
       await new Promise(r => setTimeout(r, 1200));
 
-      // 6. Send "User Message" (The task start)
-      currentPort.postMessage({
-        type: 'execution',
-        actor: 'user',
-        state: 'task_start',
-        data: { details: command },
-        timestamp: Date.now()
-      });
+      // Note: We do NOT send "task_start" USER message here anymore.
     } else {
       logger.warning('[Tuya Bridge] Side Panel did not connect in time, running headless...');
     }
