@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase.js';
-import { verifyAuth } from '../lib/auth.js';
 
 export default async function handler(req, res) {
     // Enable CORS
@@ -15,21 +14,20 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Verify authentication
-    const authHeader = req.headers.authorization;
-    const user = await verifyAuth(authHeader);
+    // Get access_id from query parameter (no auth needed!)
+    const { accessId } = req.query;
 
-    if (!user) {
-        return res.status(401).json({ error: 'Unauthorized - invalid credentials' });
+    if (!accessId) {
+        return res.status(400).json({ error: 'Access ID required' });
     }
 
-    console.log(`[Poll] User ${user.userId} polling for commands`);
+    console.log(`[Poll] Checking commands for Access ID: ${accessId}`);
 
-    // Get oldest pending command for this user
+    // Get oldest pending command for this access_id
     const { data: commands, error } = await supabase
         .from('commands')
         .select('*')
-        .eq('user_id', user.userId)
+        .eq('access_id', accessId)
         .eq('status', 'pending')
         .order('created_at', { ascending: true })
         .limit(1);
@@ -51,7 +49,7 @@ export default async function handler(req, res) {
         .update({ status: 'processing' })
         .eq('command_id', command.command_id);
 
-    console.log(`[Poll] Command found for user ${user.userId}:`, command.command_id);
+    console.log(`[Poll] Command found for Access ID ${accessId}:`, command.command_id);
 
     return res.json({
         hasCommand: true,

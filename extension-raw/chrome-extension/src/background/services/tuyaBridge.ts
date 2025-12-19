@@ -113,29 +113,25 @@ async function pollLoop() {
             continue;
         }
 
-        // Skip polling if no credentials
-        if (!credentials.username || !credentials.password) {
-            console.log('[Cloud Bridge] No credentials configured - skipping poll');
+        // Skip polling if no Access ID configured
+        if (!credentials.username) {  // We'll use username field to store Access ID
+            console.log('[Cloud Bridge] No Access ID configured - skipping poll');
             await sleep(POLL_INTERVAL);
             continue;
         }
 
         try {
-            // Create Basic Auth header
-            const authHeader = `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`;
-
-            const response = await fetch(`${CLOUD_BRIDGE_URL}/api/poll`, {
+            // Poll with Access ID as query parameter
+            const response = await fetch(`${CLOUD_BRIDGE_URL}/api/poll?accessId=${encodeURIComponent(credentials.username)}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': authHeader,
                 },
             });
 
             if (!response.ok) {
-                // Unauthorized or server error
-                if (response.status === 401) {
-                    console.error('[Cloud Bridge] Authentication failed - check credentials');
+                if (response.status === 400) {
+                    console.error('[Cloud Bridge] Invalid Access ID');
                 }
                 await sleep(POLL_INTERVAL);
                 continue;
