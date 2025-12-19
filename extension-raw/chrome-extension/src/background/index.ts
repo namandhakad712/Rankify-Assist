@@ -97,12 +97,35 @@ const onTuyaCommand = async (command: string, commandId: string) => {
       priority: 2
     });
 
-    // Try to open side panel - might fail if no gesture
+    // 1. Open Side Panel
     try {
       // @ts-ignore
       await chrome.sidePanel.open({ tabId });
     } catch (e) {
       // Expected if no user gesture
+    }
+
+    // 2. WAIT for Side Panel to connect (Max 5 seconds)
+    // This fixes the race condition where task starts before UI is ready
+    let retries = 0;
+    while (!currentPort && retries < 50) {
+      await new Promise(r => setTimeout(r, 100)); // Wait 100ms
+      retries++;
+    }
+
+    if (currentPort) {
+      logger.info('[Tuya Bridge] Side Panel connected, syncing UI...');
+
+      // 3. Send "User Message" to UI so it looks like the user typed it
+      currentPort.postMessage({
+        type: 'execution', // Matches EventType.EXECUTION
+        actor: 'user',     // Actors.USER
+        state: 'task_start',
+        data: { details: command },
+        timestamp: Date.now()
+      });
+    } else {
+      logger.warning('[Tuya Bridge] Side Panel did not connect in time, running headless...');
     }
 
     currentExecutor = await setupExecutor(`tuya_${commandId}`, command, browserContext);

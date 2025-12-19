@@ -188,6 +188,9 @@ async function pollLoop() {
 async function executeCommand(commandId: string, command: string) {
     console.log('[Tuya Bridge] Executing command:', command);
 
+    // 🛑 PAUSE POLLING so we don't get interrupted!
+    pauseBridgePolling();
+
     try {
         let result: any;
 
@@ -235,6 +238,10 @@ async function executeCommand(commandId: string, command: string) {
     } catch (error) {
         console.error('[Tuya Bridge] Error executing command:', error);
         await sendResultToBridge(commandId, `Error: ${(error as Error).message}`, 'failed');
+    } finally {
+        // ▶️ RESUME POLLING now that we are done!
+        console.log('[Tuya Bridge] Task finished, resuming polling...');
+        resumeBridgePolling();
     }
 }
 
