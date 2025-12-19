@@ -402,32 +402,23 @@
       <form id="mcpForm" onsubmit="saveMCP(event)">
         <div class="form-group">
           <label>Name</label>
-          <input type="text" id="mcpName" required placeholder="e.g., Browser Automation">
+          <input type="text" id="mcpName" required placeholder="e.g., My Tuya MCP Server">
+          <small style="color: rgba(255,255,255,0.6); font-size: 12px; display: block; margin-top: 5px;">
+            A friendly name to identify this MCP server
+          </small>
         </div>
         <div class="form-group">
-          <label>Type</label>
-          <select id="mcpType" required>
-            <option value="browser">Browser Automation</option>
-            <option value="device">Device Controller</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>MCP Endpoint</label>
-          <input type="text" id="mcpEndpoint" placeholder="wss://mcp-us.tuya-inc.com:8443">
-        </div>
-        <div class="form-group">
-          <label>Access ID</label>
-          <input type="text" id="mcpAccessId" placeholder="p17381234567890abc">
-        </div>
-        <div class="form-group">
-          <label>Access Secret</label>
-          <input type="password" id="mcpAccessSecret">
+          <label>Tuya Access ID</label>
+          <input type="text" id="mcpAccessId" required placeholder="9dddfe970174516512ff...">
+          <small style="color: rgba(255,255,255,0.6); font-size: 12px; display: block; margin-top: 5px;">
+            Get this from Tuya IoT Platform → Your MCP Server → Access ID
+          </small>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
           <button type="submit" class="btn btn-primary">Save</button>
         </div>
-      </form>
+      </form>>
     </div>
   </div>
 
@@ -471,8 +462,67 @@
     }
 
     async function loadMCPConfigs() {
-      // TODO: Implement API to fetch MCP configs
-      // For now showing empty state
+      const token = localStorage.getItem('supabase_token');
+
+      try {
+        const response = await fetch(`${API_URL}/api/mcp/config`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load MCP configs');
+        }
+
+        const data = await response.json();
+        displayMCPConfigs(data.configs || []);
+      } catch (error) {
+        console.error('Error loading MCP configs:', error);
+        document.getElementById('mcpList').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <p>Failed to load configurations</p>
+          </div>
+        `;
+      }
+    }
+
+    function displayMCPConfigs(configs) {
+      const mcpList = document.getElementById('mcpList');
+
+      if (configs.length === 0) {
+        mcpList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📦</div>
+            <p>No MCP servers configured yet</p>
+            <p style="font-size: 14px; margin-top: 10px;">Click "+ Add MCP" to get started</p>
+          </div>
+        `;
+        return;
+      }
+
+      mcpList.innerHTML = configs.map(config => `
+        <div class="mcp-card">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+            <div class="mcp-title">${config.name}</div>
+            <span class="mcp-badge ${config.enabled ? 'badge-enabled' : 'badge-disabled'}">
+              ${config.enabled ? 'Enabled' : 'Disabled'}
+            </span>
+          </div>
+          <div class="mcp-detail">
+            <strong>Access ID:</strong> ${config.access_id ? config.access_id.substring(0, 20) + '...' : 'N/A'}
+          </div>
+          <div class="mcp-detail">
+            <strong>Created:</strong> ${new Date(config.created_at).toLocaleString()}
+          </div>
+          <div class="mcp-actions">
+            <button class="btn btn-danger btn-small" onclick="deleteMCP('${config.config_id}')">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      `).join('');
     }
 
     function showAddMCPModal() {
@@ -490,15 +540,61 @@
 
       const config = {
         name: document.getElementById('mcpName').value,
-        type: document.getElementById('mcpType').value,
-        endpoint: document.getElementById('mcpEndpoint').value,
-        access_id: document.getElementById('mcpAccessId').value,
-        access_secret: document.getElementById('mcpAccessSecret').value,
+        accessId: document.getElementById('mcpAccessId').value,
       };
 
-      // TODO: Implement API to save MCP config
-      alert('MCP configuration saved! (API endpoint needs implementation)');
-      closeModal();
+      const token = localStorage.getItem('supabase_token');
+
+      try {
+        const response = await fetch(`${API_URL}/api/mcp/config`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(config)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to save configuration');
+        }
+
+        const result = await response.json();
+        alert('✅ MCP configuration saved successfully!');
+        closeModal();
+        loadMCPConfigs(); // Reload the list
+      } catch (error) {
+        console.error('Error saving MCP config:', error);
+        alert('❌ ' + error.message);
+      }
+    }
+
+    async function deleteMCP(configId) {
+      if (!confirm('Are you sure you want to delete this MCP configuration?')) {
+        return;
+      }
+
+      const token = localStorage.getItem('supabase_token');
+
+      try {
+        const response = await fetch(`${API_URL}/api/mcp/config?configId=${configId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete configuration');
+        }
+
+        alert('✅ Configuration deleted successfully!');
+        loadMCPConfigs(); // Reload the list
+      } catch (error) {
+        console.error('Error deleting MCP config:', error);
+        alert('❌ Failed to delete configuration');
+      }
     }
   </script>
 </body>

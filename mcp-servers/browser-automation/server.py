@@ -18,6 +18,7 @@ load_dotenv()
 # Configuration
 CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL', 'https://tuya-cloud-bridge.vercel.app')
 MCP_API_KEY = os.getenv('MCP_API_KEY')
+TUYA_ACCESS_ID = os.getenv('MCP_ACCESS_ID')  # Use the Tuya Access ID from .env
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -47,8 +48,9 @@ async def execute_browser_command(
             response = await client.post(
                 f"{CLOUD_BRIDGE_URL}/api/execute",  # ← FIXED: Correct endpoint
                 json={
-                    "userId": "tuya_ai",  # ← FIXED: Correct field name
+                    "userId": "tuya_ai",  # Legacy field, not used anymore
                     "apiKey": MCP_API_KEY,  # ← FIXED: Send in body, not header
+                    "accessId": TUYA_ACCESS_ID,  # Send the Access ID!
                     "command": command
                 },
                 timeout=15.0  # Shorter timeout since we're not waiting for execution
