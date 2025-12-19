@@ -15,6 +15,7 @@
     "debugger",
     "unlimitedStorage",
     "webNavigation",
+    "notifications",
     "sidePanel"
   ],
   "options_page": "options/index.html",
