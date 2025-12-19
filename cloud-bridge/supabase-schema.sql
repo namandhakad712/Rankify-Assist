@@ -87,11 +87,39 @@ CREATE TRIGGER update_commands_updated_at BEFORE UPDATE ON commands
 CREATE TRIGGER update_mcp_configs_updated_at BEFORE UPDATE ON mcp_configs
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- NEW: Request logs table (store ALL requests/responses)
+CREATE TABLE request_logs (\r
+  id BIGSERIAL PRIMARY KEY,\r
+  request_id TEXT UNIQUE NOT NULL,\r
+  endpoint TEXT NOT NULL,\r
+  method TEXT NOT NULL,\r
+  user_id TEXT,\r
+  request_body JSONB,\r
+  response_body JSONB,\r
+  status_code INTEGER,\r
+  ip_address TEXT,\r
+  user_agent TEXT,\r
+  duration_ms INTEGER,\r
+  error TEXT,\r
+  created_at TIMESTAMPTZ DEFAULT NOW()\r
+);\r
+
+-- Index for request logs\r
+CREATE INDEX idx_request_logs_endpoint ON request_logs(endpoint, created_at DESC);\r
+CREATE INDEX idx_request_logs_user ON request_logs(user_id, created_at DESC);\r
+CREATE INDEX idx_request_logs_status ON request_logs(status_code, created_at DESC);\r
+CREATE INDEX idx_request_logs_created ON request_logs(created_at DESC);\r
+
+-- RLS for request_logs\r
+ALTER TABLE request_logs ENABLE ROW LEVEL SECURITY;\r
+CREATE POLICY "Service role full access request_logs" ON request_logs FOR ALL USING (true);\r
+
 -- Cleanup function
 CREATE OR REPLACE FUNCTION cleanup_old_data()
 RETURNS void AS $$
 BEGIN
   DELETE FROM commands WHERE created_at < NOW() - INTERVAL '7 days';
   DELETE FROM results WHERE completed_at < NOW() - INTERVAL '7 days';
+  DELETE FROM request_logs WHERE created_at < NOW() - INTERVAL '30 days'; -- Keep logs longer
 END;
 $$ LANGUAGE plpgsql;
