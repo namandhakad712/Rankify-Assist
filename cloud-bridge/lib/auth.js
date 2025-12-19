@@ -1,6 +1,36 @@
 import { supabase } from '../lib/supabase.js';
 import bcrypt from 'bcrypt';
 
+// Verify JWT token from Google OAuth (NO users table needed!)
+export async function verifyJWT(authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+
+    try {
+        const token = authHeader.split(' ')[1];
+
+        // Verify JWT token with Supabase Auth
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+
+        if (error || !user) {
+            console.error('[Auth] JWT verification failed:', error);
+            return null;
+        }
+
+        // Return user info directly from JWT (no users table needed!)
+        return {
+            userId: user.id,
+            email: user.email,
+            name: user.user_metadata?.name || user.email.split('@')[0],
+        };
+    } catch (error) {
+        console.error('[Auth] Error verifying JWT:', error);
+        return null;
+    }
+}
+
+// OLD: Basic Auth verification (for backward compatibility)
 export async function verifyAuth(authHeader) {
     if (!authHeader || !authHeader.startsWith('Basic ')) {
         return null;

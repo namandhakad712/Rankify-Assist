@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase.js';
-import { verifyAuth } from '../../lib/auth.js';
+import { verifyJWT } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
     // Enable CORS
@@ -11,9 +11,9 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    // Verify authentication
+    // Verify JWT authentication (Google OAuth)
     const authHeader = req.headers.authorization;
-    const user = await verifyAuth(authHeader);
+    const user = await verifyJWT(authHeader);
 
     if (!user) {
         return res.status(401).json({ error: 'Unauthorized - please login' });
