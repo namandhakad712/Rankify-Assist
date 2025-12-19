@@ -76,15 +76,56 @@ logger.info('background loaded');
 
 // Initialize Tuya Bridge for AI workflow integration
 logger.info('[Tuya Bridge] Initializing...');
+
+const onTuyaCommand = async (command: string, commandId: string) => {
+  logger.info('[Tuya Bridge] Received command via callback:', command);
+
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tabId = tabs[0]?.id;
+
+    if (!tabId) {
+      throw new Error('No active tab found');
+    }
+
+    // Create notifications for visual feedback
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon-128.png',
+      title: 'Rankify Assist',
+      message: `Executing Tuya Command: ${command.substring(0, 50)}...`,
+      priority: 2
+    });
+
+    // Try to open side panel - might fail if no gesture
+    try {
+      // @ts-ignore
+      await chrome.sidePanel.open({ tabId });
+    } catch (e) {
+      // Expected if no user gesture
+    }
+
+    currentExecutor = await setupExecutor(`tuya_${commandId}`, command, browserContext);
+    subscribeToExecutorEvents(currentExecutor);
+    const result = await currentExecutor.execute();
+    return { success: true, result };
+  } catch (error) {
+    logger.error('[Tuya Bridge] Execution failed:', error);
+    return { success: false, error: (error as Error).message };
+  }
+};
+
 testBridgeConnection().then(result => {
   if (result.connected) {
     logger.info('[Tuya Bridge] ✓ Connected:', result.message);
-    startBridgePolling();
+    startBridgePolling(onTuyaCommand); // Pass handler!
     logger.info('[Tuya Bridge] Started polling for commands');
   } else {
     logger.info('[Tuya Bridge] ✗ Not connected:', result.message);
     logger.info('[Tuya Bridge] Bridge server optional - extension works normally without it');
     logger.info('[Tuya Bridge] To enable Tuya AI integration: Start bridge server at http://localhost:3000');
+    // Start polling anyway if configured via extension settings (cloud bridge)
+    startBridgePolling(onTuyaCommand);
   }
 }).catch(error => {
   logger.error('[Tuya Bridge] Initialization error:', error);

@@ -91,13 +91,19 @@ function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+let commandHandler: ((command: string, commandId: string) => Promise<any>) | null = null;
+
 /**
  * Start polling for commands from bridge server
  */
-export function startBridgePolling() {
+export function startBridgePolling(handler?: (command: string, commandId: string) => Promise<any>) {
     if (isPolling) {
         console.log('[Tuya Bridge] Already polling');
         return;
+    }
+
+    if (handler) {
+        commandHandler = handler;
     }
 
     isPolling = true;
@@ -183,48 +189,51 @@ async function executeCommand(commandId: string, command: string) {
     console.log('[Tuya Bridge] Executing command:', command);
 
     try {
-        // Get the current active tab
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        let result: any;
 
-        if (!tabs || tabs.length === 0) {
-            throw new Error('No active tab found');
-        }
+        if (commandHandler) {
+            // Use direct callback if available (preferred for background execution)
+            console.log('[Tuya Bridge] Delegating execution to handler...');
+            result = await commandHandler(command, commandId);
+        } else {
+            // Fallback to messaging (might fail if no receiver)
+            console.log('[Tuya Bridge] No handler, trying sendMessage...');
 
-        const activeTab = tabs[0];
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            const activeTab = tabs[0];
 
-        // 1. Open Side Panel (Required for visuals)
-        if (activeTab.id) {
-            try {
-                // @ts-ignore - sidePanel API types might be missing in some setups
-                await chrome.sidePanel.open({ tabId: activeTab.id });
-                // Give it a moment to initialize connection
-                await sleep(1000);
-            } catch (e) {
-                console.warn('[Tuya Bridge] Could not open side panel automatically:', e);
+            if (activeTab?.id) {
+                try {
+                    // @ts-ignore
+                    await chrome.sidePanel.open({ tabId: activeTab.id });
+                    await sleep(1000);
+                } catch (e) { console.warn('Side panel open failed', e); }
+
+                result = await chrome.runtime.sendMessage({
+                    type: 'execute_tuya_task',
+                    task: command,
+                    taskId: `tuya_${commandId}`,
+                    tabId: activeTab.id,
+                });
+            } else {
+                throw new Error('No active tab to execute in');
             }
         }
 
-        // 2. Execute Task via Background Service
-        // This relies on the 'execute_tuya_task' handler in background/index.ts
-        const result: any = await chrome.runtime.sendMessage({
-            type: 'execute_tuya_task',
-            task: command,
-            taskId: `tuya_${commandId}`,
-            tabId: activeTab.id,
-        });
-
         console.log('[Tuya Bridge] Task result:', result);
 
-        if (result && result.success) {
-            await sendResultToBridge(commandId, result.result || 'Task completed successfully');
+        // Check result structure
+        const resultPayload = (result && result.result) ? result.result : result;
+        const success = (result && result.success !== undefined) ? result.success : true; // default true if result returned
+
+        if (success) {
+            await sendResultToBridge(commandId, resultPayload || 'Task completed successfully');
         } else {
             throw new Error(result?.error || 'Unknown execution error');
         }
 
     } catch (error) {
         console.error('[Tuya Bridge] Error executing command:', error);
-
-        // Send error back to cloud bridge
         await sendResultToBridge(commandId, `Error: ${(error as Error).message}`, 'failed');
     }
 }
