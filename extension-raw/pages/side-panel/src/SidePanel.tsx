@@ -311,6 +311,18 @@ const SidePanel = () => {
         // Add type checking for message
         if (message && message.type === EventType.EXECUTION) {
           handleTaskState(message);
+        } else if (message && message.type === 'init_session') {
+          console.log('Initializing session:', message.sessionId);
+          setCurrentSessionId(message.sessionId);
+        } else if (message && message.type === 'simulate_interaction') {
+          // Visual effect: Auto-fill input then "send"
+          if (setInputTextRef.current) {
+            setInputTextRef.current(message.text);
+            // Clear after delay to mimic "sending" (The actual message appears via 'task_start' event)
+            setTimeout(() => {
+              if (setInputTextRef.current) setInputTextRef.current('');
+            }, 1000);
+          }
         } else if (message && message.type === 'error') {
           // Handle error messages from service worker
           appendMessage({

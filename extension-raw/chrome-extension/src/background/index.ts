@@ -114,24 +114,9 @@ const onTuyaCommand = async (command: string, commandId: string) => {
       retries++;
     }
 
-    if (currentPort) {
-      logger.info('[Tuya Bridge] Side Panel connected, syncing UI...');
-
-      // 3. Send "User Message" to UI so it looks like the user typed it
-      currentPort.postMessage({
-        type: 'execution', // Matches EventType.EXECUTION
-        actor: 'user',     // Actors.USER
-        state: 'task_start',
-        data: { details: command },
-        timestamp: Date.now()
-      });
-    } else {
-      logger.warning('[Tuya Bridge] Side Panel did not connect in time, running headless...');
-    }
-
     const taskId = `tuya_${commandId}`;
 
-    // Ensure session exists for history storage (Required by Executor)
+    // Ensure session exists FIRST
     try {
       const session = await chatHistoryStore.getSession(taskId);
       if (!session) {
@@ -145,6 +130,36 @@ const onTuyaCommand = async (command: string, commandId: string) => {
       } catch (createErr) {
         logger.error('[Tuya Bridge] Could not create session:', createErr);
       }
+    }
+
+    if (currentPort) {
+      logger.info('[Tuya Bridge] Side Panel connected, syncing UI...');
+
+      // 4. Send "Init Session"
+      currentPort.postMessage({
+        type: 'init_session',
+        sessionId: taskId
+      });
+
+      // 5. VISUAL DRAMA: Simulate Input typing
+      currentPort.postMessage({
+        type: 'simulate_interaction',
+        text: command
+      });
+
+      // Wait for the "typing" and "auto-send" animation/delay
+      await new Promise(r => setTimeout(r, 1200));
+
+      // 6. Send "User Message" (The task start)
+      currentPort.postMessage({
+        type: 'execution',
+        actor: 'user',
+        state: 'task_start',
+        data: { details: command },
+        timestamp: Date.now()
+      });
+    } else {
+      logger.warning('[Tuya Bridge] Side Panel did not connect in time, running headless...');
     }
 
     currentExecutor = await setupExecutor(taskId, command, browserContext);
