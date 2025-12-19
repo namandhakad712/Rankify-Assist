@@ -98,6 +98,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep channel open for async response
   }
 
+
+  if (message.type === 'bridge_test_connection') {
+    testBridgeConnection().then(result => {
+      sendResponse(result);
+    }).catch(error => {
+      sendResponse({ connected: false, message: error.message });
+    });
+    return true; // Will respond asynchronously
+  }
+
+  if (message.type === 'bridge_get_status') {
+    const status = getBridgeStatus();
+    sendResponse(status);
+    return false;
+  }
+
   if (message.type === 'get_bridge_status') {
     const status = getBridgeStatus();
     sendResponse(status);

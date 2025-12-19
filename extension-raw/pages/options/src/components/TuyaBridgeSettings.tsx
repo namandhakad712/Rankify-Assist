@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { testBridgeConnection, getBridgeStatus, startBridgePolling, stopBridgePolling, pauseBridgePolling, resumeBridgePolling } from '@extension/chrome-extension/src/background/services/tuyaBridge';
 
 export default function TuyaBridgeSettings() {
   const [status, setStatus] = useState({
@@ -33,11 +32,12 @@ export default function TuyaBridgeSettings() {
   const checkConnection = async () => {
     setTesting(true);
     try {
-      const result = await testBridgeConnection();
-      const bridgeStatus = getBridgeStatus();
+      // Ask background script to test connection
+      const result = await chrome.runtime.sendMessage({ type: 'bridge_test_connection' });
+      const statusResult = await chrome.runtime.sendMessage({ type: 'bridge_get_status' });
 
       setStatus({
-        ...bridgeStatus,
+        ...statusResult,
         connected: result.connected,
         message: result.message,
       });
@@ -54,31 +54,35 @@ export default function TuyaBridgeSettings() {
     }
   };
 
-  const refreshStatus = () => {
-    const bridgeStatus = getBridgeStatus();
-    setStatus(prev => ({
-      ...prev,
-      ...bridgeStatus,
-    }));
+  const refreshStatus = async () => {
+    try {
+      const bridgeStatus = await chrome.runtime.sendMessage({ type: 'bridge_get_status' });
+      setStatus(prev => ({
+        ...prev,
+        ...bridgeStatus,
+      }));
+    } catch (error) {
+      console.error('Failed to refresh status:', error);
+    }
   };
 
-  const handleStartPolling = () => {
-    startBridgePolling();
+  const handleStartPolling = async () => {
+    await chrome.runtime.sendMessage({ type: 'bridge_start_polling' });
     setTimeout(refreshStatus, 100);
   };
 
-  const handleStopPolling = () => {
-    stopBridgePolling();
+  const handleStopPolling = async () => {
+    await chrome.runtime.sendMessage({ type: 'bridge_stop_polling' });
     setTimeout(refreshStatus, 100);
   };
 
-  const handlePausePolling = () => {
-    pauseBridgePolling();
+  const handlePausePolling = async () => {
+    await chrome.runtime.sendMessage({ type: 'bridge_pause_polling' });
     setTimeout(refreshStatus, 100);
   };
 
-  const handleResumePolling = () => {
-    resumeBridgePolling();
+  const handleResumePolling = async () => {
+    await chrome.runtime.sendMessage({ type: 'bridge_resume_polling' });
     setTimeout(refreshStatus, 100);
   };
 
