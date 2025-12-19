@@ -1,37 +1,29 @@
 """
-Browser Automation - Full MCP Server Implementation
-
-This runs TWO components:
-1. Local MCP server that receives commands from Tuya AI
-2. HTTP client that forwards commands to Vercel cloud bridge
-
-The flow:
-Tuya AI → Tuya Platform → MCP SDK → Local MCP Server → Vercel Cloud Bridge → Chrome Extension → Browser
+Browser Automation MCP Server - HTTP/SSE Mode
+Runs a local HTTP server that Tuya SDK connects to
 """
 
 import os
 import asyncio
 import logging
-import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Import required libraries
+# Import libraries
 try:
     from mcp_sdk import create_mcpsdk
     from mcp.server import Server
-    from mcp.server.stdio import stdio_server
+    from mcp.server.sse import SseServerTransport
     from mcp.types import Tool, TextContent
+    import httpx
+    from starlette.applications import Starlette
+    from starlette.routing import Route
     SDK_AVAILABLE = True
 except ImportError as e:
     SDK_AVAILABLE = False
-    print(f"\n❌ ERROR: Missing dependencies: {e}")
-    print("\nInstall steps:")
-    print("1. pip install mcp httpx")
-    print("2. git clone https://github.com/tuya/tuya-mcp-sdk.git")
-    print("3. cd tuya-mcp-sdk/mcp-python")
-    print("4. pip install -e .")
+    print(f"❌ ERROR: {e}")
+    print("\nInstall: pip install mcp httpx starlette uvicorn")
     exit(1)
 
 # Setup logging
@@ -51,171 +43,97 @@ print(f"MCP Endpoint: {MCP_ENDPOINT or 'NOT SET'}")
 print(f"Cloud Bridge: {CLOUD_BRIDGE_URL}")
 print("=" * 50)
 
-# Create the local MCP server
-app = Server("browser-automation")
+# Create MCP server
+app_mcp = Server("browser-automation")
 
-async def send_to_cloud_bridge(command: dict) -> dict:
-    """Send command to Vercel cloud bridge"""
+# Tools and handlers (same as before)
+@app_mcp.list_tools()
+async def list_tools() -> list[Tool]:
+    return [
+        Tool(name="navigate_to_url", description="Navigate browser to URL",
+             inputSchema={"type": "object", "properties": {"url": {"type": "string"}}, "required": ["url"]}),
+        Tool(name="click_element", description="Click element by selector",
+             inputSchema={"type": "object", "properties": {"selector": {"type": "string"}}, "required": ["selector"]}),
+        Tool(name="type_text", description="Type text into input",
+             inputSchema={"type": "object", "properties": {"selector": {"type": "string"}, "text": {"type": "string"}}, "required": ["selector", "text"]}),
+        Tool(name="get_page_content", description="Get page content",
+             inputSchema={"type": "object", "properties": {}}),
+        Tool(name="take_screenshot", description="Take screenshot",
+             inputSchema={"type": "object", "properties": {}})
+    ]
+
+@app_mcp.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    logger.info(f"🔧 Tool: {name}, Args: {arguments}")
+    
     try:
-        logger.info(f"📤 Sending to cloud bridge: {command}")
-        
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{CLOUD_BRIDGE_URL}/api/commands/create",
-                json=command,
-                headers={
-                    "Authorization": f"Bearer {MCP_API_KEY}",
-                    "Content-Type": "application/json"
-                },
+                json={"type": name, "params": arguments, "user_id": "tuya_ai", "source": "tuya_mcp"},
+                headers={"Authorization": f"Bearer {MCP_API_KEY}"},
                 timeout=10.0
             )
             
             if response.status_code == 200:
                 result = response.json()
-                logger.info(f"✅ Command sent! ID: {result.get('command_id')}")
-                return result
+                return [TextContent(type="text", text=f"✅ Queued! ID: {result.get('command_id')}")]
             else:
-                logger.error(f"❌ Cloud bridge error: {response.status_code} - {response.text}")
-                return {"error": f"HTTP {response.status_code}"}
-                
+                return [TextContent(type="text", text=f"❌ Error: {response.status_code}")]
     except Exception as e:
-        logger.error(f"❌ Failed to send to cloud bridge: {e}")
-        return {"error": str(e)}
+        return [TextContent(type="text", text=f"❌ Error: {str(e)}")]
 
+# HTTP endpoints for SSE
+async def handle_sse(request):
+    async with SseServerTransport("/messages") as transport:
+        await app_mcp.run(transport.read_stream, transport.write_stream, 
+                         app_mcp.create_initialization_options())
 
-# Define browser automation tools
-@app.list_tools()
-async def list_tools() -> list[Tool]:
-    """List available browser automation tools"""
-    return [
-        Tool(
-            name="navigate_to_url",
-            description="Navigate browser to a specific URL",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "url": {
-                        "type": "string",
-                        "description": "The URL to navigate to"
-                    }
-                },
-                "required": ["url"]
-            }
-        ),
-        Tool(
-            name="click_element",
-            description="Click on an element using CSS selector",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "selector": {
-                        "type": "string",
-                        "description": "CSS selector of element to click"
-                    }
-                },
-                "required": ["selector"]
-            }
-        ),
-        Tool(
-            name="type_text",
-            description="Type text into an input field",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "selector": {
-                        "type": "string",
-                        "description": "CSS selector of input field"
-                    },
-                    "text": {
-                        "type": "string",
-                        "description": "Text to type"
-                    }
-                },
-                "required": ["selector", "text"]
-            }
-        ),
-        Tool(
-            name="get_page_content",
-            description="Get the text content of the current page",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-                "required": []
-            }
-        ),
-        Tool(
-            name="take_screenshot",
-            description="Take a screenshot of the current page",
-            inputSchema={
-                "type": "object",
-                "properties": {},
-                "required": []
-            }
-        )
-    ]
+async def handle_messages(request):
+    return {"status": "ok"}
 
+# Starlette app
+app_http = Starlette(routes=[
+    Route("/sse", handle_sse),
+    Route("/messages", handle_messages, methods=["POST"])
+])
 
-@app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Handle tool calls - forward to cloud bridge"""
-    logger.info(f"🔧 Tool called: {name}")
-    logger.info(f"   Arguments: {arguments}")
-    
-    # Create command for cloud bridge
-    command = {
-        "type": name,
-        "params": arguments,
-        "user_id": "tuya_ai_user",  # From Tuya AI
-        "source": "tuya_mcp"
-    }
-    
-    # Send to cloud bridge
-    result = await send_to_cloud_bridge(command)
-    
-    if "error" in result:
-        return [TextContent(
-            type="text",
-            text=f"❌ Error: {result['error']}"
-        )]
-    else:
-        return [TextContent(
-            type="text", 
-            text=f"✅ Command queued! ID: {result.get('command_id', 'unknown')}\nThe browser extension will execute this shortly."
-        )]
-
-
-async def run_local_mcp_server():
-    """Run the local MCP server using stdio"""
-    logger.info("🚀 Starting local MCP server...")
-    logger.info("📡 Commands will be forwarded to cloud bridge")
-    async with stdio_server() as (read_stream, write_stream):
-        await app.run(read_stream, write_stream, app.create_initialization_options())
-
-
-async def main():
-    """Main entry point"""
-    
+async def run_tuya_sdk():
+    """Connect to Tuya Platform"""
     if not all([MCP_ENDPOINT, MCP_ACCESS_ID, MCP_ACCESS_SECRET]):
-        print("❌ Missing required environment variables!")
-        print("\nRequired in .env:")
-        print("- MCP_ENDPOINT")
-        print("- MCP_ACCESS_ID")
-        print("- MCP_ACCESS_SECRET")
-        print("- CLOUD_BRIDGE_URL (optional, has default)")
-        print("- MCP_API_KEY (for cloud bridge auth)")
+        logger.error("❌ Missing MCP credentials!")
         return
     
-    try:
-        logger.info("🔌 Starting Browser Automation MCP Server...")
-        
-        # Run local MCP server (receives from Tuya, sends to cloud bridge)
-        await run_local_mcp_server()
-        
-    except KeyboardInterrupt:
-        logger.info("\n⏹️  Server stopped")
-    except Exception as e:
-        logger.error(f"❌ Error: {e}", exc_info=True)
+    logger.info("🔌 Connecting to Tuya MCP Platform...")
+    
+    sdk = create_mcpsdk(
+        endpoint=MCP_ENDPOINT,
+        access_id=MCP_ACCESS_ID,
+        access_secret=MCP_ACCESS_SECRET,
+        custom_mcp_server_endpoint="http://localhost:8765/sse"
+    )
+    
+    logger.info("✅ Connected to Tuya Platform!")
+    logger.info("🎧 MCP Server is ONLINE")
+    
+    while True:
+        await asyncio.sleep(1)
 
+async def main():
+    if not all([MCP_ENDPOINT, MCP_ACCESS_ID, MCP_ACCESS_SECRET]):
+        print("❌ Missing env vars! Check .env file")
+        return
+    
+    # Run HTTP server and SDK connection concurrently
+    import uvicorn
+    
+    config = uvicorn.Config(app_http, host="127.0.0.1", port=8765, log_level="info")
+    server = uvicorn.Server(config)
+    
+    await asyncio.gather(
+        server.serve(),
+        run_tuya_sdk()
+    )
 
 if __name__ == "__main__":
     if SDK_AVAILABLE:
