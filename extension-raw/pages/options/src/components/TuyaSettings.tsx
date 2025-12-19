@@ -37,8 +37,17 @@ export const TuyaSettings = ({ isDarkMode }: { isDarkMode: boolean }) => {
     }, []);
 
     const saveSettings = () => {
+        // Save config
         chrome.storage.local.set({ tuya_config: config }, () => {
-            alert('✅ Tuya settings saved!');
+            // Also save Access ID to bridge credentials (username field stores Access ID)
+            chrome.storage.local.set({
+                cloudBridgeCredentials: {
+                    username: config.clientId,  // Access ID
+                    password: config.clientSecret || '',  // Name (optional)
+                }
+            }, () => {
+                alert('✅ Tuya Access ID saved!\n\nNow go to "Tuya AI Bridge" section and click "Start Polling"');
+            });
         });
     };
 
@@ -231,70 +240,46 @@ export const TuyaSettings = ({ isDarkMode }: { isDarkMode: boolean }) => {
                 )}
             </div>
 
-            {/* Original Tuya API Settings Section */}
+            {/* Tuya MCP Access ID Section */}
             <div className="glass-card p-6">
-                <h3 className="font-medium text-lg text-primary mb-4">🏠 Туya IoT Cloud API</h3>
+                <h3 className="font-medium text-lg text-primary mb-2">🔑 Tuya MCP Access ID</h3>
+                <p className="text-sm text-secondary mb-6">
+                    Enter your Tuya MCP Server Access ID to receive commands from Tuya AI Workflow
+                </p>
 
-                {/* Enable Toggle */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <label className="font-medium text-lg text-primary">
-                            Enable Integration
-                        </label>
-                        <p className="text-sm text-secondary">Master switch for Tuya features</p>
-                    </div>
-                    <input
-                        type="checkbox"
-                        checked={config.enabled}
-                        onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
-                        className="w-5 h-5 accent-current text-primary"
-                    />
-                </div>
-
-                <div className="grid gap-6">
-                    {/* Client ID */}
+                <div className="space-y-4">
+                    {/* Access ID */}
                     <div>
                         <label className="block mb-2 font-medium text-secondary">
-                            Client ID
+                            Access ID <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             value={config.clientId}
                             onChange={(e) => setConfig({ ...config, clientId: e.target.value })}
-                            placeholder="Enter your Tuya Client ID"
-                            className="glass-input w-full"
+                            placeholder="9dddfe970174516512ff..."
+                            className="glass-input w-full font-mono text-sm"
                         />
+                        <p className="text-xs text-secondary mt-2">
+                            📍 Get this from Tuya IoT Platform → Your MCP Server → Access ID
+                        </p>
                     </div>
 
-                    {/* Client Secret */}
+                    {/* Optional Name */}
                     <div>
                         <label className="block mb-2 font-medium text-secondary">
-                            Client Secret
+                            Name (Optional)
                         </label>
                         <input
-                            type="password"
+                            type="text"
                             value={config.clientSecret}
                             onChange={(e) => setConfig({ ...config, clientSecret: e.target.value })}
-                            placeholder="Enter your Tuya Client Secret"
+                            placeholder="My Tuya MCP Server"
                             className="glass-input w-full"
                         />
-                    </div>
-
-                    {/* Region */}
-                    <div>
-                        <label className="block mb-2 font-medium text-secondary">
-                            API Region
-                        </label>
-                        <select
-                            value={config.baseUrl}
-                            onChange={(e) => setConfig({ ...config, baseUrl: e.target.value })}
-                            className="glass-input w-full"
-                        >
-                            <option value="https://openapi.tuyaus.com">United States</option>
-                            <option value="https://openapi.tuyacn.com">China</option>
-                            <option value="https://openapi.tuyaeu.com">Europe</option>
-                            <option value="https://openapi.tuyain.com">India</option>
-                        </select>
+                        <p className="text-xs text-secondary mt-2">
+                            A friendly name to identify this configuration
+                        </p>
                     </div>
                 </div>
             </div>
