@@ -22,16 +22,33 @@ let credentials = {
 let isPolling = false;
 let isPaused = false;
 
-// Load configuration from storage on startup
+/**
+ * Load configuration from storage
+ */
 async function loadConfig() {
-    const result = await chrome.storage.local.get(['cloudBridgeUrl']);
-    if (result.cloudBridgeUrl) {
-        CLOUD_BRIDGE_URL = result.cloudBridgeUrl;
-        console.log('[Tuya Bridge] Loaded bridge URL:', CLOUD_BRIDGE_URL);
-    }
+    return new Promise<void>((resolve) => {
+        chrome.storage.local.get(['cloudBridgeUrl', 'bridge_url', 'bridge_credentials'], (result) => {
+            // Support both old and new key names
+            if (result.cloudBridgeUrl) {
+                CLOUD_BRIDGE_URL = result.cloudBridgeUrl;
+            } else if (result.bridge_url) {
+                CLOUD_BRIDGE_URL = result.bridge_url;
+            }
+
+            if (result.bridge_credentials) {
+                credentials = result.bridge_credentials;
+            }
+
+            console.log('[Tuya Bridge] Config loaded:', {
+                url: CLOUD_BRIDGE_URL,
+                hasCredentials: !!credentials.username,
+            });
+            resolve();
+        });
+    });
 }
 
-// Initialize config
+// Initialize config on module load
 loadConfig();
 
 // Listen for URL updates from options page
@@ -49,30 +66,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-/**
- * Load configuration from storage
- */
-async function loadConfig() {
-    return new Promise<void>((resolve) => {
-        chrome.storage.local.get(['bridge_url', 'bridge_credentials'], (result) => {
-            if (result.bridge_url) {
-                CLOUD_BRIDGE_URL = result.bridge_url;
-            }
-            if (result.bridge_credentials) {
-                credentials = result.bridge_credentials;
-            }
-            console.log('[Cloud Bridge] Config loaded:', {
-                url: CLOUD_BRIDGE_URL,
-                hasCredentials: !!credentials.username,
-            });
-            resolve();
-        });
-    });
-}
-
-// Load config on module initialization
-loadConfig();
 
 /**
  * Start polling for commands from bridge server
