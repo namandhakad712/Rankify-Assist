@@ -146,6 +146,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Handle other message types if needed in the future
   // Return false if response is not sent asynchronously
+  if (message.type === 'execute_tuya_task') {
+    (async () => {
+      try {
+        if (!message.task) throw new Error('No task provided');
+        if (!message.tabId) throw new Error('No tab ID provided');
+
+        logger.info('[Tuya] Executing task:', message.task);
+        currentExecutor = await setupExecutor(message.taskId, message.task, browserContext);
+        subscribeToExecutorEvents(currentExecutor);
+
+        const result = await currentExecutor.execute();
+        logger.info('[Tuya] Execution result:', result);
+        sendResponse({ success: true, result });
+      } catch (error) {
+        logger.error('[Tuya] Execution error:', error);
+        sendResponse({ success: false, error: (error as Error).message });
+      }
+    })();
+    return true;
+  }
+
   return false;
 });
 

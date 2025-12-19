@@ -27,7 +27,9 @@ let isPaused = false;
  */
 async function loadConfig() {
     return new Promise<void>((resolve) => {
-        chrome.storage.local.get(['cloudBridgeUrl', 'bridge_url', 'bridge_credentials'], (result) => {
+        chrome.storage.local.get(['cloudBridgeUrl', 'bridge_url', 'bridge_credentials', 'cloudBridgeCredentials'], (result) => {
+            console.log('[Tuya Bridge] RAW STORAGE:', result);  // ← DEBUG: See everything!
+
             // Support both old and new key names
             if (result.cloudBridgeUrl) {
                 CLOUD_BRIDGE_URL = result.cloudBridgeUrl;
@@ -35,21 +37,43 @@ async function loadConfig() {
                 CLOUD_BRIDGE_URL = result.bridge_url;
             }
 
+            // Check both possible credential keys
             if (result.bridge_credentials) {
                 credentials = result.bridge_credentials;
+                console.log('[Tuya Bridge] Loaded from bridge_credentials:', credentials);
+            } else if (result.cloudBridgeCredentials) {
+                credentials = result.cloudBridgeCredentials;
+                console.log('[Tuya Bridge] Loaded from cloudBridgeCredentials:', credentials);
             }
 
             console.log('[Tuya Bridge] Config loaded:', {
                 url: CLOUD_BRIDGE_URL,
                 hasCredentials: !!credentials.username,
+                accessId: credentials.username ? credentials.username.substring(0, 20) + '...' : 'NOT SET',
             });
             resolve();
         });
     });
 }
 
+
 // Initialize config on module load
 loadConfig();
+
+// Listen for storage changes and reload config
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local') {
+        if (changes.bridge_credentials || changes.cloudBridgeUrl || changes.bridge_url) {
+            console.log('[Tuya Bridge] Storage changed, reloading config...');
+            loadConfig().then(() => {
+                console.log('[Tuya Bridge] Config reloaded:', {
+                    url: CLOUD_BRIDGE_URL,
+                    accessId: credentials.username ? credentials.username.substring(0, 20) + '...' : 'NOT SET'
+                });
+            });
+        }
+    }
+});
 
 // Listen for URL updates from options page
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -168,52 +192,68 @@ async function executeCommand(commandId: string, command: string) {
 
         const activeTab = tabs[0];
 
-        // Send command to the extension's message handler
-        // This will trigger your existing Nanobrowser automation
-        const result = await chrome.runtime.sendMessage({
-            type: 'newTask',
-            data: {
-                task: command,
-                tabId: activeTab.id,
-            },
+        // 1. Open Side Panel (Required for visuals)
+        if (activeTab.id) {
+            try {
+                // @ts-ignore - sidePanel API types might be missing in some setups
+                await chrome.sidePanel.open({ tabId: activeTab.id });
+                // Give it a moment to initialize connection
+                await sleep(1000);
+            } catch (e) {
+                console.warn('[Tuya Bridge] Could not open side panel automatically:', e);
+            }
+        }
+
+        // 2. Execute Task via Background Service
+        // This relies on the 'execute_tuya_task' handler in background/index.ts
+        const result: any = await chrome.runtime.sendMessage({
+            type: 'execute_tuya_task',
+            task: command,
+            taskId: `tuya_${commandId}`,
+            tabId: activeTab.id,
         });
 
         console.log('[Tuya Bridge] Task result:', result);
 
-        // Send result back to cloud bridge
-        await sendResultToBridge(commandId, result || 'Task completed successfully');
+        if (result && result.success) {
+            await sendResultToBridge(commandId, result.result || 'Task completed successfully');
+        } else {
+            throw new Error(result?.error || 'Unknown execution error');
+        }
 
     } catch (error) {
         console.error('[Tuya Bridge] Error executing command:', error);
 
         // Send error back to cloud bridge
-        await sendResultToBridge(commandId, `Error: ${(error as Error).message}`);
+        await sendResultToBridge(commandId, `Error: ${(error as Error).message}`, 'failed');
     }
 }
 
 /**
  * Send execution result back to cloud bridge
  */
-async function sendResultToBridge(commandId: string, result: string | object) {
+async function sendResultToBridge(commandId: string, result: string | object, status = 'completed') {
     try {
         const resultText = typeof result === 'string' ? result : JSON.stringify(result);
-        const authHeader = `Basic ${btoa(`${credentials.username}:${credentials.password}`)}`;
+
+        // Pass Access ID if available (stored in credentials.username)
+        const accessId = credentials.username;
 
         await fetch(`${CLOUD_BRIDGE_URL}/api/result`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': authHeader,
             },
             body: JSON.stringify({
                 commandId,
+                accessId,
                 result: resultText,
-                success: true,
-                executionTime: 0, // TODO: Track actual execution time
+                status: status,
+                completedAt: new Date().toISOString(),
             }),
         });
 
-        console.log('[Cloud Bridge] Result sent');
+        console.log(`[Cloud Bridge] Result sent (${status})`);
     } catch (error) {
         console.error('[Cloud Bridge] Failed to send result:', error);
     }

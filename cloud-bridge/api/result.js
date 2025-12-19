@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase.js';
-import { verifyAuth } from '../lib/auth.js';
 
 export default async function handler(req, res) {
     // Enable CORS
@@ -15,51 +14,50 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Verify authentication
-    const authHeader = req.headers.authorization;
-    const user = await verifyAuth(authHeader);
-
-    if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { commandId, result, success, executionTime } = req.body;
+    const { commandId, result, status, accessId } = req.body;
 
     if (!commandId) {
-        return res.status(400).json({ error: 'Missing commandId' });
+        return res.status(400).json({ error: 'Command ID required' });
     }
 
-    console.log(`[Result] User ${user.userId} submitting result for command ${commandId}`);
+    console.log(`[Result] Received result for command ${commandId} (Status: ${status})`);
 
-    // Insert result into Supabase
-    const { error: insertError } = await supabase
-        .from('results')
-        .insert([
-            {
-                command_id: commandId,
-                user_id: user.userId,
-                result: result || 'No result provided',
-                success: success !== undefined ? success : true,
-                execution_time: executionTime || 0,
-                completed_at: new Date().toISOString(),
-            },
-        ]);
+    try {
+        // 1. Update command status
+        const { error: updateError } = await supabase
+            .from('commands')
+            .update({
+                status: status || 'completed',
+                updated_at: new Date().toISOString(),
+            })
+            .eq('command_id', commandId);
 
-    if (insertError) {
-        console.error('[Result] Error inserting result:', insertError);
-        return res.status(500).json({ error: 'Failed to store result' });
+        if (updateError) {
+            console.error('[Result] Error updating command status:', updateError);
+            // Don't fail the request, try to insert result anyway
+        }
+
+        // 2. Insert result into results table
+        const { error: insertError } = await supabase
+            .from('results')
+            .upsert([ // Using upsert just in case result already exists
+                {
+                    command_id: commandId,
+                    result: result, // Can be JSON string or text
+                    created_at: new Date().toISOString(),
+                },
+            ], { onConflict: 'command_id' });
+
+        if (insertError) {
+            console.error('[Result] Error inserting result:', insertError);
+            return res.status(500).json({ error: 'Failed to save result', details: insertError.message });
+        }
+
+        console.log(`[Result] Command ${commandId} completed successfully`);
+        return res.json({ success: true });
+
+    } catch (error) {
+        console.error('[Result] Server error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Update command status
-    await supabase
-        .from('commands')
-        .update({ status: 'completed' })
-        .eq('command_id', commandId);
-
-    console.log(`[Result] Result stored for command ${commandId}`);
-
-    return res.json({
-        success: true,
-        message: 'Result stored successfully',
-    });
 }
