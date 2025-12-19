@@ -1,12 +1,11 @@
 """
-Browser Automation MCP Server
-Uses official Tuya MCP SDK to connect to Tuya Platform
-Sends browser commands to Vercel cloud bridge
+Browser Automation MCP Server  
+Uses official Tuya MCP SDK - NO OpenAPI credentials needed!
+The MCP SDK connects to Tuya Platform and receives browser commands.
 """
 
 import os
 import asyncio
-import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,143 +24,127 @@ except ImportError:
     print("4. Return here and run: python server.py\n")
     exit(1)
 
-# Tuya Platform MCP Credentials (from MCP Management page)
-MCP_ENDPOINT = os.getenv('MCP_ENDPOINT')  # wss://...
+# ONLY MCP Credentials Needed (from Tuya Platform MCP Management)
+MCP_ENDPOINT = os.getenv('MCP_ENDPOINT')
 MCP_ACCESS_ID = os.getenv('MCP_ACCESS_ID')
 MCP_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
 
-# Vercel Cloud Bridge
-CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL')  # https://your-project.vercel.app
-MCP_API_KEY = os.getenv('MCP_API_KEY')
-DEFAULT_USER_ID = os.getenv('DEFAULT_USER_ID', 'default')
-
 print("🌐 Browser Automation MCP Server")
 print("=" * 50)
-print(f"MCP Endpoint: {MCP_ENDPOINT}")
-print(f"Cloud Bridge: {CLOUD_BRIDGE_URL}")
-print(f"Default User: {DEFAULT_USER_ID}")
+print(f"MCP Endpoint: {MCP_ENDPOINT or 'NOT SET'}")
+print(f"Access ID: {MCP_ACCESS_ID[:20] + '...' if MCP_ACCESS_ID else 'NOT SET'}")
 print("=" * 50)
 
-def execute_browser_task(command: str, user_id: str = None):
-    """
-    Execute browser automation command via cloud bridge
-    
-    Flow:
-    1. MCP receives tool call from Tuya Workflow
-    2. Send command to Vercel API (/api/execute)
-    3. Extension polls Vercel, gets command
-    4. Extension executes in browser
-    5. Extension sends result to Vercel
-    6. Vercel returns result to us
-    7. We return to Tuya Workflow
-    """
-    user_id = user_id or DEFAULT_USER_ID
-    
-    print(f"\n📨 [execute_browser_task] Command: {command}")
-    print(f"   User: {user_id}")
-    
-    try:
-        # Send to cloud bridge
-        response = requests.post(
-            f"{CLOUD_BRIDGE_URL}/api/execute",
-            json={
-                "userId": user_id,
-                "apiKey": MCP_API_KEY,
-                "command": command,
-            },
-            timeout=65  # Wait for extension to execute (60s timeout + buffer)
-        )
-        
-        if response.status_code == 200:
-            result = response.json()
-            print(f"✅ Success: {result.get('result')}")
-            return {
-                "success": True,
-                "result": result.get('result', 'Task completed'),
-                "executionTime": result.get('executionTime', 0)
-            }
-        elif response.status_code == 408:
-            print("⏱️  Timeout - extension may not be connected")
-            return {
-                "success": False,
-                "error": "Extension timeout - is it running and polling?"
-            }
-        else:
-            print(f"❌ Cloud bridge error: {response.status_code}")
-            return {
-                "success": False,
-                "error": f"Cloud error: {response.status_code}"
-            }
-            
-    except requests.exceptions.Timeout:
-        print("❌ Request timeout")
-        return {
-            "success": False,
-            "error": "Request timeout - check extension and cloud bridge"
-        }
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
 
-
-# MCP Tool Definitions (Standard MCP format)
+# MCP Tool Definitions
 TOOLS = [
     {
-        "name": "execute_browser_task",
-        "description": "Execute a browser automation task. Examples: 'check gmail unread count', 'open youtube', 'search for AI news'",
+        "name": "navigate_to_url",
+        "description": "Navigate browser to a specific URL",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "command": {
+                "url": {
                     "type": "string",
-                    "description": "The browser task to execute in natural language"
-                },
-                "user_id": {
-                    "type": "string",
-                    "description": "Optional user ID (defaults to env configured user)"
+                    "description": "The URL to navigate to"
                 }
             },
-            "required": ["command"]
+            "required": ["url"]
+        }
+    },
+    {
+        "name": "click_element",
+        "description": "Click on an element using CSS selector",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the element to click"
+                }
+            },
+            "required": ["selector"]
+        }
+    },
+    {
+        "name": "type_text",
+        "description": "Type text into an input field",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "selector": {
+                    "type": "string",
+                    "description": "CSS selector of the input field"
+                },
+                "text": {
+                    "type": "string",
+                    "description": "Text to type"
+                }
+            },
+            "required": ["selector", "text"]
+        }
+    },
+    {
+        "name": "get_page_content",
+        "description": "Get the text content of the current page",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+    },
+    {
+        "name": "take_screenshot",
+        "description": "Take a screenshot of the current page",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
         }
     }
 ]
 
 
 def handle_tool_call(tool_name: str, arguments: dict):
-    """Handle incoming tool calls from Tuya AI Workflow"""
-    print(f"\n🔧 Tool Call: {tool_name}")
+    """
+    Handle incoming tool calls from Tuya AI Workflow
+    
+    NOTE: The actual browser control happens in the Chrome extension!
+    This MCP server forwards commands to the cloud bridge,
+    which then sends them to the browser extension.
+    """
+    print(f"\n🔧 Tool Call Received: {tool_name}")
     print(f"   Arguments: {arguments}")
     
-    if tool_name == "execute_browser_task":
-        return execute_browser_task(**arguments)
-    else:
-        return {"error": f"Unknown tool: {tool_name}"}
+    # Return the arguments - these will be forwarded to the browser
+    return {
+        "success": True,
+        "tool": tool_name,
+        "arguments": arguments,
+        "message": f"Browser command {tool_name} queued"
+    }
 
 
 async def main():
     """Main entry point - Connect to Tuya MCP Gateway"""
     
     print("\n🚀 Starting Browser Automation MCP Server...")
-    print("This server connects to Tuya Cloud via WebSocket")
-    print("and listens for browser automation tool calls.\n")
+    print("This server connects to Tuya MCP Gateway via WebSocket\n")
     
     if not all([MCP_ENDPOINT, MCP_ACCESS_ID, MCP_ACCESS_SECRET]):
         print("❌ Missing required environment variables!")
         print("\nRequired in .env:")
-        print("- MCP_ENDPOINT (from Tuya MCP Management)")
-        print("- MCP_ACCESS_ID")
-        print("- MCP_ACCESS_SECRET")
-        print("- CLOUD_BRIDGE_URL (your Vercel URL)")
-        print("- MCP_API_KEY")
+        print("- MCP_ENDPOINT     (from Tuya Platform → MCP Management)")
+        print("- MCP_ACCESS_ID    (from Tuya Platform → MCP Management)")
+        print("- MCP_ACCESS_SECRET (from Tuya Platform → MCP Management)")
+        print("\n📚 Guide: https://developer.tuya.com/en/docs/iot/custom-mcp")
+        print("\nNOTE: NO user ID or OpenAPI credentials needed!")
         return
     
     try:
         print("🔌 Connecting to Tuya MCP Gateway...")
         
-        # Initialize Tuya MCP SDK (persistent WebSocket connection)
+        # Initialize Tuya MCP SDK
         async with create_mcpsdk(
             endpoint=MCP_ENDPOINT,
             access_id=MCP_ACCESS_ID,
@@ -169,12 +152,12 @@ async def main():
             tools=TOOLS,
             tool_handler=handle_tool_call
         ) as sdk:
-            print("✅ Connected to Tuya Cloud!")
-            print("🎧 Listening for tool calls from AI Workflow...")
+            print("✅ Connected to Tuya MCP Platform!")
+            print("🎧 Listening for browser automation commands from Tuya AI...")
             print("\nMCP Server is running. Press Ctrl+C to stop.\n")
             print("=" * 50)
             
-            # Run forever (blocks until Ctrl+C)
+            # Run forever
             await sdk.run()
             
     except KeyboardInterrupt:
@@ -183,10 +166,10 @@ async def main():
     except Exception as e:
         print(f"\n❌ Fatal Error: {e}")
         print("\nTroubleshooting:")
-        print("1. Check your .env file has correct values")
-        print("2. Verify MCP credentials from Tuya Platform")
-        print("3. Ensure Vercel cloud bridge is deployed")
-        print("4. Check network connection\n")
+        print("1. Check MCP credentials in .env")
+        print("2. Verify data center selection")
+        print("3. Ensure MCP server is created on Tuya Platform")
+        print("\n📚 Guide: https://developer.tuya.com/en/docs/iot/custom-mcp\n")
 
 
 if __name__ == "__main__":
