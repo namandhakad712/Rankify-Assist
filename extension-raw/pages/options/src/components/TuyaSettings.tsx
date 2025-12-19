@@ -129,7 +129,17 @@ export const TuyaSettings = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
                             <span className="text-secondary">Bridge URL:</span>
-                            <div className="font-mono text-xs text-primary">{bridgeStatus.bridgeUrl}</div>
+                            <input
+                                type="url"
+                                className="font-mono text-xs text-primary bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 w-full mt-1 focus:outline-none focus:border-blue-500"
+                                value={bridgeStatus.bridgeUrl}
+                                onChange={(e) => setBridgeStatus(prev => ({ ...prev, bridgeUrl: e.target.value }))}
+                                onBlur={async () => {
+                                    await chrome.storage.local.set({ cloudBridgeUrl: bridgeStatus.bridgeUrl });
+                                    chrome.runtime.sendMessage({ type: 'update_bridge_url', url: bridgeStatus.bridgeUrl });
+                                }}
+                                placeholder="https://your-project.vercel.app"
+                            />
                         </div>
                         <div>
                             <span className="text-secondary">Polling:</span>
