@@ -45,29 +45,28 @@ async def execute_browser_command(
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{CLOUD_BRIDGE_URL}/api/commands/create",
+                f"{CLOUD_BRIDGE_URL}/api/execute",  # ← FIXED: Correct endpoint
                 json={
-                    "type": "execute_command",  # Generic type
-                    "command": command,  # Natural language command
-                    "user_id": "tuya_ai",
-                    "source": "tuya_workflow"
+                    "userId": "tuya_ai",  # ← FIXED: Correct field name
+                    "apiKey": MCP_API_KEY,  # ← FIXED: Send in body, not header
+                    "command": command
                 },
-                headers={"Authorization": f"Bearer {MCP_API_KEY}"},
-                timeout=10.0
+                timeout=15.0  # Shorter timeout since we're not waiting for execution
             )
             
             if response.status_code == 200:
                 result = response.json()
-                command_id = result.get('command_id')
-                logger.info(f"✅ Command forwarded! ID: {command_id}")
-                return f"✅ Command sent to browser extension! Command ID: {command_id}"
+                command_id = result.get('commandId')
+                logger.info(f"✅ Command queued! ID: {command_id}")
+                return f"✅ Command sent! The browser extension will execute it shortly. (ID: {command_id})"
             else:
-                logger.error(f"❌ Cloud Bridge error: {response.status_code}")
-                return f"❌ Failed to forward command: {response.status_code}"
+                error_msg = response.text
+                logger.error(f"❌ Cloud Bridge error {response.status_code}: {error_msg}")
+                return f"❌ Failed: {error_msg}"
                 
     except Exception as e:
         logger.error(f"❌ Error: {str(e)}")
-        return f"❌ Error sending command: {str(e)}"
+        return f"❌ Error: {str(e)}"
 
 # Main entry point
 if __name__ == "__main__":

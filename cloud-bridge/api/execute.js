@@ -32,6 +32,22 @@ export default async function handler(req, res) {
 
     console.log(`[Execute] Queueing command for user ${userId}:`, commandId);
 
+    // Ensure user exists (create if not)
+    const { error: userError } = await supabase
+        .from('users')
+        .upsert([
+            {
+                user_id: userId,
+                email: `${userId}@system.local`,
+                name: userId === 'tuya_ai' ? 'Tuya AI System' : userId,
+            },
+        ], { onConflict: 'user_id' });
+
+    if (userError) {
+        console.error('[Execute] Error ensuring user exists:', userError);
+        // Continue anyway - maybe user already exists
+    }
+
     // Insert command into Supabase
     const { error: insertError } = await supabase
         .from('commands')
@@ -47,35 +63,18 @@ export default async function handler(req, res) {
 
     if (insertError) {
         console.error('[Execute] Error inserting command:', insertError);
-        return res.status(500).json({ error: 'Failed to queue command' });
+        return res.status(500).json({ error: 'Failed to queue command', details: insertError.message });
     }
 
-    // Wait for result (long-polling)
-    const result = await waitForResult(commandId, 60000);
+    console.log(`[Execute] Command ${commandId} queued successfully`);
 
-    if (result) {
-        console.log(`[Execute] Command ${commandId} completed successfully`);
-        return res.json({
-            success: true,
-            commandId,
-            result: result.result,
-            executionTime: result.execution_time,
-        });
-    } else {
-        console.log(`[Execute] Command ${commandId} timed out`);
-
-        // Mark command as timed out
-        await supabase
-            .from('commands')
-            .update({ status: 'timeout' })
-            .eq('command_id', commandId);
-
-        return res.status(408).json({
-            success: false,
-            commandId,
-            error: 'Command timeout - no response from extension',
-        });
-    }
+    // Return immediately - don't wait for result (to avoid Vercel timeout)
+    return res.json({
+        success: true,
+        commandId,
+        message: 'Command queued successfully. Extension will execute it.',
+        status: 'pending'
+    });
 }
 
 async function waitForResult(commandId, timeout) {
