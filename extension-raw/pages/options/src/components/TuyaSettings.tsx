@@ -41,12 +41,12 @@ export const TuyaSettings = ({ isDarkMode }: { isDarkMode: boolean }) => {
         chrome.storage.local.set({ tuya_config: config }, () => {
             // Also save Access ID to bridge credentials (username field stores Access ID)
             chrome.storage.local.set({
-                cloudBridgeCredentials: {
+                bridge_credentials: {  // ← FIXED: Match the key that tuyaBridge loads!
                     username: config.clientId,  // Access ID
                     password: config.clientSecret || '',  // Name (optional)
                 }
             }, () => {
-                alert('✅ Tuya Access ID saved!\n\nNow go to "Tuya AI Bridge" section and click "Start Polling"');
+                alert('✅ Tuya Access ID saved!\n\nReload the extension for changes to take effect.');
             });
         });
     };
