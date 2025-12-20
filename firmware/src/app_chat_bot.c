@@ -4,7 +4,8 @@
  */
 #include "tuya_cloud_types.h"
 #include "tuya_cloud_com_defs.h"
-#include "tuya_iot.h"  // REPLACES tuya_iot_dp_api.h
+#include "tuya_iot.h"
+#include "tuya_iot_dp.h"  // Required for tuya_iot_dp_obj_report
 #include "cJSON.h"
 #include "ai_audio.h"
 #include "app_chat_bot.h"
@@ -39,22 +40,22 @@ static char pending_command_json[512] = {0};
 void update_dp_string(int dp_id, const char* value) {
     if (value == NULL) return;
     
-    // Create JSON: {"104": "value"}
-    cJSON *root = cJSON_CreateObject();
-    char dp_key[8];
-    snprintf(dp_key, sizeof(dp_key), "%d", dp_id);
-    cJSON_AddStringToObject(root, dp_key, value);
-    
-    // Convert to String
-    char *json_str = cJSON_PrintUnformatted(root);
-    if (json_str) {
-        PR_NOTICE("Reporting DP: %s", json_str);
-        // Use Tuya IoT API to report
-        tuya_iot_dp_report_json(&ai_client, json_str);
-        tal_free(json_str);
+    tuya_iot_client_t *client = tuya_iot_client_get();
+    if (!client) {
+        PR_ERR("IoT client not initialized");
+        return;
     }
-
-    cJSON_Delete(root);
+    
+    // Create DP object (official API pattern)
+    dp_obj_t dp_obj = {0};
+    dp_obj.id = dp_id;
+    dp_obj.type = PROP_STR;
+    dp_obj.value.dp_str = (char*)value;
+    
+    PR_NOTICE("Reporting DP %d: %s", dp_id, value);
+    
+    // Use official DP reporting API
+    tuya_iot_dp_obj_report(client, client->activate.devid, &dp_obj, 1, 0);
 }
 
 /* --- Parse AI Response and Handle Flow --- */

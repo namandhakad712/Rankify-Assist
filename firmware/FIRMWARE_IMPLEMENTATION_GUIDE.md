@@ -234,22 +234,6 @@ void dev_dp_cb(tuya_iot_client_t *client, tuya_dp_cmd_t *dp_cmd) {
 
 ---
 
-## When Board Arrives - Build & Flash
-
-```powershell
-# 1. Copy firmware to build location
-xcopy /E /I /Y c:\TUYA\RankifyAssist\firmware c:\TUYA\TuyaOpen\apps\tuya.ai\rankify_assist
-
-# 2. Update tuya_config.h with UUID/AuthKey
-
-# 3. Build
-cd c:\TUYA\TuyaOpen
-python build_app.py apps/tuya.ai/rankify_assist rankify_assist:1.0.0
-
-# 4. Flash using Tuya Wind IDE
-# Output: output/rankify_assist_1.0.0/rankify_assist_QIO.bin
-```
-
 ---
 
 ## Testing Flow
@@ -287,3 +271,22 @@ python build_app.py apps/tuya.ai/rankify_assist rankify_assist:1.0.0
 **⏳ Firmware: Needs implementation** - This guide provides the pattern. When board arrives, implement API calls and state machine.
 
 **📋 Platform: Complete** - All DPs defined, AI Agent deployed
+
+## Hardware Controls
+
+### User Button (P29) Functionality
+The hardware button connected to GPIO P29 is configured for **EMERGENCY RESET & RE-PAIRING**.
+
+- **Action:** Single Press (Short Click)
+- **Behavior:**
+  1. **Stops AI Audio** immediately.
+  2. **Deletes Network Configuration** (
+etinfo) from persistent storage.
+  3. **Wipes Tuya IoT Data** (Unbinds device).
+  4. **Forces System Reboot**.
+- **Result:** Device reboots into a clean state and automatically enters **Start Pairing Mode (AP + BLE)** because no network info exists.
+
+> **Use this if:**
+> - The device is stuck connecting to an old WiFi.
+> - You need to re-pair with a new account.
+> - The device is unresponsive.
