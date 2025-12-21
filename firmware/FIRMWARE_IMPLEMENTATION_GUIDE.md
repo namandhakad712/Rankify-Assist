@@ -1,292 +1,217 @@
-# Firmware Implementation Guide
-## AI Agent API Integration for T5-E1
-
-> **Note:** Full firmware code requires T5-AI hardware to test. This guide provides the implementation pattern for when your board arrives.
-
----
+# Firmware Implementation Guide - Tuya AI Workflow Architecture
 
 ## Overview
 
-The firmware needs to:
-1. Capture voice → Send to Tuya Cloud STT
-2. Get text result
-3. **Call Tuya AI Agent API** with text
-4. Parse AI's JSON response
-5. Update DPs 102, 106 based on response
-6. Handle safety confirmation flow (DP 103, 104)
+**Rankify Assist** uses the **Tuya AI Workflow** architecture where the cloud handles all intelligence, planning, and execution coordination.
 
----
+### Architecture Components
 
-## Required APIs
-
-### 1. AI Agent Chat API
-
-**Endpoint:** `POST /v2.0/cloud/ai-agent/chat`
-
-**Headers:**
-```c
-Authorization: Bearer {access_token}
-Content-Type: application/json
 ```
-
-**Request Body:**
-```json
-{
-  "agent_id": "aipt_f6hcebhd23nk",
-  "user_input": "Check my Gmail",
-  "session_id": "{device_id}",
-  "stream": false
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "result": {
-    "response": "{\"intent\":\"browser\",\"plan\":\"Open Gmail\",\"command\":\"open gmail.com\",\"needs_confirmation\":true,\"tts_confirm\":\"I plan to open Gmail. Proceed?\"}"
-  }
-}
+┌─────────────┐
+│   Device    │ ← Voice I/O Only
+│  (Firmware) │
+└──────┬──────┘
+       │ STT/TTS
+       ↓
+┌─────────────┐
+│  Tuya AI    │ ← Intent, Planning, Confirmation
+│  Workflow   │
+│   (Cloud)   │
+└──────┬──────┘
+       │ MCP Protocol
+       ↓
+┌─────────────┐
+│ MCP Servers │ ← Task Execution
+│ (Browser/   │
+│  Devices)   │
+└─────────────┘
 ```
 
 ---
 
-## Implementation Pattern
+## Firmware Responsibilities
 
-### Add to `firmware/src/app_chat_bot.c`:
+The **firmware does NOT handle**:
+- ❌ Intent classification
+- ❌ Action planning
+- ❌ Safety confirmations
+- ❌ Command execution
+- ❌ DP management (101-106)
 
-```c
-#include "cJSON.h"
-#include "tuya_cloud_com_defs.h"
-
-// State machine for safety check
-typedef enum {
-    STATE_IDLE,
-    STATE_LISTENING,
-    STATE_WAITING_AI_RESPONSE,
-    STATE_ASKING_CONFIRMATION,
-    STATE_WAITING_USER_CONFIRM,
-    STATE_EXECUTING,
-    STATE_SPEAKING_RESULT
-} bot_state_t;
-
-static bot_state_t current_state = STATE_IDLE;
-static char ai_response_buffer[1024];
-static char confirmation_text[256];
-
-/**
- * Call AI Agent API after getting voice text from STT
- */
-OPERATE_RET call_ai_agent(const char* user_text) {
-    OPERATE_RET ret = OPRT_OK;
-    
-    // Build API request
-    char request_body[512];
-    snprintf(request_body, sizeof(request_body),
-        "{\"agent_id\":\"aipt_f6hcebhd23nk\","
-        "\"user_input\":\"%s\","
-        "\"session_id\":\"%s\","
-        "\"stream\":false}",
-        user_text,
-        get_device_id()
-    );
-    
-    // Make HTTP POST to /v2.0/cloud/ai-agent/chat
-    http_response_t response;
-    ret = tuya_cloud_api_post("/v2.0/cloud/ai-agent/chat", request_body, &response);
-    
-    if (ret == OPRT_OK) {
-        // Parse response
-        cJSON* root = cJSON_Parse(response.body);
-        cJSON* result = cJSON_GetObjectItem(root, "result");
-        cJSON* ai_response = cJSON_GetObjectItem(result, "response");
-        
-        if (ai_response) {
-            strncpy(ai_response_buffer, ai_response->valuestring, sizeof(ai_response_buffer));
-            process_ai_response();
-        }
-        
-        cJSON_Delete(root);
-    }
-    
-    return ret;
-}
-
-/**
- * Process AI's JSON response and update DPs
- */
-void process_ai_response() {
-    cJSON* root = cJSON_Parse(ai_response_buffer);
-    
-    const char* intent = cJSON_GetObjectItem(root, "intent")->valuestring;
-    const char* plan = cJSON_GetObjectItem(root, "plan")->valuestring;
-    bool needs_confirm = cJSON_GetObjectItem(root, "needs_confirmation")->valueint;
-    const char* tts_text = cJSON_GetObjectItem(root, "tts_confirm")->valuestring;
-    
-    // Update DP 101 (intent_type)
-    tuya_iot_dp_string_update(101, intent);
-    
-    // Update DP 102 (action_plan) - full JSON
-    tuya_iot_dp_string_update(102, ai_response_buffer);
-    
-    if (needs_confirm) {
-        // Update DP 106 (tts_text)
-        tuya_iot_dp_string_update(106, tts_text);
-        
-        // Play TTS confirmation question
-        ai_audio_tts_play(tts_text);
-        
-        current_state = STATE_ASKING_CONFIRMATION;
-    } else {
-        // Chat response - play directly
-        ai_audio_tts_play(tts_text);
-        current_state = STATE_SPEAKING_RESULT;
-    }
-    
-    cJSON_Delete(root);
-}
-
-/**
- * Handle user's voice confirmation (Yes/No)
- * Called after TTS plays confirmation question
- */
-void handle_confirmation_response(const char* user_text) {
-    // Simple yes/no detection
-    bool confirmed = (
-        strstr(user_text, "yes") != NULL ||
-        strstr(user_text, "go") != NULL ||
-        strstr(user_text, "proceed") != NULL ||
-        strstr(user_text, "okay") != NULL
-    );
-    
-    // Update DP 103 (user_confirmation)
-    tuya_iot_dp_bool_update(103, confirmed);
-    
-    if (confirmed) {
-        // Parse DP 102 to get command
-        cJSON* root = cJSON_Parse(ai_response_buffer);
-        const char* command = cJSON_GetObjectItem(root, "command")->valuestring;
-        
-        // Create execution command JSON for DP 104
-        char exec_cmd[512];
-        snprintf(exec_cmd, sizeof(exec_cmd),
-            "{\"intent\":\"%s\",\"command\":\"%s\"}",
-            cJSON_GetObjectItem(root, "intent")->valuestring,
-            command
-        );
-        
-        // Update DP 104 (exec_command)
-        tuya_iot_dp_string_update(104, exec_cmd);
-        
-        cJSON_Delete(root);
-        
-        current_state = STATE_EXECUTING;
-        
-        // For IoT commands, execute here
-        // For browser commands, extension will poll DP 104
-        
-    } else {
-        ai_audio_tts_play("Cancelled. What would you like me to do instead?");
-        current_state = STATE_IDLE;
-    }
-}
-
-/**
- * DP callback - handle DP 105 (exec_result) updates from extension
- */
-void dp_105_callback(const char* result_text) {
-    // Extension reported result, speak it to user
-    ai_audio_tts_play(result_text);
-    current_state = STATE_IDLE;
-}
-```
+The **firmware ONLY handles**:
+- ✅ Voice input (microphone → STT)
+- ✅ Voice output (TTS → speaker)
+- ✅ Basic device status reporting
+- ✅ Hardware controls (reset button)
 
 ---
 
-## Integration into Main Loop
+## Implementation
 
-### Update `firmware/src/tuya_main.c`:
+### Voice I/O Flow
+
+**file:** `firmware/src/app_chat_bot.c`
 
 ```c
-// In ASR complete callback
-void on_asr_complete(const char* recognized_text) {
-    PR_NOTICE("ASR Result: %s", recognized_text);
-    
-    if (current_state == STATE_LISTENING) {
-        // User's initial command
-        current_state = STATE_WAITING_AI_RESPONSE;
-        call_ai_agent(recognized_text);
+/**
+ * User speaks → STT → Tuya AI Workflow (cloud)
+ * Cloud processes → MCP execution → TTS response → Device speaks
+ */
+static void __app_ai_audio_evt_cb(AI_AUDIO_EVENT_E event, ...) {
+    switch (event) {
+    case AI_AUDIO_EVT_ASR_WAKEUP:
+        // Wake word detected
+        PR_NOTICE("Listening...");
+        break;
         
-    } else if (current_state == STATE_WAITING_USER_CONFIRM) {
-        // User's Yes/No response
-        handle_confirmation_response(recognized_text);
-    }
-}
-
-// In DP callback handler
-void dev_dp_cb(tuya_iot_client_t *client, tuya_dp_cmd_t *dp_cmd) {
-    if (dp_cmd->dp_id == 105) {
-        // DP 105: exec_result from extension
-        dp_105_callback(dp_cmd->value.dp_str);
+    case AI_AUDIO_EVT_HUMAN_ASR_TEXT:
+        // Voice → cloud (automatic)
+        // Cloud AI Workflow handles everything from here
+        break;
+    
+    case AI_AUDIO_EVT_AI_REPLIES_TEXT_DATA:
+        // Cloud → TTS response (automatic playback)
+        break;
     }
 }
 ```
 
 ---
-
----
-
-## Testing Flow
-
-**Once board is flashed and paired:**
-
-1. Say: "Check my Gmail"
-2. Board → STT → "Check my Gmail"
-3. Firmware calls AI Agent API
-4. AI responds with JSON:
-   ```json
-   {
-     "intent": "browser",
-     "plan": "Open Gmail",
-     "command": "open gmail.com and count unread",
-     "needs_confirmation": true,
-     "tts_confirm": "I plan to open Gmail. Proceed?"
-   }
-   ```
-5. Firmware updates DP 102, 106
-6. Board plays: "I plan to open Gmail. Proceed?"
-7. You say: "Yes"
-8. Firmware updates DP 103 = true
-9. Firmware updates DP 104 with command
-10. Extension polls DP 104 → Opens Gmail
-11. Extension reports to DP 105
-12. Firmware receives DP 105 → Speaks result
-
----
-
-## Summary
-
-**✅ Extension: Ready** - Polls DP 104, executes browser tasks, reports to DP 105
-
-**⏳ Firmware: Needs implementation** - This guide provides the pattern. When board arrives, implement API calls and state machine.
-
-**📋 Platform: Complete** - All DPs defined, AI Agent deployed
 
 ## Hardware Controls
 
 ### User Button (P29) Functionality
+
 The hardware button connected to GPIO P29 is configured for **EMERGENCY RESET & RE-PAIRING**.
 
 - **Action:** Single Press (Short Click)
 - **Behavior:**
   1. **Stops AI Audio** immediately.
-  2. **Deletes Network Configuration** (
-etinfo) from persistent storage.
+  2. **Deletes Network Configuration** (`netinfo`) from persistent storage.
   3. **Wipes Tuya IoT Data** (Unbinds device).
   4. **Forces System Reboot**.
-- **Result:** Device reboots into a clean state and automatically enters **Start Pairing Mode (AP + BLE)** because no network info exists.
+- **Result:** Device reboots into a clean state and automatically enters **Pairing Mode (AP + BLE)** because no network info exists.
 
 > **Use this if:**
 > - The device is stuck connecting to an old WiFi.
 > - You need to re-pair with a new account.
 > - The device is unresponsive.
+
+**Implementation:** `firmware/src/tuya_main.c`
+
+```c
+// Button polling detects P29 press
+if (level == TUYA_GPIO_LEVEL_LOW) {
+    // Nuke config and reset
+    tal_kv_del("netinfo");
+    tuya_iot_reset(&ai_client);
+    tal_system_reset();
+}
+```
+
+---
+
+## Cloud AI Workflow Integration
+
+The **Tuya AI Workflow** (cloud-side) handles:
+
+### 1. Speech-to-Text (Automatic)
+Device audio → Cloud STT service
+
+### 2. Intent Recognition
+```yaml
+Intent Types:
+  0: browser    # Web automation tasks
+  1: iot        # Smart device control
+  2: chat       # General conversation
+```
+
+### 3. Planning & Execution
+
+**For Browser Tasks (Intent: 0):**
+```
+Cloud AI Workflow 
+  → Browser Planner LLM
+  → Safety Confirmation (if needed)
+  → MCP Browser Server (via Vercel)
+  → Chrome Extension polls Vercel
+  → Executes browser automation
+  → Reports result back to cloud
+  → Cloud sends TTS response to device
+```
+
+**For IoT Tasks (Intent: 1):**
+```
+Cloud AI Workflow
+  → MCP Device Server  
+  → Tuya OpenAPI
+  → Control smart devices
+  → Cloud sends TTS response
+```
+
+**For Chat (Intent: 2):**
+```
+Cloud AI Workflow
+  → Chat LLM
+  → Cloud sends TTS response directly
+```
+
+---
+
+## Testing Flow
+
+### Example: "Check my Gmail"
+
+1. **User:** "Check my Gmail" (speaks to device)
+2. **Firmware:** Captures audio → Sends to cloud (automatic)
+3. **Cloud AI Workflow:**
+   - STT: "Check my Gmail"
+   - Intent: 0 (browser)
+   - Browser Planner: "Open Gmail and count unread emails"
+   - Safety Check: "I plan to open Gmail. Proceed?"
+4. **Firmware:** Plays TTS: "I plan to open Gmail. Proceed?"
+5. **User:** "Yes"
+6. **Cloud AI Workflow:**
+   - Confirms intent
+   - Calls MCP Browser Server via Vercel API
+7. **Chrome Extension:**
+   - Polls Vercel every 3s
+   - Receives command
+   - Opens Gmail, counts emails
+   - Reports result to Vercel
+8. **Cloud AI Workflow:** Receives result
+9. **Firmware:** Plays TTS: "You have 5 unread emails"
+
+---
+
+## Platform DPs (Reference Only)
+
+These DPs exist on the platform but **are NOT managed by firmware**:
+
+| DP ID | Name | Purpose | Managed By |
+|-------|------|---------|------------|
+| 1 | switch_charge | Charging control | Platform |
+| 2 | status | Device status | Firmware (basic) |
+| 6 | volume_set | Volume control | Firmware |
+| 9 | conversational_mode | Talk mode | Platform |
+| 101-106 | AI DPs | Intent/Execution | **Cloud AI Workflow** |
+
+> **Note:** DPs 101-106 were designed for a different architecture. In the current Tuya AI Workflow architecture, these are handled entirely by the cloud and MCP servers.
+
+---
+
+## Summary
+
+**✅ Firmware: Simple Voice I/O**
+- Captures voice → Sends to cloud
+- Receives TTS → Plays to user
+
+**✅ Cloud: All Intelligence**
+- Tuya AI Workflow handles intent, planning, safety
+- Executes via MCP servers (browser/devices)
+
+**✅ MCP Servers: Task Execution**
+- Browser MCP → Chrome Extension → Vercel/Supabase
+- Device MCP → Tuya OpenAPI → Smart Devices
+
+**Architecture Benefit:** Clean separation of concerns. Firmware stays simple and reliable while cloud provides unlimited extensibility.
