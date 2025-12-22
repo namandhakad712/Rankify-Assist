@@ -20,11 +20,11 @@ COPY entrypoint.sh .
 # Make executable
 RUN chmod +x entrypoint.sh
 
-# Expose ports
-EXPOSE 7860 8501
+# Expose port 7860 (Hugging Face default)
+EXPOSE 7860
 
-# Set environment
-ENV STREAMLIT_SERVER_PORT=8501
+# Set environment - run Streamlit on 7860
+ENV STREAMLIT_SERVER_PORT=7860
 ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
 ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
