@@ -8,24 +8,25 @@ RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 # Copy requirements
 COPY requirements.txt .
 
-# Install dependencies
+# Install dependencies (includes uvicorn for FastMCP)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all application files
+# Copy ALL application files
+COPY mcp_server.py .
 COPY tuya_client.py .
 COPY app.py .
 COPY entrypoint.sh .
 
-# Make entrypoint executable
+# Make executable
 RUN chmod +x entrypoint.sh
 
-# Expose port
-EXPOSE 7860
+# Expose ports
+EXPOSE 7860 8501
 
 # Set environment
-ENV STREAMLIT_SERVER_PORT=7860
+ENV STREAMLIT_SERVER_PORT=8501
 ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
 ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
-# Run entrypoint (starts both Tuya client & Streamlit)
+# Run entrypoint (starts all 3!)
 CMD ["/app/entrypoint.sh"]

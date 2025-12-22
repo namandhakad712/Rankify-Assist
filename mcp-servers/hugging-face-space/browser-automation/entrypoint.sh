@@ -1,11 +1,16 @@
 #!/bin/bash
-# Docker entrypoint - starts both Tuya client and Streamlit UI
+# Entrypoint - Starts all 3 processes!
 
-# Start Tuya client in background
+# 1. Start MCP server (with tools) - CRITICAL!
+python /app/mcp_server.py &
+echo "MCP Server starting on port 7860..."
+sleep 3
+
+# 2. Start Tuya client (connects to MCP server)
 python /app/tuya_client.py &
-
-# Wait a moment for it to initialize
+echo "Tuya client starting..."
 sleep 2
 
-# Start Streamlit UI in foreground
-streamlit run /app/app.py --server.port=7860 --server.address=0.0.0.0
+# 3. Start Streamlit UI (foreground)
+echo "Starting UI..."
+streamlit run /app/app.py --server.port=8501 --server.address=0.0.0.0
