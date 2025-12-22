@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rankify Assist - Cloud Bridge Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #030014;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-primary: #7042f8;
+            --accent-cyan: #00f0ff;
+            --accent-green: #00ff9d;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient Background */
+        .ambient-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(112, 66, 248, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.15), transparent 25%);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* Navigation overlay */
+        .nav-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .nav-overlay a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+
+        .nav-overlay a:hover {
+            color: #fff;
+        }
+
+        /* Glassmorphic card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 24px;
+            padding: 60px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Status grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .status-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-icon.online {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .status-icon.offline {
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+        }
+
+        .status-icon.checking {
+            background: #ffaa00;
+            box-shadow: 0 0 10px #ffaa00;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status-label {
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .status-value {
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .status-detail {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 50px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-family: var(--font-body);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #a21aff 100%);
+            color: white;
+            box-shadow: 0 0 20px rgba(112, 66, 248, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(112, 66, 248, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* User profile */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 40px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-primary);
+        }
+
+        .user-info h3 {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-info p {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .logout-btn {
+            margin-left: auto;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.2);
+            color: #ff6666;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 68, 68, 0.2);
+        }
+
+        /* Info section */
+        .info-section {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+
+        .info-value {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .glass-card {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                font-size: 32px;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-light"></div>
+
+    <div class="nav-overlay">
+        <a href="index.html">← Back to Home</a>
+    </div>
+
+    <div class="container">
+        <div class="glass-card">
+            <!-- User Profile (hidden by default) -->
+            <div id="userProfile" class="user-profile hidden">
+                <img id="userAvatar" class="user-avatar" src="" alt="User">
+                <div class="user-info">
+                    <h3 id="userName">Loading...</h3>
+                    <p id="userEmail">Loading...</p>
+                </div>
+                <button class="logout-btn" onclick="logout()">Sign Out</button>
+            </div>
+
+            <!-- Header -->
+            <div class="header">
+                <h1 class="logo">Rankify Assist</h1>
+                <p class="subtitle">Cloud Bridge Controller</p>
+            </div>
+
+            <!-- Status Grid -->
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-header">
+                        <span id="apiStatusIcon" class="status-icon checking"></span>
+                        <span class="status-label">API Status</span>
+                    </div>
+                    <div id="apiStatus" class="status-value">Checking...</div>
+                    <div id="apiDetail" class="status-detail">Connecting to server</div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span id="dbStatusIcon" class="status-icon checking"></span>
+                        <span class="status-label">Database</span>
+                    </div>
+                    <div id="dbStatus" class="status-value">Checking...</div>
+                    <div id="dbDetail" class="status-detail">Connecting to Supabase</div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span id="authStatusIcon" class="status-icon offline"></span>
+                        <span class="status-label">Authentication</span>
+                    </div>
+                    <div id="authStatus" class="status-value">Guest</div>
+                    <div id="authDetail" class="status-detail">Sign in to continue</div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-icon online"></span>
+                        <span class="status-label">Total Requests</span>
+                    </div>
+                    <div id="requestCount" class="status-value">0</div>
+                    <div class="status-detail">Since deployment</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group">
+                <button id="signInBtn" class="btn btn-primary" onclick="signInWithGoogle()">
+                    <span id="signInText">🔐 google_sign_in</span>
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/admin.html'">
+                    ⚙️ Admin Control
+                </button>
+                <button class="btn btn-secondary" onclick="testConnection()">
+                    🔄 Ping System
+                </button>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <div class="info-grid">
+                    <div>
+                        <div class="info-value">1ms</div>
+                        <div class="info-label">Latency</div>
+                    </div>
+                    <div>
+                        <div class="info-value">∞</div>
+                        <div class="info-label">Scalability</div>
+                    </div>
+                    <div>
+                        <div class="info-value">128</div>
+                        <div class="info-label">Encryption</div>
+                    </div>
+                    <div>
+                        <div class="info-value">OS</div>
+                        <div class="info-label">Open Source</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check status on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await checkAPIStatus();
+            await checkSupabaseStatus();
+            await checkAuth();
+            await loadRequestCount();
+        });
+
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch('/api/ping');
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    updateStatus('api', 'online', 'Online', data.service || 'Cloud Bridge');
+                } else {
+                    updateStatus('api', 'offline', 'Error', 'Service unavailable');
+                }
+            } catch (error) {
+                updateStatus('api', 'offline', 'Offline', error.message);
+            }
+        }
+
+        async function checkSupabaseStatus() {
+            try {
+                const response = await fetch('/api/health/supabase');
+                const data = await response.json();
+
+                if (data.connected) {
+                    updateStatus('db', 'online', 'Connected', `${data.latency}ms`);
+                } else {
+                    updateStatus('db', 'offline', 'Disconnected', data.error || 'Failed');
+                }
+            } catch (error) {
+                updateStatus('db', 'offline', 'Offline', error.message);
+            }
+        }
+
+        async function checkAuth() {
+            const token = localStorage.getItem('supabase_token');
+            if (token) {
+                const email = localStorage.getItem('user_email');
+                const name = localStorage.getItem('user_name');
+                const avatar = localStorage.getItem('user_avatar');
+
+                if (email) {
+                    showUserProfile({ email, name, avatar });
+                    updateStatus('auth', 'online', 'Authenticated', email);
+                    return;
+                }
+            }
+            updateStatus('auth', 'offline', 'Guest Mode', 'Access limited');
+        }
+
+        function updateStatus(type, status, value, detail) {
+            document.getElementById(`${type}StatusIcon`).className = `status-icon ${status}`;
+            document.getElementById(`${type}Status`).textContent = value;
+            document.getElementById(`${type}Detail`).textContent = detail;
+        }
+
+        function signInWithGoogle() {
+            const btn = document.getElementById('signInBtn');
+            btn.disabled = true;
+            document.getElementById('signInText').innerHTML = '<span class="spinner"></span> Authenticating...';
+            window.location.href = '/api/auth/google';
+        }
+
+        function showUserProfile(user) {
+            document.getElementById('userProfile').classList.remove('hidden');
+            document.getElementById('userAvatar').src = user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || user.email);
+            document.getElementById('userName').textContent = user.name || 'User';
+            document.getElementById('userEmail').textContent = user.email || '';
+            document.getElementById('signInBtn').classList.add('hidden');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.reload();
+        }
+
+        async function testConnection() {
+            await checkAPIStatus();
+            await checkSupabaseStatus();
+            alert('✅ Network diagnostic complete.');
+        }
+
+        async function loadRequestCount() {
+            try {
+                const response = await fetch('/api/stats/requests');
+                const data = await response.json();
+                document.getElementById('requestCount').textContent = data.count || 0;
+            } catch (error) {
+                console.error('Failed to load request count:', error);
+            }
+        }
+
+        // Refresh stats every 30 seconds
+        setInterval(async () => {
+            await checkAPIStatus();
+            await checkSupabaseStatus();
+            await loadRequestCount();
+        }, 30000);
+    </script>
+</body>
+
+</html>

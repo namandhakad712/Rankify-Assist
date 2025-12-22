@@ -4,553 +4,1004 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rankify Assist - Cloud Bridge</title>
+    <title>Rankify Assist - Agentic Cloud Bridge</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- GSAP & Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
     <style>
+        :root {
+            --bg-color: #030014;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-primary: #7042f8;
+            --accent-cyan: #00f0ff;
+            --accent-green: #00ff9d;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            cursor: none;
+            /* Hide default cursor */
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            opacity: 0;
+            /* JS will reveal */
+        }
+
+        /* Ambient Background */
+        .ambient-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(112, 66, 248, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.15), transparent 25%);
+        }
+
+        /* --- ULTRA SMOOTH LIQUID CURSOR --- */
+        .cursor-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 10000;
+            mix-blend-mode: difference;
+            /* Inverted Color */
+            filter: url('#liquid-filter');
+            /* Gooey Effect */
+        }
+
+        .cursor-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-blob {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            /* White acts as inverter in difference mode */
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            opacity: 0.8;
+            transition: width 0.3s ease, height 0.3s ease, opacity 0.3s;
+        }
+
+        /* Hover States for Cursor */
+        body.is-hovering .cursor-blob {
+            width: 80px;
+            height: 80px;
+            opacity: 0.5;
+        }
+
+        body.is-hovering .cursor-dot {
+            opacity: 0;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px 48px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            z-index: 100;
+            /* mix-blend-mode: difference; Removed to prevent conflicts with cursor usually */
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+            pointer-events: auto;
+        }
+
+        .cta-button {
+            padding: 12px 24px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid var(--glass-border);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            pointer-events: auto;
             position: relative;
             overflow: hidden;
         }
 
-        /* Animated background */
-        body::before {
+        .cta-button::after {
             content: '';
             position: absolute;
-            width: 200%;
-            height: 200%;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(72, 126, 176, 0.3), transparent 50%);
-            animation: float 20s ease-in-out infinite;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
         }
 
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translate(0, 0);
-            }
-
-            50% {
-                transform: translate(30px, -30px);
-            }
+        .cta-button:hover::after {
+            left: 100%;
         }
 
-        /* Noise texture */
-        body::after {
-            content: '';
+        .cta-button:hover {
+            border-color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            perspective: 1000px;
+            /* For 3D Tilt Element */
+        }
+
+        .hero-content {
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 8rem);
+            line-height: 0.9;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-secondary);
+            max-width: 600px;
+        }
+
+        /* SECTION 1: ORCHESTRATION */
+        .workflow-section {
+            height: 400vh;
+            position: relative;
+        }
+
+        .workflow-container {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: radial-gradient(circle at center, rgba(3, 0, 20, 0) 0%, var(--bg-color) 100%);
+        }
+
+        .prompt-container {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            padding: 16px 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 400px;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .prompt-cursor {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+        }
+
+        .prompt-text {
+            font-family: 'Courier New', monospace;
+            color: var(--accent-cyan);
+            font-size: 14px;
+        }
+
+        .core-orb {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff, var(--accent-primary));
+            box-shadow: 0 0 50px var(--accent-primary);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 5;
+        }
+
+        .flow-lines svg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+            z-index: 4;
             pointer-events: none;
         }
 
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1200px;
-            width: 100%;
+        .flow-line {
+            fill: none;
+            stroke: var(--accent-primary);
+            stroke-width: 2;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            opacity: 0.5;
         }
 
-        /* Glassmorphic card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            padding: 50px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo {
-            font-size: 56px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            letter-spacing: -1px;
-        }
-
-        .subtitle {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 16px;
-            font-weight: 300;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        /* Status grid */
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 40px 0;
-        }
-
-        .status-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
+        /* Feature Cards with 3D Interaction */
+        .feature-card {
+            position: absolute;
+            width: 280px;
             padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            color: white;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+            z-index: 6;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            pointer-events: auto;
+            /* Enable hover */
         }
 
-        .status-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+        .feature-card h3 {
+            font-family: var(--font-display);
+            margin-bottom: 8px;
+            font-size: 18px;
+            pointer-events: none;
         }
 
-        .status-header {
+        .feature-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            pointer-events: none;
+        }
+
+        .fc-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .status-icon {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .status-icon.online {
-            background: #00ff88;
-            box-shadow: 0 0 16px #00ff88;
-        }
-
-        .status-icon.offline {
-            background: #ff4444;
-            box-shadow: 0 0 16px #ff4444;
-        }
-
-        .status-icon.checking {
-            background: #ffaa00;
-            box-shadow: 0 0 16px #ffaa00;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .status-label {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-        }
-
-        .status-value {
-            color: #fff;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .status-detail {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 12px;
-        }
-
-        /* Buttons */
-        .btn-group {
-            display: flex;
-            gap: 16px;
             justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 40px;
         }
 
-        .btn {
-            padding: 14px 28px;
-            border-radius: 12px;
-            border: none;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        #card-extension {
+            top: 20%;
+            left: 20%;
+        }
+
+        #card-firmware {
+            top: 20%;
+            right: 20%;
+        }
+
+        #card-mcp {
+            top: 80%;
+            left: 20%;
+        }
+
+        #card-cloud {
+            top: 80%;
+            right: 20%;
+        }
+
+        /* SECTION 2: PIPELINE */
+        .pipeline-section {
+            height: 500vh;
             position: relative;
+            background: var(--bg-color);
+        }
+
+        .pipeline-container {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.6);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .btn:disabled {
+        .pipeline-title {
+            position: absolute;
+            top: 10%;
+            font-family: var(--font-display);
+            font-size: 32px;
+            color: var(--text-secondary);
             opacity: 0.5;
-            cursor: not-allowed;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        /* User profile */
-        .user-profile {
+        .pipeline-track {
             display: flex;
+            gap: 100px;
             align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 30px;
+            position: relative;
+            z-index: 5;
         }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid #667eea;
-        }
-
-        .user-info h3 {
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .user-info p {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 12px;
-        }
-
-        .logout-btn {
-            margin-left: auto;
-            padding: 8px 16px;
-            border-radius: 8px;
-            background: rgba(255, 68, 68, 0.15);
-            border: 1px solid rgba(255, 68, 68, 0.3);
-            color: #ff6666;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 68, 68, 0.25);
-        }
-
-        /* Info section */
-        .info-section {
-            margin-top: 50px;
-            padding-top: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 30px;
+        .pipeline-node {
+            width: 200px;
+            padding: 30px;
+            background: rgba(10, 10, 30, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
             text-align: center;
+            position: relative;
+            z-index: 10;
+            opacity: 0.3;
+            transform: scale(0.9);
+            transition: all 0.5s ease;
         }
 
-        .info-value {
-            font-size: 36px;
+        .pipeline-node.active {
+            opacity: 1;
+            transform: scale(1.1);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+        }
+
+        .pipeline-node.secure-active {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 50px rgba(0, 255, 157, 0.2);
+        }
+
+        .node-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .node-label {
+            font-family: var(--font-display);
+            font-size: 18px;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #fff;
             margin-bottom: 8px;
         }
 
-        .info-label {
+        .node-desc {
             font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 600;
+            color: var(--text-secondary);
         }
 
-        .spinner {
+        .connection-beam {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-cyan));
+            z-index: 5;
+            transform: translateY(-50%);
+            border-radius: 4px;
+            box-shadow: 0 0 20px var(--accent-primary);
+        }
+
+        .data-packet {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px #fff;
+            z-index: 15;
+            opacity: 0;
+        }
+
+        .security-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+        }
+
+        .lock-icon {
+            font-size: 100px;
+            color: var(--accent-green);
+            filter: drop-shadow(0 0 30px var(--accent-green));
+            transform: scale(0);
+        }
+
+        .security-text {
+            position: absolute;
+            bottom: 20%;
+            font-family: 'Courier New', monospace;
+            color: var(--accent-green);
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* SECTION 3: TECHNICAL WORKFLOW */
+        .tech-flow-section {
+            padding: 150px 48px;
+            padding-bottom: 300px;
+            background: linear-gradient(180deg, var(--bg-color) 0%, #060614 100%);
+            position: relative;
+            z-index: 2;
+        }
+
+        .tech-title-wrap {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .tech-title {
+            font-family: var(--font-display);
+            font-size: 42px;
+            background: linear-gradient(to right, #fff, var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+
+        .tech-flow-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            border-left: 2px dashed rgba(255, 255, 255, 0.1);
+            ;
+            margin-left: 50%;
+            padding-left: 50px;
+            padding-bottom: 100px;
+        }
+
+        .tf-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 60px;
+            position: relative;
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .tf-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tf-card:nth-child(odd) {
+            margin-left: -580px;
+            text-align: right;
+        }
+
+        .tf-card:nth-child(even) {
+            text-align: left;
+        }
+
+        .tf-card::after {
+            content: '';
+            position: absolute;
+            top: 40px;
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #fff;
+            background: var(--accent-primary);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            border: 4px solid var(--bg-color);
+            box-shadow: 0 0 15px var(--accent-primary);
+        }
+
+        .tf-card:nth-child(odd)::after {
+            right: -84px;
+        }
+
+        .tf-card:nth-child(even)::after {
+            left: -66px;
+        }
+
+        .tf-number {
+            font-family: var(--font-display);
+            font-size: 64px;
+            color: rgba(255, 255, 255, 0.05);
+            position: absolute;
+            top: 20px;
+        }
+
+        .tf-card:nth-child(odd) .tf-number {
+            left: 30px;
+        }
+
+        .tf-card:nth-child(even) .tf-number {
+            right: 30px;
+        }
+
+        .tf-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
             display: inline-block;
-            vertical-align: middle;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .tf-content h3 {
+            font-family: var(--font-display);
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #fff;
         }
 
-        .hidden {
-            display: none !important;
+        .tf-content p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
         }
 
-        @media (max-width: 768px) {
-            .glass-card {
-                padding: 30px 20px;
-            }
+        .tf-tech-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(112, 66, 248, 0.2);
+            border: 1px solid rgba(112, 66, 248, 0.3);
+            border-radius: 99px;
+            font-size: 11px;
+            margin-top: 16px;
+            margin-right: 8px;
+            color: #d1c4e9;
+        }
 
-            .logo {
-                font-size: 42px;
-            }
+        /* REVEAL FOOTER (Rounded + Glass Noise) */
+        .reveal-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: rgba(10, 10, 20, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-top-left-radius: 60px;
+            border-top-right-radius: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 999;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: height 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-            .status-grid {
-                grid-template-columns: 1fr;
-            }
+        .reveal-footer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Noise Filter via SVG */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
 
-            .btn-group {
-                flex-direction: column;
-            }
+        .footer-nav {
+            display: flex;
+            gap: 60px;
+            flex-wrap: wrap;
+            justify-content: center;
+            z-index: 2;
+        }
 
-            .btn {
-                width: 100%;
-            }
+        .footer-link {
+            font-family: var(--font-display);
+            font-size: 18px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            position: relative;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            pointer-events: auto;
+            /* Active for cursor */
+        }
+
+        .footer-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .reveal-footer.active {
+            height: 350px;
+        }
+
+        .footer-brand {
+            position: absolute;
+            bottom: 30px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            opacity: 0.6;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="glass-card">
-            <!-- User Profile (hidden by default) -->
-            <div id="userProfile" class="user-profile hidden">
-                <img id="userAvatar" class="user-avatar" src="" alt="User">
-                <div class="user-info">
-                    <h3 id="userName">Loading...</h3>
-                    <p id="userEmail">Loading...</p>
-                </div>
-                <button class="logout-btn" onclick="logout()">Sign Out</button>
+    <!-- 1. SVG Filter for Liquid Gooeiness -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+        <defs>
+            <filter id="liquid-filter">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
+                    result="liquid" />
+                <feComposite in="SourceGraphic" in2="liquid" operator="atop" />
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- 2. Cursor Elements -->
+    <div class="cursor-wrapper">
+        <div class="cursor-blob"></div>
+        <div class="cursor-dot"></div>
+    </div>
+
+    <!-- 3. Ambient Light -->
+    <div class="ambient-light"></div>
+
+    <nav>
+        <div class="logo hover-trigger" data-cursor-scale>Rankify Assist</div>
+        <a href="dashboard.html" class="cta-button hover-trigger" data-hover-magnet>Enter Dashboard</a>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title hover-trigger" data-hover-scramble>Orchestrate<br>Reality.</h1>
+            <p class="hero-subtitle">The seamless bridge between your AI agents and the physical world.</p>
+        </div>
+    </header>
+
+    <!-- SECTION 1 -->
+    <section class="workflow-section">
+        <div class="workflow-container">
+            <div class="core-orb"></div>
+            <div class="flow-lines">
+                <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+                    <path class="flow-line" id="line-1" d="M200,200 L500,500" />
+                    <path class="flow-line" id="line-2" d="M800,200 L500,500" />
+                    <path class="flow-line" id="line-3" d="M200,800 L500,500" />
+                    <path class="flow-line" id="line-4" d="M800,800 L500,500" />
+                </svg>
             </div>
-
-            <!-- Header -->
-            <div class="header">
-                <h1 class="logo">Rankify Assist</h1>
-                <p class="subtitle">Cloud Bridge</p>
+            <div class="prompt-container">
+                <div class="prompt-cursor"></div>
+                <div class="prompt-text"></div>
             </div>
+            <div class="feature-card hover-trigger" id="card-extension">
+                <div class="fc-icon">🧩</div>
+                <h3>Web Automator</h3>
+                <p>Chrome extension agent observing and interacting with the browser DOM.</p>
+            </div>
+            <div class="feature-card hover-trigger" id="card-firmware">
+                <div class="fc-icon">⚡</div>
+                <h3>Hardware Agents</h3>
+                <p>Deployed directly to Tuya & ESP devices for physical actuation.</p>
+            </div>
+            <div class="feature-card hover-trigger" id="card-mcp">
+                <div class="fc-icon">🔌</div>
+                <h3>MCP Servers</h3>
+                <p>Standardized protocol for tools, data, and agent communication.</p>
+            </div>
+            <div class="feature-card hover-trigger" id="card-cloud">
+                <div class="fc-icon">☁️</div>
+                <h3>Cloud Bridge</h3>
+                <p>Unified state management and remote execution layer.</p>
+            </div>
+        </div>
+    </section>
 
-            <!-- Status Grid -->
-            <div class="status-grid">
-                <div class="status-card">
-                    <div class="status-header">
-                        <span id="apiStatusIcon" class="status-icon checking"></span>
-                        <span class="status-label">API Status</span>
-                    </div>
-                    <div id="apiStatus" class="status-value">Checking...</div>
-                    <div id="apiDetail" class="status-detail">Connecting to server</div>
+    <!-- SECTION 2 -->
+    <section class="pipeline-section">
+        <div class="pipeline-container">
+            <h2 class="pipeline-title">Secure Execution Pipeline</h2>
+            <div class="pipeline-track">
+                <div class="pipeline-node" id="node-ext"><span class="node-icon">🧩</span>
+                    <h3 class="node-label">Web Extension</h3>
+                    <p class="node-desc">Captures commands & page context</p>
                 </div>
-
-                <div class="status-card">
-                    <div class="status-header">
-                        <span id="dbStatusIcon" class="status-icon checking"></span>
-                        <span class="status-label">Database</span>
-                    </div>
-                    <div id="dbStatus" class="status-value">Checking...</div>
-                    <div id="dbDetail" class="status-detail">Connecting to Supabase</div>
+                <div class="pipeline-node" id="node-vercel"><span class="node-icon">▲</span>
+                    <h3 class="node-label">Vercel Router</h3>
+                    <p class="node-desc">Custom Server Intelligence</p>
                 </div>
-
-                <div class="status-card">
-                    <div class="status-header">
-                        <span id="authStatusIcon" class="status-icon offline"></span>
-                        <span class="status-label">Authentication</span>
-                    </div>
-                    <div id="authStatus" class="status-value">Not Signed In</div>
-                    <div id="authDetail" class="status-detail">Sign in to continue</div>
+                <div class="pipeline-node" id="node-db"><span class="node-icon">🗄️</span>
+                    <h3 class="node-label">Supabase</h3>
+                    <p class="node-desc">Vector Memory & State</p>
                 </div>
+                <div class="pipeline-node" id="node-mcp"><span class="node-icon">🔌</span>
+                    <h3 class="node-label">MCP Server</h3>
+                    <p class="node-desc">Tool Execution</p>
+                </div>
+                <div class="connection-beam"></div>
+            </div>
+            <div class="data-packet"></div>
+            <div class="security-layer">
+                <div class="lock-icon">🔒</div>
+                <div class="security-text">Single Access ID • End-to-End Encrypted</div>
+            </div>
+        </div>
+    </section>
 
-                <div class="status-card">
-                    <div class="status-header">
-                        <span class="status-icon online"></span>
-                        <span class="status-label">Total Requests</span>
-                    </div>
-                    <div id="requestCount" class="status-value">0</div>
-                    <div class="status-detail">Since deployment</div>
+    <!-- SECTION 3 -->
+    <section class="tech-flow-section">
+        <div class="tech-title-wrap">
+            <h2 class="tech-title">Architecture Deep Dive</h2>
+            <p style="color: var(--text-secondary);">From browser intention to containerized execution.</p>
+        </div>
+        <div class="tech-flow-container">
+            <div class="tf-card hover-trigger">
+                <div class="tf-number">01</div><span class="tf-icon">🧩</span>
+                <div class="tf-content">
+                    <h3>Web Automation Agent</h3>
+                    <p>A specialized Chrome Extension observes DOM mutations and captures user intent.</p><span
+                        class="tf-tech-tag">Chrome Runtime</span>
                 </div>
             </div>
-
-            <!-- Buttons -->
-            <div class="btn-group">
-                <button id="signInBtn" class="btn btn-primary" onclick="signInWithGoogle()">
-                    <span id="signInText">🔐 Sign in with Google</span>
-                </button>
-                <button class="btn btn-secondary" onclick="window.location.href='/admin.html'">
-                    ⚙️ Admin Panel
-                </button>
-                <button class="btn btn-secondary" onclick="testConnection()">
-                    🔄 Test Connection
-                </button>
+            <div class="tf-card hover-trigger">
+                <div class="tf-number">02</div><span class="tf-icon">☁️</span>
+                <div class="tf-content">
+                    <h3>Adaptive Routing Cloud</h3>
+                    <p>Custom Vercel Edge Functions route the secure payload based on realtime demand.</p><span
+                        class="tf-tech-tag">Vercel Edge</span>
+                </div>
             </div>
-
-            <!-- Info Section -->
-            <div class="info-section">
-                <div class="info-grid">
-                    <div>
-                        <div class="info-value">Free</div>
-                        <div class="info-label">Monthly Cost</div>
-                    </div>
-                    <div>
-                        <div class="info-value">∞</div>
-                        <div class="info-label">Scalability</div>
-                    </div>
-                    <div>
-                        <div class="info-value">100%</div>
-                        <div class="info-label">Open Source</div>
-                    </div>
-                    <div>
-                        <div class="info-value">24/7</div>
-                        <div class="info-label">Uptime</div>
-                    </div>
+            <div class="tf-card hover-trigger">
+                <div class="tf-number">03</div><span class="tf-icon">📦</span>
+                <div class="tf-content">
+                    <h3>Containerized MCP Swarm</h3>
+                    <p>Docker containers hosted on Hugging Face Spaces receive the instructions.</p><span
+                        class="tf-tech-tag">Docker</span>
+                </div>
+            </div>
+            <div class="tf-card hover-trigger">
+                <div class="tf-number">04</div><span class="tf-icon">🧠</span>
+                <div class="tf-content">
+                    <h3>Tuya AI Intent Engine</h3>
+                    <p>The final intent is resolved against the Tuya IoT Platform.</p><span class="tf-tech-tag">Tuya
+                        IoT</span>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- FOOTER TRIGGER -->
+    <div id="footer-trigger" style="height: 1px;"></div>
+
+    <!-- REVEALING FOOTER -->
+    <footer class="reveal-footer">
+        <div class="footer-nav">
+            <a href="https://github.com/namandhakad712/rankify-assist" class="footer-link hover-trigger">GitHub
+                Source</a>
+            <a href="https://github.com/namandhakad712/Rankify-Assist/releases"
+                class="footer-link hover-trigger">Extension Releases</a>
+            <a href="guide.html" class="footer-link hover-trigger">Documentation Guide</a>
+        </div>
+        <div class="footer-brand">© 2024 Rankify Assist • Crafted for Agents</div>
+    </footer>
 
     <script>
-        // Check status on load
-        window.addEventListener('DOMContentLoaded', async () => {
-            await checkAPIStatus();
-            await checkSupabaseStatus();
-            await checkAuth();
-            await loadRequestCount();
+        // --- 1. LENIS SMOOTH SCROLL ---
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+
+        // --- 2. ADVANCED LIQUID CURSOR & MICRO-INTERACTIONS ---
+        // Using GSAP quickTo for ultra-performance
+        const blob = document.querySelector('.cursor-blob');
+        const dot = document.querySelector('.cursor-dot');
+        const body = document.body;
+
+        // fast setters
+        const xToDot = gsap.quickTo(dot, "x", { duration: 0.1, ease: "power3" });
+        const yToDot = gsap.quickTo(dot, "y", { duration: 0.1, ease: "power3" });
+
+        // bouncy spring for the liquid blob
+        const xToBlob = gsap.quickTo(blob, "x", { duration: 0.6, ease: "elastic.out(1, 0.5)" });
+        const yToBlob = gsap.quickTo(blob, "y", { duration: 0.6, ease: "elastic.out(1, 0.5)" });
+
+        window.addEventListener("mousemove", (e) => {
+            xToDot(e.clientX);
+            yToDot(e.clientY);
+            xToBlob(e.clientX);
+            yToBlob(e.clientY);
+
+            // Hero 3D Parallax (Subtle)
+            const xPct = (e.clientX / window.innerWidth - 0.5);
+            const yPct = (e.clientY / window.innerHeight - 0.5);
+            gsap.to(".hero-content", {
+                rotateY: xPct * 10,
+                rotateX: -yPct * 10,
+                duration: 1,
+                ease: "power2.out"
+            });
         });
 
-        async function checkAPIStatus() {
-            try {
-                const response = await fetch('/api/ping');
-                const data = await response.json();
+        // Hover Effect Handlers
+        const triggers = document.querySelectorAll('.hover-trigger, a, button, .feature-card, .tf-card');
 
-                if (data.status === 'ok') {
-                    updateStatus('api', 'online', 'Online', data.service || 'Cloud Bridge');
-                } else {
-                    updateStatus('api', 'offline', 'Error', 'Service unavailable');
+        triggers.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                body.classList.add('is-hovering');
+                // Magnetic Pull (optional for buttons)
+                if (el.hasAttribute('data-hover-magnet')) {
+                    // advanced logic would go here, keep simple for stability
                 }
-            } catch (error) {
-                updateStatus('api', 'offline', 'Offline', error.message);
-            }
-        }
-
-        async function checkSupabaseStatus() {
-            try {
-                const response = await fetch('/api/health/supabase');
-                const data = await response.json();
-
-                if (data.connected) {
-                    updateStatus('db', 'online', 'Connected', `${data.latency}ms`);
-                } else {
-                    updateStatus('db', 'offline', 'Disconnected', data.error || 'Failed');
+                // Text Scramble (simulated simple glitch)
+                if (el.hasAttribute('data-hover-scramble') && !el.dataset.scrambling) {
+                    el.dataset.scrambling = true;
+                    const originalText = el.innerText;
+                    gsap.to(el, {
+                        duration: 0.5,
+                        scrambleText: { text: originalText, chars: "01", revealDelay: 0.2 },
+                        onComplete: () => el.dataset.scrambling = false
+                    });
                 }
-            } catch (error) {
-                updateStatus('db', 'offline', 'Offline', error.message);
+            });
+            el.addEventListener('mouseleave', () => {
+                body.classList.remove('is-hovering');
+            });
+
+            // 3D Card Tilt
+            if (el.classList.contains('feature-card') || el.classList.contains('tf-card')) {
+                el.addEventListener('mousemove', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -10; // max 10deg
+                    const rotateY = ((x - centerX) / centerX) * 10;
+
+                    gsap.to(el, {
+                        transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`,
+                        duration: 0.5,
+                        ease: "power2.out"
+                    });
+                });
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(el, {
+                        transform: `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`,
+                        duration: 0.5,
+                        ease: "power2.out"
+                    });
+                });
             }
-        }
+        });
 
-        async function checkAuth() {
-            const token = localStorage.getItem('supabase_token');
-            if (token) {
-                const email = localStorage.getItem('user_email');
-                const name = localStorage.getItem('user_name');
-                const avatar = localStorage.getItem('user_avatar');
 
-                if (email) {
-                    showUserProfile({ email, name, avatar });
-                    updateStatus('auth', 'online', 'Authenticated', email);
-                    return;
-                }
-            }
-            updateStatus('auth', 'offline', 'Not Signed In', 'Click to sign in');
-        }
+        // --- 3. PAGE ANIMATIONS ---
+        window.addEventListener("load", () => {
+            gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
-        function updateStatus(type, status, value, detail) {
-            document.getElementById(`${type}StatusIcon`).className = `status-icon ${status}`;
-            document.getElementById(`${type}Status`).textContent = value;
-            document.getElementById(`${type}Detail`).textContent = detail;
-        }
+            // Intro
+            gsap.to("body", { opacity: 1, duration: 1 });
+            gsap.from(".hero-title", { y: 50, opacity: 0, duration: 1.2, ease: "power3.out", delay: 0.2 });
+            gsap.from(".hero-subtitle", { y: 20, opacity: 0, duration: 1, ease: "power2.out", delay: 0.5 });
 
-        function signInWithGoogle() {
-            const btn = document.getElementById('signInBtn');
-            btn.disabled = true;
-            document.getElementById('signInText').innerHTML = '<span class="spinner"></span> Signing in...';
-            window.location.href = '/api/auth/google';
-        }
+            // Workflow Scroll
+            const tl = gsap.timeline({
+                scrollTrigger: { trigger: ".workflow-section", start: "top top", end: "bottom bottom", scrub: 1, pin: ".workflow-container" }
+            });
+            tl.from(".prompt-container", { y: 100, opacity: 0, duration: 1 })
+                .to(".prompt-text", { duration: 2, text: { value: "Analyze workflow and deploy resources...", delimiter: "" } });
+            tl.to(".core-orb", { scale: 1.5, opacity: 1, duration: 2, ease: "elastic.out(1, 0.5)" }, "+=0.5");
+            tl.to(".prompt-container", { opacity: 0, y: -50, duration: 1 }, "deploy");
+            tl.to(".flow-line", { strokeDashoffset: 0, opacity: 1, duration: 3, stagger: 0.2 }, "deploy");
+            tl.to("#card-extension", { top: "25%", left: "25%", x: "-50%", y: "-50%", scale: 1, opacity: 1, duration: 2 }, "cards");
+            tl.to("#card-firmware", { top: "25%", right: "25%", x: "50%", y: "-50%", scale: 1, opacity: 1, duration: 2 }, "cards+=0.2");
+            tl.to("#card-mcp", { top: "75%", left: "25%", x: "-50%", y: "50%", scale: 1, opacity: 1, duration: 2 }, "cards+=0.4");
+            tl.to("#card-cloud", { top: "75%", right: "25%", x: "50%", y: "50%", scale: 1, opacity: 1, duration: 2 }, "cards+=0.6");
 
-        function showUserProfile(user) {
-            document.getElementById('userProfile').classList.remove('hidden');
-            document.getElementById('userAvatar').src = user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || user.email);
-            document.getElementById('userName').textContent = user.name || 'User';
-            document.getElementById('userEmail').textContent = user.email || '';
-            document.getElementById('signInBtn').classList.add('hidden');
-        }
+            // Pipeline
+            const pl = gsap.timeline({
+                scrollTrigger: { trigger: ".pipeline-section", start: "top top", end: "bottom bottom", scrub: 1, pin: ".pipeline-container" }
+            });
+            pl.to("#node-ext", { opacity: 1, scale: 1.1, duration: 1, className: "pipeline-node active" }).to(".data-packet", { opacity: 1, top: "50%", left: "20%", duration: 0.5 });
+            pl.to(".connection-beam", { width: "33%", duration: 2 }).to(".data-packet", { left: "40%", duration: 2 }, "<").to("#node-ext", { scale: 1, className: "pipeline-node" }, "<+=1").to("#node-vercel", { opacity: 1, scale: 1.1, className: "pipeline-node active" }, "<+=1.5");
+            pl.to(".connection-beam", { width: "66%", duration: 2 }).to(".data-packet", { left: "60%", duration: 2 }, "<").to("#node-vercel", { scale: 1, className: "pipeline-node" }, "<+=1").to("#node-db", { opacity: 1, scale: 1.1, className: "pipeline-node active" }, "<+=1.5");
+            pl.to(".connection-beam", { width: "100%", duration: 2 }).to(".data-packet", { left: "80%", duration: 2 }, "<").to("#node-db", { scale: 1, className: "pipeline-node" }, "<+=1").to("#node-mcp", { opacity: 1, scale: 1.1, className: "pipeline-node active" }, "<+=1.5");
+            pl.addLabel("security");
+            pl.to(".pipeline-node", { className: "pipeline-node secure-active", duration: 1 }, "security").to(".connection-beam", { background: "linear-gradient(90deg, #00ff9d, #00ff9d)", boxShadow: "0 0 40px #00ff9d", duration: 1 }, "security").to(".security-layer", { opacity: 1, duration: 1 }, "security").to(".lock-icon", { scale: 1, ease: "back.out(1.7)", duration: 1.5 }, "security+=0.5").from(".security-text", { opacity: 0, y: 20, duration: 1 }, "security+=1");
 
-        function logout() {
-            localStorage.clear();
-            window.location.reload();
-        }
+            // Stagger
+            gsap.utils.toArray(".tf-card").forEach((card) => {
+                gsap.from(card, { scrollTrigger: { trigger: card, start: "top 80%" }, y: 50, opacity: 0, duration: 1, ease: "power3.out" });
+            });
 
-        async function testConnection() {
-            await checkAPIStatus();
-            await checkSupabaseStatus();
-            alert('✅ Connection test complete!\nCheck status indicators above.');
-        }
-
-        async function loadRequestCount() {
-            try {
-                const response = await fetch('/api/stats/requests');
-                const data = await response.json();
-                document.getElementById('requestCount').textContent = data.count || 0;
-            } catch (error) {
-                console.error('Failed to load request count:', error);
-            }
-        }
-
-        // Refresh stats every 30 seconds
-        setInterval(async () => {
-            await checkAPIStatus();
-            await checkSupabaseStatus();
-            await loadRequestCount();
-        }, 30000);
+            // Reveal Footer
+            ScrollTrigger.create({
+                trigger: "#footer-trigger",
+                start: "top bottom",
+                onEnter: () => document.querySelector('.reveal-footer').classList.add('active'),
+                onLeaveBack: () => document.querySelector('.reveal-footer').classList.remove('active'),
+            });
+        });
     </script>
 </body>
 
