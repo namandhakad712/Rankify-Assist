@@ -1,7 +1,20 @@
 # Device Controller Requirements
-gradio>=4.0.0
+# For Hugging Face Space deployment
+
+# Gradio web interface (pinned for compatibility)
+gradio==4.44.1
+
+# FastMCP framework
 fastmcp>=2.12.3
+
+# HTTP client
 httpx>=0.25.0
+
+# Environment variables
 python-dotenv>=1.0.0
+
+# Data validation
 pydantic>=2.0.0
+
+# Tuya MCP SDK from GitHub
 git+https://github.com/tuya/tuya-mcp-sdk.git#subdirectory=mcp-python
