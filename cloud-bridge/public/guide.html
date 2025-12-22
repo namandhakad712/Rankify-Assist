@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rankify Assist - Documentation Hub</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- GSAP & Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+    <!-- Markdown Parser & Highlighter -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+
+    <!-- Mermaid JS -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+        // Expose init to window for our script to use
+        window.initMermaid = async () => {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'neutral',
+                securityLevel: 'loose',
+            });
+            await mermaid.run({
+                querySelector: '.mermaid'
+            });
+        };
+    </script>
+
+    <!-- Docs Data Bundle -->
+    <script src="docs_data.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #030014;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-primary: #7042f8;
+            --accent-cyan: #00f0ff;
+            --accent-green: #00ff9d;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Background */
+        .ambient-light {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(112, 66, 248, 0.08), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.08), transparent 40%);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 40px 24px;
+            border-right: 1px solid var(--glass-border);
+            background: rgba(3, 0, 20, 0.5);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 40px;
+            display: block;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .nav-group {
+            margin-bottom: 32px;
+        }
+
+        .nav-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 8px 12px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-link.active {
+            color: #fff;
+            background: rgba(112, 66, 248, 0.1);
+            border: 1px solid rgba(112, 66, 248, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 60px 80px;
+            max-width: 1200px;
+        }
+
+        /* Markdown Styling */
+        #doc-renderer {
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        #doc-renderer h1,
+        #doc-renderer h2,
+        #doc-renderer h3 {
+            font-family: var(--font-display);
+            color: #fff;
+            margin-top: 2em;
+            margin-bottom: 0.8em;
+        }
+
+        #doc-renderer h1 {
+            font-size: 48px;
+            margin-top: 0;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #doc-renderer h2 {
+            font-size: 32px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5em;
+        }
+
+        #doc-renderer h3 {
+            font-size: 24px;
+            color: var(--accent-cyan);
+        }
+
+        #doc-renderer p {
+            margin-bottom: 1.2em;
+            font-size: 16px;
+        }
+
+        #doc-renderer ul,
+        #doc-renderer ol {
+            margin-left: 1.5em;
+            margin-bottom: 1.5em;
+        }
+
+        #doc-renderer li {
+            margin-bottom: 0.5em;
+        }
+
+        #doc-renderer code {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ff79c6;
+            font-size: 0.9em;
+        }
+
+        #doc-renderer pre {
+            background: #0d0d16 !important;
+            padding: 1.5em;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            margin: 2em 0;
+            overflow-x: auto;
+        }
+
+        #doc-renderer pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        #doc-renderer blockquote {
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 1em;
+            margin-left: 0;
+            color: #fff;
+            background: rgba(112, 66, 248, 0.1);
+            padding: 1em;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Mermaid Zoom Container */
+        .mermaid-wrapper {
+            width: 100%;
+            height: 600px;
+            /* Large view */
+            overflow: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            margin: 24px 0;
+            cursor: grab;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .mermaid-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .mermaid {
+            /* Let it grow */
+            min-width: 100%;
+        }
+
+        /* Tables */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 2em 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .back-home {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            padding: 12px 24px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 99px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(112, 66, 248, 0.4);
+            transition: transform 0.2s;
+            z-index: 50;
+        }
+
+        .back-home:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-light"></div>
+
+    <aside class="sidebar">
+        <a href="index.html" class="logo">Rankify Docs</a>
+        <div id="nav-container">
+            <!-- Dynamically populated -->
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div id="doc-renderer">
+            <!-- Markdown content rendered here -->
+        </div>
+        <div style="height: 100px;"></div>
+    </main>
+
+    <a href="index.html" class="back-home">← Home</a>
+
+    <script>
+        // Init Smooth Scroll
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+        });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // --- DYNAMIC DOCS LOGIC ---
+
+        const navContainer = document.getElementById('nav-container');
+        const docRenderer = document.getElementById('doc-renderer');
+
+        // Load content
+        async function loadDoc(category, docName) {
+            // Scroll to top
+            lenis.scrollTo(0, { immediate: true });
+
+            // Get content
+            const content = window.DOCS_DATA[category][docName];
+
+            // Parse & Render
+            docRenderer.innerHTML = marked.parse(content);
+
+            // Handle Mermaid
+            const mermaids = docRenderer.querySelectorAll('code.language-mermaid');
+            mermaids.forEach(block => {
+                const pre = block.parentElement; // marked wraps code in pre
+                const wrapper = document.createElement('div');
+                wrapper.className = 'mermaid-wrapper';
+
+                // Create actual mermaid div
+                const div = document.createElement('div');
+                div.className = 'mermaid';
+                div.textContent = block.textContent; // Using textContent to be safe
+
+                wrapper.appendChild(div);
+
+                // Replace the pre block
+                pre.replaceWith(wrapper);
+            });
+
+            if (mermaids.length > 0 && window.initMermaid) {
+                // Wait for DOM
+                requestAnimationFrame(async () => {
+                    await window.initMermaid();
+                });
+            }
+
+            // Highlight Syntax
+            Prism.highlightAll();
+
+            // Update Active Link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.cat === category && link.dataset.doc === docName) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Animate content in
+            gsap.fromTo("#doc-renderer", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 });
+        }
+
+        // Init Sidebar
+        if (window.DOCS_DATA) {
+            Object.keys(window.DOCS_DATA).forEach((category, index) => {
+
+                const group = document.createElement('div');
+                group.className = 'nav-group';
+
+                const header = document.createElement('div');
+                header.className = 'nav-header';
+                header.innerText = category;
+                group.appendChild(header);
+
+                Object.keys(window.DOCS_DATA[category]).forEach((docName, docIndex) => {
+                    const link = document.createElement('a');
+                    link.className = 'nav-link';
+                    link.innerText = docName;
+                    link.dataset.cat = category;
+                    link.dataset.doc = docName;
+
+                    link.addEventListener('click', () => loadDoc(category, docName));
+
+                    group.appendChild(link);
+                });
+
+                navContainer.appendChild(group);
+            });
+
+            // Load first doc by default
+            const firstCat = Object.keys(window.DOCS_DATA)[0];
+            const firstDoc = Object.keys(window.DOCS_DATA[firstCat])[0];
+            loadDoc(firstCat, firstDoc);
+        }
+
+    </script>
+</body>
+
+</html>
