@@ -17,11 +17,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Environment variables (set in FastMCP Cloud dashboard)
-TUYA_ENDPOINT = os.getenv('MCP_ENDPOINT', 'https://mcp-in.iotbing.com')
-TUYA_ACCESS_ID = os.getenv('MCP_ACCESS_ID')
-TUYA_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
-FASTMCP_CLOUD_MCP_URL = os.getenv('FASTMCP_CLOUD_MCP_URL', 'https://assist.fastmcp.app/mcp')
+# Environment variables (MUST be set in FastMCP Cloud dashboard)
+TUYA_ENDPOINT = os.getenv('MCP_ENDPOINT')  # No default - MUST be set!
+TUYA_ACCESS_ID = os.getenv('MCP_ACCESS_ID')  # No default - MUST be set!
+TUYA_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')  # No default - MUST be set!
+FASTMCP_CLOUD_MCP_URL = os.getenv('FASTMCP_CLOUD_MCP_URL')  # No default - MUST be set!
 
 # Create FastMCP app
 mcp = FastMCP("Tuya Client Bridge")

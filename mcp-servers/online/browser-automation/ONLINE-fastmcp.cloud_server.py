@@ -12,10 +12,10 @@ from fastmcp import FastMCP
 from pydantic import Field
 from typing import Annotated
 
-# Environment variables (set in FastMCP Cloud dashboard or .env for local testing)
-CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL', 'https://tuya-cloud-bridge.vercel.app')
-MCP_API_KEY = os.getenv('MCP_API_KEY')
-TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID')
+# Environment variables (MUST be set in FastMCP Cloud dashboard)
+CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL')  # No default - MUST be set!
+MCP_API_KEY = os.getenv('MCP_API_KEY')  # No default - MUST be set!
+TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID')  # No default - MUST be set!
 
 # Create FastMCP app (compatible with FastMCP 2.12.3)
 mcp = FastMCP("Browser Automation")
