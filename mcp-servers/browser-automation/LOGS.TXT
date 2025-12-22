@@ -1,0 +1,304 @@
+assist
+namandhakad712/Rankify-Assist
+Connect
+ChatMCP
+Clients
+Inspector
+Server
+Deployments
+Logs
+
+Capabilities
+Tools
+Resources
+Resource Templates
+Prompts
+Configuration
+Access
+Analytics
+
+Users
+Soon
+
+Sessions
+Soon
+
+Naman Dhakad
+Naman Dhakad
+namandhakad712@gmail.com
+
+Build Logs
+assist • Build 8b205063
+
+Failed
+
+🚀 Initializing build environment
+🌐 Setting up network
+📦 Preparing dependencies
+⚡ Inspecting MCP code
+🔧 Preparing application build
+📋 Setting up build checks
+🎯 Initializing encrypted variables
+✨ Optimizing bundle size
+🔍 Inspecting manifest
+🎉 Finalizing build setup
+🚀 Build started for deployment: assist
+⚙️ Build configuration:
+  • Repository: https://github.com/namandhakad712/Rankify-Assist
+  • Entrypoint: mcp-servers/browser-automation/ONLINE-fastmcp.cloud_server.py
+  • Python version: 3.12
+  • Git SHA: f9c1279d
+  • Billing type: HOBBY
+  • Environment variables: CLOUD_BRIDGE_URL, MCP_ACCESS_ID, MCP_ACCESS_SECRET, MCP_API_KEY, MCP_ENDPOINT
+📦 Using specified requirements file: mcp-servers/browser-automation/requirements.txt
+Authenticating with container registries...
+Downloading your code...
+Cloning into '.'...
+From https://github.com/namandhakad712/Rankify-Assist
+ * branch            f9c1279d5e9e7319ddad0fddbf59afecf8f7faaf -> FETCH_HEAD
+HEAD is now at f9c1279  Add FastMCP Cloud support for both MCP servers
+Build started on `date`
+Using mcp-servers/browser-automation/requirements.txt for dependencies
+    cat > Dockerfile << 'EOF'
+    FROM 342547628772.dkr.ecr.us-east-1.amazonaws.com/fastmcp-prd-base-images:mcp-base-python3.12
+ARG HOME
+ARG CLOUD_BRIDGE_URL
+ARG MCP_ACCESS_ID
+ARG MCP_ACCESS_SECRET
+ARG MCP_API_KEY
+ARG MCP_ENDPOINT
+ARG FASTMCP_CLOUD_URL
+ARG FASTMCP_CLOUD_GIT_COMMIT_SHA
+ARG FASTMCP_CLOUD_GIT_REPO
+# Copy application code
+COPY . .
+# Install FastMCP CLI for inspection
+RUN uv pip install --system "fastmcp==2.12.3"
+# Install dependencies from requirements file
+RUN if [ -f "mcp-servers/browser-automation/requirements.txt" ]; then \
+        echo "Installing Python dependencies from mcp-servers/browser-automation/requirements.txt..." && \
+        uv pip install --system -r "mcp-servers/browser-automation/requirements.txt"; \
+    else \
+        echo "mcp-servers/browser-automation/requirements.txt not found, skipping dependency installation"; \
+    fi
+ENV HOME=$HOME
+ENV CLOUD_BRIDGE_URL=$CLOUD_BRIDGE_URL
+ENV MCP_ACCESS_ID=$MCP_ACCESS_ID
+ENV MCP_ACCESS_SECRET=$MCP_ACCESS_SECRET
+ENV MCP_API_KEY=$MCP_API_KEY
+ENV MCP_ENDPOINT=$MCP_ENDPOINT
+ENV FASTMCP_CLOUD_URL=$FASTMCP_CLOUD_URL
+ENV FASTMCP_CLOUD_GIT_COMMIT_SHA=$FASTMCP_CLOUD_GIT_COMMIT_SHA
+ENV FASTMCP_CLOUD_GIT_REPO=$FASTMCP_CLOUD_GIT_REPO
+# Inspect MCP tools (continue build if this fails)
+RUN fastmcp inspect -f fastmcp -o /tmp/server-info.json "/app/mcp-servers/browser-automation/ONLINE-fastmcp.cloud_server.py" || echo '{"error": "Failed to inspect MCP tools"}' > /tmp/server-info.json
+# Lambda Web Adapter expects port 8080 by default
+EXPOSE 8080
+EOF
+Creating Dockerfile...
+Building your MCP server...
+#0 building with "default" instance using docker driver
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.78kB done
+#1 DONE 0.0s
+#2 [auth] sharing credentials for 342547628772.dkr.ecr.us-east-1.amazonaws.com
+#2 DONE 0.0s
+#3 [internal] load metadata for 342547628772.dkr.ecr.us-east-1.amazonaws.com/fastmcp-prd-base-images:mcp-base-python3.12
+#3 DONE 0.3s
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+#5 [1/5] FROM 342547628772.dkr.ecr.us-east-1.amazonaws.com/fastmcp-prd-base-images:mcp-base-python3.12@sha256:e441786287b463e0f103b48614a62b0efb55e2f8fc47070f8cf6248a1e8d7363
+#5 resolve 342547628772.dkr.ecr.us-east-1.amazonaws.com/fastmcp-prd-base-images:mcp-base-python3.12@sha256:e441786287b463e0f103b48614a62b0efb55e2f8fc47070f8cf6248a1e8d7363 0.0s done
+#5 sha256:e441786287b463e0f103b48614a62b0efb55e2f8fc47070f8cf6248a1e8d7363 3.68kB / 3.68kB done
+#5 sha256:b86c3dedcc90849f1b4c9156091523808bc80b407e118493da396cb44b93932b 9.51kB / 9.51kB done
+#5 sha256:5ba766340b3db1900c6b6602eff2e0b604affbd43c1bba793dc8ec490335a0cb 0B / 30.78MB 0.1s
+#5 sha256:dfff024aded812f05863f68d31b04030038e01017329961ea2d5f37e6a1c70ef 0B / 1.29MB 0.1s
+#5 sha256:89933f78055059f29cf8b5a9c0b6df0fe9d96c388b99215881bf653ed6f1ca35 0B / 12.11MB 0.1s
+#5 sha256:5ba766340b3db1900c6b6602eff2e0b604affbd43c1bba793dc8ec490335a0cb 4.19MB / 30.78MB 0.3s
+#5 sha256:dfff024aded812f05863f68d31b04030038e01017329961ea2d5f37e6a1c70ef 1.29MB / 1.29MB 0.3s done
+#5 sha256:89933f78055059f29cf8b5a9c0b6df0fe9d96c388b99215881bf653ed6f1ca35 7.25MB / 12.11MB 0.3s
+#5 ...
+#6 [internal] load build context
+#6 transferring context: 25.76MB 0.3s done
+#6 DONE 0.3s
+#5 [1/5] FROM 342547628772.dkr.ecr.us-east-1.amazonaws.com/fastmcp-prd-base-images:mcp-base-python3.12@sha256:e441786287b463e0f103b48614a62b0efb55e2f8fc47070f8cf6248a1e8d7363
+#5 sha256:5ba766340b3db1900c6b6602eff2e0b604affbd43c1bba793dc8ec490335a0cb 25.17MB / 30.78MB 0.5s
+#5 sha256:89933f78055059f29cf8b5a9c0b6df0fe9d96c388b99215881bf653ed6f1ca35 12.11MB / 12.11MB 0.3s done
+#5 sha256:92c55b0510710899b6e0f2baf752ed3942cd395daaaca6cc07316962aeeaa61f 0B / 1.70MB 0.5s
+#5 sha256:1f384a3df5003cc3a739008d6e3c2b2afc752887e9ce09757747c0bbb6e68983 250B / 250B 0.4s done
+#5 sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 0B / 34.77MB 0.5s
+#5 sha256:5ba766340b3db1900c6b6602eff2e0b604affbd43c1bba793dc8ec490335a0cb 30.78MB / 30.78MB 0.6s
+#5 sha256:92c55b0510710899b6e0f2baf752ed3942cd395daaaca6cc07316962aeeaa61f 1.70MB / 1.70MB 0.5s done
+#5 sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 10.49MB / 34.77MB 0.6s
+#5 sha256:b3535e3e61903a4d74411da259a8f607d9b6844cffb33556f0095fcc5839e8c8 0B / 19.41MB 0.6s
+#5 sha256:5ba766340b3db1900c6b6602eff2e0b604affbd43c1bba793dc8ec490335a0cb 30.78MB / 30.78MB 0.6s done
+#5 sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 19.92MB / 34.77MB 0.7s
+#5 sha256:b3535e3e61903a4d74411da259a8f607d9b6844cffb33556f0095fcc5839e8c8 1.05MB / 19.41MB 0.7s
+#5 extracting sha256:5ba766340b3db1900c6b6602eff2e0b604affbd43c1bba793dc8ec490335a0cb
+#5 sha256:c54677ef09beb7b32fe8a39a7456462b76ac873c8a8dc58bff3a3c6520312ba2 0B / 19.87MB 0.7s
+#5 sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 32.51MB / 34.77MB 0.8s
+#5 sha256:b3535e3e61903a4d74411da259a8f607d9b6844cffb33556f0095fcc5839e8c8 12.41MB / 19.41MB 0.8s
+#5 sha256:c54677ef09beb7b32fe8a39a7456462b76ac873c8a8dc58bff3a3c6520312ba2 3.15MB / 19.87MB 0.8s
+#5 sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 34.77MB / 34.77MB 0.9s
+#5 sha256:b3535e3e61903a4d74411da259a8f607d9b6844cffb33556f0095fcc5839e8c8 19.41MB / 19.41MB 0.9s
+#5 sha256:c54677ef09beb7b32fe8a39a7456462b76ac873c8a8dc58bff3a3c6520312ba2 13.63MB / 19.87MB 0.9s
+#5 sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 34.77MB / 34.77MB 0.9s done
+#5 sha256:b3535e3e61903a4d74411da259a8f607d9b6844cffb33556f0095fcc5839e8c8 19.41MB / 19.41MB 0.9s done
+#5 sha256:c54677ef09beb7b32fe8a39a7456462b76ac873c8a8dc58bff3a3c6520312ba2 19.87MB / 19.87MB 1.0s done
+#5 sha256:da2b34dee392c0e01b1d3498bf8ed98843fe2633b2285d4c0200249f3f7c82a3 0B / 126.36kB 1.0s
+#5 sha256:79b04b2ffc58835137239c2aef15e957dd3a4d01e51dcff0af43ce17a0af1f56 0B / 17.91MB 1.0s
+#5 sha256:0917c49625d71dcc8b56403512ddb86dfedc63a6b6919b149298e2d50df0e66e 0B / 93B 1.0s
+#5 sha256:da2b34dee392c0e01b1d3498bf8ed98843fe2633b2285d4c0200249f3f7c82a3 126.36kB / 126.36kB 1.0s done
+#5 sha256:79b04b2ffc58835137239c2aef15e957dd3a4d01e51dcff0af43ce17a0af1f56 4.19MB / 17.91MB 1.1s
+#5 sha256:0917c49625d71dcc8b56403512ddb86dfedc63a6b6919b149298e2d50df0e66e 93B / 93B 1.0s done
+#5 sha256:94f94bcf6d7740904f5faafbab51c478d30fa738d88f859893b0d1cc44c037c3 29.23kB / 29.23kB 1.0s done
+#5 sha256:1d047eecb9c965390ddcca739b24be420f8e5621de53ace7595ae8794adf8ed3 0B / 822.42kB 1.1s
+#5 sha256:c22e846b146da1abbae6bcca9744270746d8bcdacf6123fbe84e575e31bee66e 0B / 1.15kB 1.1s
+#5 sha256:ad5f868a46b7659baf4c8debe35e336db230286df11dcac434659a70274fd9e3 173B / 173B 1.1s done
+#5 sha256:79b04b2ffc58835137239c2aef15e957dd3a4d01e51dcff0af43ce17a0af1f56 8.39MB / 17.91MB 1.2s
+#5 sha256:1d047eecb9c965390ddcca739b24be420f8e5621de53ace7595ae8794adf8ed3 822.42kB / 822.42kB 1.1s done
+#5 sha256:c22e846b146da1abbae6bcca9744270746d8bcdacf6123fbe84e575e31bee66e 1.15kB / 1.15kB 1.2s done
+#5 sha256:874eff9d5e3d29a7ed8b81e9a1d1f4301b79b8da8618dc5de4af82524bdfe4db 1.15kB / 1.15kB 1.2s done
+#5 sha256:79b04b2ffc58835137239c2aef15e957dd3a4d01e51dcff0af43ce17a0af1f56 17.91MB / 17.91MB 1.3s done
+#5 extracting sha256:5ba766340b3db1900c6b6602eff2e0b604affbd43c1bba793dc8ec490335a0cb 1.3s done
+#5 extracting sha256:dfff024aded812f05863f68d31b04030038e01017329961ea2d5f37e6a1c70ef
+#5 extracting sha256:dfff024aded812f05863f68d31b04030038e01017329961ea2d5f37e6a1c70ef 0.1s done
+#5 extracting sha256:89933f78055059f29cf8b5a9c0b6df0fe9d96c388b99215881bf653ed6f1ca35
+#5 extracting sha256:89933f78055059f29cf8b5a9c0b6df0fe9d96c388b99215881bf653ed6f1ca35 0.6s done
+#5 extracting sha256:1f384a3df5003cc3a739008d6e3c2b2afc752887e9ce09757747c0bbb6e68983 done
+#5 extracting sha256:92c55b0510710899b6e0f2baf752ed3942cd395daaaca6cc07316962aeeaa61f 0.1s done
+#5 extracting sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 0.1s
+#5 extracting sha256:4b4a862bbc0f3354bdc8727818826e870b6d84e4f806add6a2df24a53c6a29fa 1.2s done
+#5 extracting sha256:b3535e3e61903a4d74411da259a8f607d9b6844cffb33556f0095fcc5839e8c8
+#5 extracting sha256:b3535e3e61903a4d74411da259a8f607d9b6844cffb33556f0095fcc5839e8c8 0.9s done
+#5 extracting sha256:c54677ef09beb7b32fe8a39a7456462b76ac873c8a8dc58bff3a3c6520312ba2
+#5 extracting sha256:c54677ef09beb7b32fe8a39a7456462b76ac873c8a8dc58bff3a3c6520312ba2 0.4s done
+#5 extracting sha256:0917c49625d71dcc8b56403512ddb86dfedc63a6b6919b149298e2d50df0e66e done
+#5 extracting sha256:da2b34dee392c0e01b1d3498bf8ed98843fe2633b2285d4c0200249f3f7c82a3 0.0s done
+#5 extracting sha256:79b04b2ffc58835137239c2aef15e957dd3a4d01e51dcff0af43ce17a0af1f56
+#5 extracting sha256:79b04b2ffc58835137239c2aef15e957dd3a4d01e51dcff0af43ce17a0af1f56 1.4s done
+#5 extracting sha256:94f94bcf6d7740904f5faafbab51c478d30fa738d88f859893b0d1cc44c037c3
+#5 extracting sha256:94f94bcf6d7740904f5faafbab51c478d30fa738d88f859893b0d1cc44c037c3 done
+#5 extracting sha256:1d047eecb9c965390ddcca739b24be420f8e5621de53ace7595ae8794adf8ed3 0.0s done
+#5 extracting sha256:ad5f868a46b7659baf4c8debe35e336db230286df11dcac434659a70274fd9e3 done
+#5 extracting sha256:c22e846b146da1abbae6bcca9744270746d8bcdacf6123fbe84e575e31bee66e
+#5 extracting sha256:c22e846b146da1abbae6bcca9744270746d8bcdacf6123fbe84e575e31bee66e done
+#5 extracting sha256:874eff9d5e3d29a7ed8b81e9a1d1f4301b79b8da8618dc5de4af82524bdfe4db done
+#5 DONE 7.5s
+#7 [2/5] COPY . .
+#7 DONE 0.4s
+#8 [3/5] RUN uv pip install --system "fastmcp==2.12.3"
+#8 0.516 Using Python 3.12.12 environment at: /usr/local
+#8 0.768 Resolved 60 packages in 248ms
+#8 0.807 Prepared 9 packages in 38ms
+#8 0.814 Uninstalled 1 package in 7ms
+#8 0.825 Installed 9 packages in 10ms
+#8 0.825  - fastmcp==2.14.1
+#8 0.825  + fastmcp==2.12.3
+#8 0.825  + isodate==0.7.2
+#8 0.826  + lazy-object-proxy==1.12.0
+#8 0.826  + markupsafe==3.0.3
+#8 0.826  + openapi-core==0.21.0
+#8 0.826  + openapi-schema-validator==0.6.3
+#8 0.826  + openapi-spec-validator==0.7.2
+#8 0.826  + rfc3339-validator==0.1.4
+#8 0.826  + werkzeug==3.1.4
+#8 DONE 0.9s
+#9 [4/5] RUN if [ -f "mcp-servers/browser-automation/requirements.txt" ]; then         echo "Installing Python dependencies from mcp-servers/browser-automation/requirements.txt..." &&         uv pip install --system -r "mcp-servers/browser-automation/requirements.txt";     else         echo "mcp-servers/browser-automation/requirements.txt not found, skipping dependency installation";     fi
+#9 0.285 Installing Python dependencies from mcp-servers/browser-automation/requirements.txt...
+#9 0.293 Using Python 3.12.12 environment at: /usr/local
+#9 0.312 Resolved 6 packages in 15ms
+#9 0.319 Prepared 2 packages in 6ms
+#9 0.321 Uninstalled 2 packages in 2ms
+#9 0.325 Installed 2 packages in 3ms
+#9 0.325  - python-dotenv==1.2.1
+#9 0.325  + python-dotenv==1.0.0
+#9 0.326  - requests==2.32.5
+#9 0.326  + requests==2.31.0
+#9 DONE 0.4s
+#10 [5/5] RUN fastmcp inspect -f fastmcp -o /tmp/server-info.json "/app/mcp-servers/browser-automation/ONLINE-fastmcp.cloud_server.py" || echo '{"error": "Failed to inspect MCP tools"}' > /tmp/server-info.json
+#10 2.272 [12/22/25 14:17:41] ERROR    Failed to inspect server:                cli.py:769
+#10 2.272                              FastMCP.__init__() got an unexpected               
+#10 2.272                              keyword argument 'description'                     
+#10 2.273 ✗ Failed to inspect server: FastMCP.__init__() got an unexpected keyword 
+#10 2.273 argument 'description'
+#10 DONE 2.6s
+#11 exporting to image
+#11 exporting layers
+#11 exporting layers 0.3s done
+#11 writing image sha256:eb1a38d5fd1ef540b3ef59f48d8442a50c576cd8824645d6e765d71fa66e1e79 done
+#11 naming to 342547628772.dkr.ecr.us-east-1.amazonaws.com/fastmcp-prd-images:assist-f9c1279d done
+#11 DONE 0.4s
+ [33m4 warnings found (use docker --debug to expand):
+[0m - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "MCP_API_KEY") (line 7)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "MCP_ACCESS_SECRET") (line 32)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ENV "MCP_API_KEY") (line 33)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "MCP_ACCESS_SECRET") (line 6)
+Build completed on `date`
+Analyzing your MCP tools...
+1a8e1a947d979dae28784cfc85a3e09aa141b8cd90c04273f736c5186e3777c3
+mcp-inspect-assist-f9c1279d
+Publishing your MCP server...
+The push refers to repository [342547628772.dkr.ecr.us-east-1.amazonaws.com/fastmcp-prd-images]
+f2b30103fad6: Preparing
+e775271bf728: Preparing
+09a278c87b66: Preparing
+59d960fc6488: Preparing
+fb51a1c3c986: Preparing
+b234aba9493a: Preparing
+e8ae4dacf7cb: Preparing
+6a6415807e4b: Preparing
+fd5235b42643: Preparing
+cf5f721d41a2: Preparing
+624bbd63451f: Preparing
+79cd0fda7a82: Preparing
+920a3fde7970: Preparing
+158e6f6a652b: Preparing
+521b0ce98261: Preparing
+653628d2e621: Preparing
+602c1c97924f: Preparing
+644f9c869502: Preparing
+d3ed01caa084: Preparing
+77a2b55fbe8b: Preparing
+79cd0fda7a82: Waiting
+920a3fde7970: Waiting
+158e6f6a652b: Waiting
+521b0ce98261: Waiting
+653628d2e621: Waiting
+602c1c97924f: Waiting
+644f9c869502: Waiting
+d3ed01caa084: Waiting
+77a2b55fbe8b: Waiting
+b234aba9493a: Waiting
+e8ae4dacf7cb: Waiting
+6a6415807e4b: Waiting
+fd5235b42643: Waiting
+cf5f721d41a2: Waiting
+624bbd63451f: Waiting
+fb51a1c3c986: Layer already exists
+b234aba9493a: Layer already exists
+e8ae4dacf7cb: Layer already exists
+6a6415807e4b: Layer already exists
+fd5235b42643: Layer already exists
+cf5f721d41a2: Layer already exists
+624bbd63451f: Layer already exists
+e775271bf728: Pushed
+79cd0fda7a82: Layer already exists
+920a3fde7970: Layer already exists
+158e6f6a652b: Layer already exists
+521b0ce98261: Layer already exists
+653628d2e621: Layer already exists
+602c1c97924f: Layer already exists
+644f9c869502: Layer already exists
+d3ed01caa084: Layer already exists
+77a2b55fbe8b: Layer already exists
+f2b30103fad6: Pushed
+09a278c87b66: Pushed
+59d960fc6488: Pushed
+assist-f9c1279d: digest: sha256:03f5e1763384cca9d230ad82bb8474d8b1721913f7a2745f48366bfbcc820bfc size: 4520
+📦 Build artifacts uploaded successfully
+🚀 Server build complete! Deploying server now...
+✅ Server deployed successfully, starting pre-flight validation...
+✈️ Starting pre-flight check to verify server startup...
+19:47

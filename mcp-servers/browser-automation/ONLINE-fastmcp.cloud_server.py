@@ -17,11 +17,8 @@ CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL', 'https://tuya-cloud-bridge.verc
 MCP_API_KEY = os.getenv('MCP_API_KEY')
 TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID')
 
-# Create FastMCP app
-mcp = FastMCP(
-    "Browser Automation",
-    description="Control browser automation via Tuya AI through Rankify Extension"
-)
+# Create FastMCP app (compatible with FastMCP 2.12.3)
+mcp = FastMCP("Browser Automation")
 
 @mcp.tool
 async def execute_browser_command(

@@ -17,11 +17,8 @@ CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL', 'https://tuya-cloud-bridge.verc
 MCP_API_KEY = os.getenv('MCP_API_KEY')
 TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID')
 
-# Create FastMCP app
-mcp = FastMCP(
-    "Device Controller",
-    description="Control Tuya smart devices via Tuya AI - lights, AC, fans, and more"
-)
+# Create FastMCP app (compatible with FastMCP 2.12.3)
+mcp = FastMCP("Device Controller")
 
 @mcp.tool
 async def control_device(
