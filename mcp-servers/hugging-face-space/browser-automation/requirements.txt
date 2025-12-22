@@ -1,8 +1,8 @@
 # Browser Automation Requirements
 # For Hugging Face Space deployment
 
-# Gradio web interface (pinned for compatibility)
-gradio==4.44.1
+# Gradio web interface (latest version with updated dependencies)
+gradio
 
 # FastMCP framework
 fastmcp>=2.12.3
@@ -16,5 +16,5 @@ python-dotenv>=1.0.0
 # Data validation
 pydantic>=2.0.0
 
-# Tuya MCP SDK from GitHub
+# Tuya MCP SDK from GitHub (install LAST to resolve dependencies)
 git+https://github.com/tuya/tuya-mcp-sdk.git#subdirectory=mcp-python

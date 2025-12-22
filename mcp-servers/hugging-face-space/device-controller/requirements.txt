@@ -1,8 +1,8 @@
 # Device Controller Requirements
 # For Hugging Face Space deployment
 
-# Gradio web interface (pinned for compatibility)
-gradio==4.44.1
+# Gradio web interface (latest version)
+gradio
 
 # FastMCP framework
 fastmcp>=2.12.3
