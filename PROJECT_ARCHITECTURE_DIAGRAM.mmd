@@ -1,71 +1,61 @@
 sequenceDiagram
-    participant User as 👤 User (SmartLife App)
+    participant User as 👤 User (T5AI Board)
     participant Cloud as ☁️ Tuya AI Workflow
-    participant MCP_Browser as 🌐 Browser MCP (Local)
-    participant MCP_Device as 🏠 Device MCP (Local)
-    participant Vercel as 🚀 Vercel Cloud Bridge
+    participant MCP_Browser as 🐳 Browser MCP (Docker/HF)
+    participant MCP_Device as 🐳 Device MCP (Docker/HF)
+    participant Vercel as 🚀 Cloud Bridge (Vercel)
     participant Supabase as 💾 Supabase DB
-    participant Extension as 🧩 Chrome Extension
-    participant Browser as 🌐 Browser
-    participant Devices as 💡 Smart Devices
+    participant Extension as 🧩 Chrome Extension (Local)
+    participant Browser as 🌐 Browser / Local PC
 
     rect rgb(230, 240, 255)
-        Note over User, Cloud: 📢 PHASE 1: VOICE INPUT
-        User->>Cloud: Voice: "check my gmail"
-        Cloud->>Cloud: Speech-to-Text (STT)
-    end
-
-    rect rgb(255, 240, 230)
-        Note over Cloud: 🧠 PHASE 2: INTENT & PLANNING
-        Cloud->>Cloud: Intent Recognition → 0 (browser)
-        Cloud->>Cloud: Browser Planner LLM
-        Note right of Cloud: "I plan to open Gmail<br/>and count unread emails"
-    end
-
-    rect rgb(255, 250, 230)
-        Note over Cloud, User: 🔒 PHASE 3: SAFETY CONFIRMATION
-        Cloud->>User: TTS: "I plan to open Gmail. Proceed?"
-        User->>Cloud: Voice: "yes"
-        Cloud->>Cloud: selector checks response
+        Note over User, Cloud: 📢 PHASE 1: TRIGGER
+        User->>Cloud: Voice: "Open YouTube"
+        Cloud->>Cloud: Speech-to-Text (STT) & Intent Analysis
     end
 
     rect rgb(230, 255, 240)
-        Note over Cloud, Extension: ⚡ PHASE 4: EXECUTION (BROWSER)
-        Cloud->>MCP_Browser: execute_browser_task("check gmail")
+        Note over Cloud, Browser: ⚡ PHASE 2: BROWSER AUTOMATION (Direct Execution)
+        Note right of Cloud: Intent: Browser
+        Cloud->>MCP_Browser: execute_browser_command(...)
+        
+        Note right of MCP_Browser: � Docker Container<br/>Tuya Client → localhost:7860 → FastAPI
+        
         MCP_Browser->>Vercel: POST /api/execute
         Vercel->>Supabase: INSERT command (status=pending)
         
-        loop Extension Polling (every 3s)
+        loop Extension Polling (Every 3s)
             Extension->>Vercel: GET /api/poll
             Vercel->>Supabase: SELECT pending commands
         end
         
-        Vercel-->>Extension: Return command
-        Extension->>Browser: Open Gmail, count emails
-        Browser-->>Extension: Result: "5 unread"
+        Vercel-->>Extension: Return Command
+        Extension->>Browser: Execute Script / Action
+        Browser-->>Extension: Result
         
         Extension->>Vercel: POST /api/result
-        Vercel->>Supabase: INSERT result, UPDATE command
-        Vercel-->>MCP_Browser: Return result
-        MCP_Browser-->>Cloud: {"success": true, "result": "5 unread"}
-        Cloud->>User: TTS: "You have 5 unread emails"
+        Vercel->>Supabase: UPDATE command (result)
+        Vercel-->>MCP_Browser: Return JSON Result
+        MCP_Browser-->>Cloud: Action Success
+        Cloud->>User: TTS: "Opened YouTube"
     end
 
     rect rgb(240, 255, 240)
-        Note over Cloud, Devices: 🏠 ALTERNATIVE: IOT FLOW (Direct, No Confirmation)
-        User->>Cloud: Voice: "turn on lights"
-        Cloud->>Cloud: Intent: 1 (iot)
+        Note over Cloud, Browser: 🏠 PHASE 3: DEVICE CONTROL (Via Extension/Bridge)
+        Note right of Cloud: Intent: IoT Control
         Cloud->>MCP_Device: control_device(...)
-        MCP_Device->>Devices: Tuya OpenAPI
-        Devices-->>MCP_Device: Success
-        MCP_Device-->>Cloud: {"success": true}
-        Cloud->>User: TTS: "Light is on"
-    end
-
-    rect rgb(250, 240, 255)
-        Note over Cloud, User: 💬 ALTERNATIVE: CHAT FLOW
-        User->>Cloud: Voice: "what is 2+2"
-        Cloud->>Cloud: Intent: 2 (chat)
-        Cloud->>Cloud: Chat LLM (no tools)
-        Cloud->>User: TTS: "4"
+        
+        Note right of MCP_Device: 📦 Docker Container<br/>Tuya Client → localhost:7860 → FastAPI
+        
+        MCP_Device->>Vercel: POST /api/execute (type=device_control)
+        Vercel->>Supabase: INSERT command
+        
+        Vercel-->>Extension: Return Command (via poll)
+        Extension->>Browser: Local Device Control / API
+        Browser-->>Extension: Success
+        
+        Extension->>Vercel: POST /api/result
+        Vercel-->>MCP_Device: Result
+        MCP_Device-->>Cloud: Action Success
+        Cloud->>User: TTS: "Device turned on"
     end
