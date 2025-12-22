@@ -1,11 +1,10 @@
 """
-Browser Automation UI - With Live Request Flow Animation
+Browser Automation UI - Minimal Black & White Glass
 """
 
 import streamlit as st
 import os
 import json
-from datetime import datetime
 
 STATUS_FILE = '/tmp/tuya_status.json'
 LOG_FILE = '/tmp/tuya_client.log'
@@ -27,7 +26,6 @@ def read_logs():
         return "No logs..."
 
 def read_requests():
-    """Read recent MCP requests"""
     try:
         with open(REQUESTS_FILE, 'r') as f:
             return json.load(f)
@@ -38,213 +36,190 @@ CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL')
 MCP_API_KEY = os.getenv('MCP_API_KEY')
 
 st.set_page_config(
-    page_title="[ BROWSER MCP ]",
-    page_icon="█",
+    page_title="Browser MCP",
+    page_icon="⬛",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Retro CSS
+# Minimal Black & White Glass CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
     
-    * { font-family: 'VT323', monospace !important; }
+    * {
+        font-family: 'Inter', sans-serif !important;
+    }
+    
     #MainMenu, footer, header {visibility: hidden;}
-    .stApp { background: #000; color: #fff; }
     
+    .stApp {
+        background: #0a0a0a;
+        color: #fff;
+    }
+    
+    /* Noise grain overlay */
     .stApp::before {
-        content: " ";
-        display: block;
+        content: '';
         position: fixed;
-        top: 0; left: 0; bottom: 0; right: 0;
-        background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%);
-        background-size: 100% 2px;
-        z-index: 2;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        opacity: 0.03;
+        z-index: 0;
         pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='4' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E");
     }
     
     h1 {
         color: #fff !important;
-        font-size: 3rem !important;
-        letter-spacing: 0.1em !important;
-        text-shadow: 0 0 10px #fff;
+        font-size: 2rem !important;
+        font-weight: 300 !important;
+        letter-spacing: -0.02em !important;
+        margin-bottom: 8px !important;
     }
     
-    .subtitle { color: #aaa; font-size: 1.3rem; margin-bottom: 20px; }
-    
-    .pixel-box {
-        border: 3px solid #fff;
-        padding: 15px;
-        margin: 10px 0;
-        background: #000;
-        box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    .subtitle {
+        color: rgba(255,255,255,0.5);
+        font-size: 0.875rem;
+        font-weight: 300;
+        margin-bottom: 32px;
     }
     
-    .status-line {
-        font-size: 1.3rem;
-        padding: 6px 0;
-        border-bottom: 1px dashed #333;
-    }
-    .status-line:last-child { border-bottom: none; }
-    
-    .label { color: #888; display: inline-block; width: 150px; }
-    .value { color: #fff; }
-    .ok { color: #0f0; text-shadow: 0 0 5px #0f0; }
-    .err { color: #f00; text-shadow: 0 0 5px #f00; }
-    
-    /* LIVE REQUEST FLOW ANIMATION */
-    .flow-box {
-        border: 3px solid #0f0;
-        padding: 15px;
-        margin: 10px 0;
-        background: #000;
-        box-shadow: 0 0 20px rgba(0,255,0,0.3);
+    /* Glass cards */
+    .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 12px 0;
     }
     
-    .flow-arrow {
-        color: #0f0;
-        font-size: 2rem;
-        text-align: center;
-        animation: pulse 1s infinite;
+    .status-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        font-size: 0.875rem;
+    }
+    .status-row:last-child { border-bottom: none; }
+    
+    .label {
+        color: rgba(255,255,255,0.5);
+        font-weight: 300;
     }
     
-    @keyframes pulse {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 1; }
-    }
+    .value { color: #fff; font-weight: 400; }
+    .ok { color: #fff; }
+    .err { color: rgba(255,255,255,0.3); }
     
-    .request-item {
-        font-size: 1.1rem;
-        padding: 5px;
-        border-bottom: 1px solid #333;
-        color: #0f0;
+    /* Request flow */
+    .flow-item {
+        font-size: 0.8rem;
+        padding: 8px 12px;
+        margin: 6px 0;
+        background: rgba(255,255,255,0.02);
+        border-left: 2px solid rgba(255,255,255,0.2);
+        color: rgba(255,255,255,0.7);
     }
     
     .stTextArea textarea {
-        background: #000 !important;
-        color: #0f0 !important;
-        border: 3px solid #0f0 !important;
-        font-size: 1.1rem !important;
+        background: rgba(0,0,0,0.4) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 8px !important;
+        color: rgba(255,255,255,0.8) !important;
+        font-size: 0.8rem !important;
+        font-family: 'SF Mono', monospace !important;
+        line-height: 1.6 !important;
     }
     
     .stButton > button {
-        background: #000;
+        background: rgba(255,255,255,0.05);
         color: #fff;
-        border: 3px solid #fff;
-        font-size: 1.4rem;
-        padding: 12px 24px;
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 8px;
+        padding: 12px;
+        font-weight: 400;
+        font-size: 0.875rem;
+        transition: all 0.2s;
     }
+    
     .stButton > button:hover {
-        background: #fff;
-        color: #000;
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.3);
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>[ BROWSER MCP ]</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>// TUYA BRIDGE v1.0 //</p>", unsafe_allow_html=True)
+st.markdown("<h1>Browser Automation</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>Tuya MCP Bridge</p>", unsafe_allow_html=True)
 
 tuya_status = read_tuya_status()
 requests = read_requests()
 
-# Status
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
+    st.markdown("<div class='glass'>", unsafe_allow_html=True)
     
-    mcp_status = '<span class="ok">[ ONLINE ]</span>'
+    mcp_status = 'Online' if True else 'Offline'
     
     if tuya_status['connected']:
-        status_display = '<span class="ok">[ ONLINE ]</span>'
+        tuya_display = 'Connected'
     else:
-        status_display = f'<span class="err">[ OFFLINE ]</span><br><small>{tuya_status["message"]}</small>'
+        tuya_display = 'Disconnected'
     
     st.markdown(f"""
-    <div class='status-line'>
-        <span class='label'>MCP_SERVER:</span>
-        <span class='value'>{mcp_status}</span>
+    <div class='status-row'>
+        <span class='label'>MCP Server</span>
+        <span class='value ok'>{mcp_status}</span>
     </div>
-    <div class='status-line'>
-        <span class='label'>TUYA_CLIENT:</span>
-        <span class='value'>{status_display}</span>
+    <div class='status-row'>
+        <span class='label'>Tuya Client</span>
+        <span class='value {"ok" if tuya_status["connected"] else "err"}'>{tuya_display}</span>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col2:
-    st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
-    
-    cloud_ok = '<span class="ok">[OK]</span>' if CLOUD_BRIDGE_URL else '<span class="err">[ERR]</span>'
-    api_ok = '<span class="ok">[OK]</span>' if MCP_API_KEY else '<span class="err">[ERR]</span>'
-    ep_ok = '<span class="ok">[OK]</span>' if os.getenv('MCP_ENDPOINT') else '<span class="err">[ERR]</span>'
-    creds_ok = '<span class="ok">[OK]</span>' if os.getenv('MCP_ACCESS_ID') and os.getenv('MCP_ACCESS_SECRET') else '<span class="err">[ERR]</span>'
+    st.markdown("<div class='glass'>", unsafe_allow_html=True)
     
     st.markdown(f"""
-    <div class='status-line'>
-        <span class='label'>CLOUD_BRIDGE:</span>
-        <span class='value'>{cloud_ok}</span>
+    <div class='status-row'>
+        <span class='label'>Cloud Bridge</span>
+        <span class='value {"ok" if CLOUD_BRIDGE_URL else "err"}'>{'Set' if CLOUD_BRIDGE_URL else 'Not Set'}</span>
     </div>
-    <div class='status-line'>
-        <span class='label'>CREDENTIALS:</span>
-        <span class='value'>{creds_ok}</span>
+    <div class='status-row'>
+        <span class='label'>Credentials</span>
+        <span class='value {"ok" if os.getenv("MCP_ACCESS_ID") else "err"}'>{'Set' if os.getenv("MCP_ACCESS_ID") else 'Not Set'}</span>
     </div>
-    <div class='status-line'>
-        <span class='label'>REQUESTS:</span>
-        <span class='value'><span class="ok">{len(requests)}</span></span>
+    <div class='status-row'>
+        <span class='label'>Requests</span>
+        <span class='value ok'>{len(requests)}</span>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# LIVE REQUEST FLOW ANIMATION
-st.markdown("<div class='flow-box'>", unsafe_allow_html=True)
-st.markdown("<h2 style='color:#0f0; font-size:1.8rem;'>[ LIVE REQUEST FLOW ]</h2>", unsafe_allow_html=True)
+# Request Flow
+st.markdown("<div class='glass'>", unsafe_allow_html=True)
+st.markdown("<h3 style='font-size:1rem; font-weight:400; margin-bottom:12px;'>Request Flow</h3>", unsafe_allow_html=True)
 
 if requests:
-    latest = requests[-1]
-    st.markdown(f"""
-    <div class='flow-arrow'>
-    TUYA ↓
-    </div>
-    <div class='request-item'>
-    TOOL: {latest['tool']}<br>
-    ARGS: {latest['args']}
-    </div>
-    <div class='flow-arrow'>
-    ↓ MCP ↓
-    </div>
-    <div class='request-item'>
-    PROCESSING...
-    </div>
-    <div class='flow-arrow'>
-    ↓ BRIDGE ↓
-    </div>
-    <div class='request-item'>
-    RESULT: {latest['result']}
-    </div>
-    <div class='flow-arrow'>
-    ↓ EXT ↓
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Recent requests
-    st.markdown("<h3 style='color:#0f0; font-size:1.5rem; margin-top:20px;'>Recent Requests:</h3>", unsafe_allow_html=True)
     for req in reversed(requests[-5:]):
         timestamp = req['timestamp'].split('T')[1][:8]
-        st.markdown(f"<div class='request-item'>[{timestamp}] {req['tool']} → {req['result'][:50]}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='flow-item'>[{timestamp}] {req['tool']} → {req['result'][:60]}</div>", unsafe_allow_html=True)
 else:
-    st.markdown("<div style='color:#888; text-align:center; padding:20px;'>WAITING FOR REQUESTS...</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color:rgba(255,255,255,0.3); text-align:center; padding:20px; font-size:0.875rem;'>Waiting for requests...</div>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # Logs
-st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
+st.markdown("<div class='glass'>", unsafe_allow_html=True)
 logs_text = read_logs()
-st.text_area("[ SYSTEM LOG ]", logs_text, height=250, label_visibility="visible")
+st.text_area("System Log", logs_text, height=250, label_visibility="visible")
 st.markdown("</div>", unsafe_allow_html=True)
 
-if st.button("[ REFRESH ]", use_container_width=True):
+if st.button("Refresh", use_container_width=True):
     st.rerun()
 
 import time

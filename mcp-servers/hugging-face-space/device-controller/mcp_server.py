@@ -1,14 +1,16 @@
 """
 MCP Server - Device Controller
+Implements full MCP protocol
 """
 
 import logging
 import os
-from typing import Annotated
-from pydantic import Field
 import httpx
 import json
 from datetime import datetime
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import uvicorn
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,30 +37,21 @@ def log_request(tool_name, args, result):
             'timestamp': datetime.now().isoformat(),
             'tool': tool_name,
             'args': str(args)[:100],
-            'result': str(result)[:100],
-            'flow': 'TUYA→MCP→BRIDGE→DEVICE'
+            'result': str(result)[:100]
         })
         
-        requests = requests[-50:]
-        
         with open(REQUESTS_FILE, 'w') as f:
-            json.dump(requests, f)
-    except Exception as e:
-        logger.error(f"Failed to log: {e}")
+            json.dump(requests[-50:], f)
+    except:
+        pass
 
 CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL')
 MCP_API_KEY = os.getenv('MCP_API_KEY')
 TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID', 'tuya_mcp_user')
 
-from fastmcp import FastMCP
+app = FastAPI()
 
-mcp = FastMCP("Device Controller")
-
-@mcp.tool
-async def control_device(
-    command: Annotated[str, Field(description="Device control command")]
-) -> str:
-    """Control smart devices"""
+async def control_device_impl(command: str) -> str:
     logger.info(f"TOOL: control_device('{command}')")
     
     try:
@@ -95,18 +88,106 @@ async def control_device(
         log_request('control_device', {'command': command}, error_msg)
         return error_msg
 
-@mcp.tool
-async def health_check() -> str:
-    logger.info("TOOL: health_check()")
-    return "OK: Device Controller is healthy!"
+@app.post("/mcp")
+async def mcp_endpoint(request: Request):
+    """Handle MCP protocol"""
+    try:
+        data = await request.json()
+        method = data.get('method')
+        request_id = data.get('id')
+        
+        logger.info(f"MCP REQUEST: {method}")
+        
+        if method == 'initialize':
+            return JSONResponse({
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {
+                    "protocolVersion": "2025-11-25",
+                    "capabilities": {"tools": {}},
+                    "serverInfo": {
+                        "name": "Device Controller",
+                        "version": "1.0.0"
+                    }
+                }
+            })
+        
+        elif method == 'tools/list':
+            return JSONResponse({
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {
+                    "tools": [
+                        {
+                            "name": "control_device",
+                            "description": "Control smart devices",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "command": {"type": "string", "description": "Device command"}
+                                },
+                                "required": ["command"]
+                            }
+                        },
+                        {
+                            "name": "health_check",
+                            "description": "Health check",
+                            "inputSchema": {"type": "object", "properties": {}}
+                        }
+                    ]
+                }
+            })
+        
+        elif method == 'tools/call':
+            tool_name = data.get('params', {}).get('name')
+            arguments = data.get('params', {}).get('arguments', {})
+            
+            if tool_name == 'control_device':
+                command = arguments.get('command', '')
+                result = await control_device_impl(command)
+                return JSONResponse({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {
+                        "content": [{"type": "text", "text": result}]
+                    }
+                })
+            
+            elif tool_name == 'health_check':
+                return JSONResponse({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {
+                        "content": [{"type": "text", "text": "OK: Device Controller is healthy!"}]
+                    }
+                })
+        
+        logger.warning(f"Unknown method: {method}")
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": -32601, "message": f"Method not found: {method}"}
+        })
+        
+    except Exception as e:
+        logger.error(f"ERROR: {e}")
+        return JSONResponse({
+            "jsonrpc": "2.0",
+            "id": data.get('id') if 'data' in locals() else None,
+            "error": {"code": -32603, "message": str(e)}
+        })
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     logger.info("=" * 60)
     logger.info("STARTING DEVICE CONTROLLER MCP SERVER")
     logger.info("=" * 60)
-    logger.info(f"CLOUD_BRIDGE_URL: {CLOUD_BRIDGE_URL}")
-    logger.info(f"MCP_API_KEY: {'SET' if MCP_API_KEY else 'NOT SET'}")
+    logger.info(f"CLOUD_BRIDGE: {CLOUD_BRIDGE_URL}")
+    logger.info(f"API_KEY: {'SET' if MCP_API_KEY else 'NOT SET'}")
+    logger.info("Listening on http://0.0.0.0:7860/mcp")
     logger.info("=" * 60)
     
-    # Run FastMCP server
-    mcp.run(transport='stdio')
+    uvicorn.run(app, host="0.0.0.0", port=7860, log_level="error")
