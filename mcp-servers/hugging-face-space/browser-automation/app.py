@@ -1,6 +1,6 @@
 """
-Browser Automation - Beautiful Minimalist UI
-Glassmorphism aesthetic with professional design
+Browser Automation - Retro Pixel UI
+Black & white terminal aesthetic
 """
 
 import streamlit as st
@@ -18,17 +18,23 @@ from pydantic import Field
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Logs storage
-status_log = deque(maxlen=200)
-mcp_server_running = False
-tuya_client_connected = False
-tuya_connection_time = None
+# Initialize session state for persistent variables
+if 'status_log' not in st.session_state:
+    st.session_state.status_log = deque(maxlen=200)
+if 'mcp_server_running' not in st.session_state:
+    st.session_state.mcp_server_running = False
+if 'tuya_client_connected' not in st.session_state:
+    st.session_state.tuya_client_connected = False
+if 'tuya_connection_time' not in st.session_state:
+    st.session_state.tuya_connection_time = None
+if 'initialized' not in st.session_state:
+    st.session_state.initialized = False
 
 def log_message(message, component="SYSTEM"):
     """Add timestamped message to log"""
     timestamp = datetime.now().strftime("%H:%M:%S")
     log_entry = f"[{timestamp}] [{component}] {message}"
-    status_log.append(log_entry)
+    st.session_state.status_log.append(log_entry)
     logger.info(f"[{component}] {message}")
 
 # Environment
@@ -49,7 +55,7 @@ async def execute_browser_command(
     command: Annotated[str, Field(description="Browser command")]
 ) -> str:
     """Execute browser command"""
-    log_message(f"execute_browser_command('{command}')", "MCP-SERVER")
+    log_message(f"CMD: {command}", "MCP")
     
     try:
         async with httpx.AsyncClient() as client:
@@ -67,50 +73,46 @@ async def execute_browser_command(
             if response.status_code == 200:
                 result = response.json()
                 command_id = result.get('commandId', 'unknown')
-                log_message(f"✅ Command sent! ID: {command_id}", "MCP-SERVER")
-                return f"✅ '{command}' sent! (ID: {command_id})"
+                log_message(f"OK ID:{command_id}", "MCP")
+                return f"OK: {command} (ID:{command_id})"
             else:
-                log_message(f"❌ Failed: {response.status_code}", "MCP-SERVER")
-                return f"❌ Failed: {response.text}"
+                log_message(f"ERR {response.status_code}", "MCP")
+                return f"ERROR: {response.text}"
     except Exception as e:
-        log_message(f"❌ Error: {e}", "MCP-SERVER")
-        return f"❌ Error: {str(e)}"
+        log_message(f"ERR: {e}", "MCP")
+        return f"ERROR: {str(e)}"
 
 @mcp.tool
 async def health_check() -> str:
-    """Health check"""
-    log_message("Health check", "MCP-SERVER")
-    return "✅ Browser Automation MCP Server is healthy!"
+    log_message("HEALTH CHECK", "MCP")
+    return "OK: Browser MCP Server Online"
 
 # ============================================================================
 # TUYA CLIENT
 # ============================================================================
 
-tuya_client = None
-
 async def start_tuya_client():
     """Start Tuya client"""
-    global tuya_client, tuya_client_connected, tuya_connection_time
     
     try:
-        log_message("🚀 Starting Tuya Client...", "TUYA-CLIENT")
+        log_message("INIT TUYA CLIENT", "TUYA")
         
         from mcp_sdk import MCPSdkClient
-        log_message("✅ MCP SDK imported", "TUYA-CLIENT")
+        log_message("SDK LOADED", "TUYA")
         
         TUYA_ENDPOINT = os.getenv('MCP_ENDPOINT')
         TUYA_ACCESS_ID_SDK = os.getenv('MCP_ACCESS_ID')
         TUYA_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
         MCP_SERVER_URL = "http://localhost:7860/mcp"
         
-        log_message(f"Endpoint: {TUYA_ENDPOINT}", "TUYA-CLIENT")
-        log_message(f"Access ID: {TUYA_ACCESS_ID_SDK[:20] + '...' if TUYA_ACCESS_ID_SDK else 'NOT SET'}", "TUYA-CLIENT")
+        log_message(f"EP: {TUYA_ENDPOINT}", "TUYA")
+        log_message(f"ID: {TUYA_ACCESS_ID_SDK[:20]}..." if TUYA_ACCESS_ID_SDK else "ID: NULL", "TUYA")
         
         if not all([TUYA_ENDPOINT, TUYA_ACCESS_ID_SDK, TUYA_ACCESS_SECRET]):
-            log_message("❌ Missing credentials!", "TUYA-CLIENT")
+            log_message("ERR: MISSING CREDS", "TUYA")
             return
         
-        log_message("📡 Creating SDK client...", "TUYA-CLIENT")
+        log_message("CREATING CLIENT...", "TUYA")
         tuya_client = MCPSdkClient(
             endpoint=TUYA_ENDPOINT,
             access_id=TUYA_ACCESS_ID_SDK,
@@ -118,231 +120,247 @@ async def start_tuya_client():
             custom_mcp_server_endpoint=MCP_SERVER_URL
         )
         
-        log_message("🔌 Connecting...", "TUYA-CLIENT")
+        log_message("CONNECTING...", "TUYA")
         await tuya_client.connect()
         
-        tuya_client_connected = True
-        tuya_connection_time = datetime.now()
+        # Update session state
+        st.session_state.tuya_client_connected = True
+        st.session_state.tuya_connection_time = datetime.now()
         
-        log_message("✅ Connected to Tuya Platform!", "TUYA-CLIENT")
-        log_message("🎧 Listening...", "TUYA-CLIENT")
+        log_message("CONNECTED!", "TUYA")
+        log_message("LISTENING...", "TUYA")
         
         await tuya_client.start_listening()
         
     except Exception as e:
-        log_message(f"❌ Error: {e}", "TUYA-CLIENT")
-        tuya_client_connected = False
+        log_message(f"ERR: {e}", "TUYA")
+        st.session_state.tuya_client_connected = False
 
 def start_tuya_client_background():
-    """Background thread for Tuya client"""
-    log_message("🌟 Starting background thread...", "TUYA-CLIENT")
+    """Background thread"""
+    log_message("START THREAD", "TUYA")
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(start_tuya_client())
 
-# Start everything
-log_message("🎬 Starting Browser Automation Bridge...", "SYSTEM")
-mcp_server_running = True
-
-tuya_thread = threading.Thread(target=start_tuya_client_background, daemon=True)
-tuya_thread.start()
-
-log_message("✅ Both components initialized!", "SYSTEM")
+# Initialize once
+if not st.session_state.initialized:
+    log_message("=" * 40, "SYS")
+    log_message("BROWSER AUTOMATION MCP", "SYS")
+    log_message("=" * 40, "SYS")
+    st.session_state.mcp_server_running = True
+    
+    tuya_thread = threading.Thread(target=start_tuya_client_background, daemon=True)
+    tuya_thread.start()
+    
+    st.session_state.initialized = True
+    log_message("INIT COMPLETE", "SYS")
 
 # ============================================================================
-# STREAMLIT UI - MINIMALIST GLASS AESTHETIC
+# RETRO PIXEL UI
 # ============================================================================
 
 st.set_page_config(
-    page_title="Browser Automation",
-    page_icon="🌐",
+    page_title="[ BROWSER MCP ]",
+    page_icon="█",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS - Glassmorphism & Minimalist Design
+# Retro Terminal CSS
 st.markdown("""
 <style>
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
     
-    /* Background with noise texture */
-    .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        background-attachment: fixed;
+    * {
+        font-family: 'VT323', monospace !important;
     }
     
-    /* Add noise overlay */
+    #MainMenu, footer, header {visibility: hidden;}
+    
+    .stApp {
+        background: #000000;
+        color: #ffffff;
+    }
+    
+    /* Scanline effect */
     .stApp::before {
-        content: '';
+        content: " ";
+        display: block;
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        opacity: 0.03;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E");
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 2;
+        background-size: 100% 2px, 3px 100%;
         pointer-events: none;
-        z-index: 0;
     }
     
-    /* Glass cards */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        padding: 24px;
-        margin: 12px 0;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    }
-    
-    /* Text styling */
     h1 {
-        color: white !important;
-        font-weight: 300 !important;
-        font-size: 2.5rem !important;
-        letter-spacing: -0.02em !important;
-        margin-bottom: 8px !important;
+        color: #ffffff !important;
+        font-size: 3.5rem !important;
+        letter-spacing: 0.1em !important;
+        text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+        font-weight: normal !important;
     }
     
     .subtitle {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.95rem;
-        font-weight: 300;
-        margin-bottom: 32px;
+        color: #aaa;
+        font-size: 1.5rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 30px;
     }
     
-    /* Status indicators */
-    .status-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-        font-size: 0.9rem;
+    .pixel-box {
+        border: 3px solid #ffffff;
+        padding: 20px;
+        margin: 15px 0;
+        background: #000;
+        box-shadow: 0 0 20px rgba(255,255,255,0.3);
     }
     
-    .status-item:last-child {
+    .status-line {
+        font-size: 1.4rem;
+        padding: 8px 0;
+        letter-spacing: 0.05em;
+        border-bottom: 1px dashed #333;
+    }
+    
+    .status-line:last-child {
         border-bottom: none;
     }
     
-    .status-label {
-        opacity: 0.7;
-        min-width: 140px;
+    .label {
+        color: #888;
+        display: inline-block;
+        width: 180px;
     }
     
-    .status-value {
-        font-weight: 500;
+    .value {
+        color: #fff;
     }
     
-    /* Buttons */
+    .ok {
+        color: #0f0;
+        text-shadow: 0 0 5px #0f0;
+    }
+    
+    .err {
+        color: #f00;
+        text-shadow: 0 0 5px #f00;
+    }
+    
+    .stTextArea textarea {
+        background: #000 !important;
+        color: #0f0 !important;
+        border: 3px solid #0f0 !important;
+        font-size: 1.2rem !important;
+        letter-spacing: 0.05em !important;
+        line-height: 1.4 !important;
+        box-shadow: 0 0 20px rgba(0,255,0,0.3) !important;
+    }
+    
     .stButton > button {
-        background: rgba(255, 255, 255, 0.15);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding: 12px 24px;
-        font-weight: 400;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
+        background: #000;
+        color: #fff;
+        border: 3px solid #fff;
+        font-size: 1.5rem;
+        letter-spacing: 0.1em;
+        padding: 15px 30px;
+        transition: all 0.2s;
     }
     
     .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.4);
-        transform: translateY(-2px);
+        background: #fff;
+        color: #000;
+        box-shadow: 0 0 20px #fff;
     }
     
-    /* Text area (logs) */
-    .stTextArea > div > div > textarea {
-        background: rgba(0, 0, 0, 0.3) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 8px !important;
-        color: white !important;
-        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace !important;
-        font-size: 0.85rem !important;
-        line-height: 1.6 !important;
-        backdrop-filter: blur(10px);
+    .blink {
+        animation: blink 1s infinite;
     }
     
-    /* Columns */
-    .stColumn {
-        padding: 0 8px;
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown("<h1>🌐 Browser Automation</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Tuya MCP Bridge • Docker Container</p>", unsafe_allow_html=True)
+st.markdown("<h1>[ BROWSER MCP ]</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>// TUYA BRIDGE v1.0 //</p>", unsafe_allow_html=True)
 
-# Status Cards
+# Status
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
     
-    mcp_status = "✅ Running" if mcp_server_running else "❌ Not Running"
+    mcp_status = '<span class="ok">[ ONLINE ]</span>' if st.session_state.mcp_server_running else '<span class="err">[ OFFLINE ]</span>'
     
-    if tuya_client_connected and tuya_connection_time:
-        uptime = datetime.now() - tuya_connection_time
+    if st.session_state.tuya_client_connected and st.session_state.tuya_connection_time:
+        uptime = datetime.now() - st.session_state.tuya_connection_time
         uptime_str = str(uptime).split('.')[0]
-        tuya_status = f"✅ Connected • {uptime_str}"
+        tuya_status = f'<span class="ok">[ ONLINE ] {uptime_str}</span>'
     else:
-        tuya_status = "❌ Disconnected"
+        tuya_status = '<span class="err">[ OFFLINE ]</span>'
     
     st.markdown(f"""
-    <div class='status-item'>
-        <span class='status-label'>MCP Server</span>
-        <span class='status-value'>{mcp_status}</span>
+    <div class='status-line'>
+        <span class='label'>MCP_SERVER:</span>
+        <span class='value'>{mcp_status}</span>
     </div>
-    <div class='status-item'>
-        <span class='status-label'>Tuya Client</span>
-        <span class='status-value'>{tuya_status}</span>
+    <div class='status-line'>
+        <span class='label'>TUYA_CLIENT:</span>
+        <span class='value'>{tuya_status}</span>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col2:
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
+    
+    cloud_ok = '<span class="ok">[OK]</span>' if CLOUD_BRIDGE_URL else '<span class="err">[ERR]</span>'
+    api_ok = '<span class="ok">[OK]</span>' if MCP_API_KEY else '<span class="err">[ERR]</span>'
+    ep_ok = '<span class="ok">[OK]</span>' if os.getenv('MCP_ENDPOINT') else '<span class="err">[ERR]</span>'
+    creds_ok = '<span class="ok">[OK]</span>' if os.getenv('MCP_ACCESS_ID') and os.getenv('MCP_ACCESS_SECRET') else '<span class="err">[ERR]</span>'
     
     st.markdown(f"""
-    <div class='status-item'>
-        <span class='status-label'>Cloud Bridge</span>
-        <span class='status-value'>{'✅' if CLOUD_BRIDGE_URL else '❌'}</span>
+    <div class='status-line'>
+        <span class='label'>CLOUD_BRIDGE:</span>
+        <span class='value'>{cloud_ok}</span>
     </div>
-    <div class='status-item'>
-        <span class='status-label'>API Key</span>
-        <span class='status-value'>{'✅' if MCP_API_KEY else '❌'}</span>
+    <div class='status-line'>
+        <span class='label'>API_KEY:</span>
+        <span class='value'>{api_ok}</span>
     </div>
-    <div class='status-item'>
-        <span class='status-label'>Tuya Endpoint</span>
-        <span class='status-value'>{'✅' if os.getenv('MCP_ENDPOINT') else '❌'}</span>
+    <div class='status-line'>
+        <span class='label'>TUYA_ENDPOINT:</span>
+        <span class='value'>{ep_ok}</span>
     </div>
-    <div class='status-item'>
-        <span class='status-label'>Credentials</span>
-        <span class='status-value'>{'✅' if os.getenv('MCP_ACCESS_ID') and os.getenv('MCP_ACCESS_SECRET') else '❌'}</span>
+    <div class='status-line'>
+        <span class='label'>CREDENTIALS:</span>
+        <span class='value'>{creds_ok}</span>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("</div>", unsafe_allow_html=True)
 
 # Logs
-st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-logs_text = "\n".join(list(status_log))
-st.text_area("Live Logs", logs_text, height=350, label_visibility="collapsed")
+st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
+logs_text = "\n".join(list(st.session_state.status_log))
+st.text_area("[ SYSTEM LOG ]", logs_text, height=350, label_visibility="visible")
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Refresh button - FIXED
-if st.button("🔄 Refresh", use_container_width=True):
+# Refresh
+if st.button("[ REFRESH ]", use_container_width=True):
     st.rerun()
 
-# Auto-refresh every 5 seconds
+# Auto-refresh
 import time
 time.sleep(5)
 st.rerun()
