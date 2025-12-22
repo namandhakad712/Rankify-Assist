@@ -1,11 +1,16 @@
 #!/bin/bash
-# Docker entrypoint - Device Controller
+# Entrypoint - Device Controller
 
-# Start Tuya client in background
+# 1. Start MCP server with tools
+python /app/mcp_server.py &
+echo "MCP Server starting..."
+sleep 3
+
+# 2. Start Tuya client
 python /app/tuya_client.py &
-
-# Wait for initialization
+echo "Tuya client starting..."
 sleep 2
 
-# Start Streamlit UI
-streamlit run /app/app.py --server.port=7860 --server.address=0.0.0.0
+# 3. Start UI
+echo "Starting UI..."
+streamlit run /app/app.py --server.port=8501 --server.address=0.0.0.0
