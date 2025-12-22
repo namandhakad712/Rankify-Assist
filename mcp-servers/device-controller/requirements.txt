@@ -1,9 +1,20 @@
-# Tuya MCP SDK
-# Install from: git clone https://github.com/tuya/tuya-mcp-sdk.git
-# Then: cd tuya-mcp-sdk/mcp-python && pip install -e .
+# All-in-one requirements for both local and cloud deployments
+# Works for: ONLINE-fastmcp.cloud_server.py, ONLINE-tuya_client.py, and local servers
 
-# MCP Library (for local tools server)
-mcp>=1.0.0
+# FastMCP framework
+fastmcp>=2.12.3
 
-# Other dependencies
+# HTTP client for API calls
+httpx>=0.25.0
+
+# Tuya MCP SDK (for Tuya IoT Platform connection)
+tuya-mcp-sdk>=1.0.0
+
+# Environment variable management
 python-dotenv>=1.0.0
+
+# Data validation
+pydantic>=2.0.0
+
+# Legacy/optional dependencies (for local testing)
+requests>=2.31.0
