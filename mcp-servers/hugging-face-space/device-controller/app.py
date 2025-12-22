@@ -1,164 +1,39 @@
 """
-Device Controller - Retro Pixel UI
-Black & white terminal aesthetic
+Device Controller - Retro UI
+READS status from persistent Tuya client process
 """
 
 import streamlit as st
-import asyncio
-import logging
 import os
-import threading
-import httpx
+import json
 from datetime import datetime
-from collections import deque
-from typing import Annotated
-from pydantic import Field
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+STATUS_FILE = '/tmp/tuya_status.json'
+LOG_FILE = '/tmp/tuya_client.log'
 
-# Initialize session state
-if 'status_log' not in st.session_state:
-    st.session_state.status_log = deque(maxlen=200)
-if 'mcp_server_running' not in st.session_state:
-    st.session_state.mcp_server_running = False
-if 'tuya_client_connected' not in st.session_state:
-    st.session_state.tuya_client_connected = False
-if 'tuya_connection_time' not in st.session_state:
-    st.session_state.tuya_connection_time = None
-if 'initialized' not in st.session_state:
-    st.session_state.initialized = False
+def read_tuya_status():
+    """Read status from Tuya client"""
+    try:
+        with open(STATUS_FILE, 'r') as f:
+            return json.load(f)
+    except:
+        return {'connected': False, 'message': 'INITIALIZING...', 'timestamp': None}
 
-def log_message(message, component="SYSTEM"):
-    """Add timestamped message to log"""
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    log_entry = f"[{timestamp}] [{component}] {message}"
-    st.session_state.status_log.append(log_entry)
-    logger.info(f"[{component}] {message}")
+def read_logs():
+    """Read logs"""
+    try:
+        with open(LOG_FILE, 'r') as f:
+            lines = f.readlines()
+            return ''.join(lines[-50:])
+    except:
+        return "No logs yet..."
 
 # Environment
 CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL')
 MCP_API_KEY = os.getenv('MCP_API_KEY')
-TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID', 'tuya_mcp_user')
 
 # ============================================================================
-# MCP SERVER
-# ============================================================================
-
-from fastmcp import FastMCP
-
-mcp = FastMCP("Device Controller")
-
-@mcp.tool
-async def control_device(
-    command: Annotated[str, Field(description="Device control command")]
-) -> str:
-    """Control smart devices"""
-    log_message(f"CMD: {command}", "MCP")
-    
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{CLOUD_BRIDGE_URL}/api/execute",
-                json={
-                    "userId": "tuya_ai",
-                    "apiKey": MCP_API_KEY,
-                    "accessId": TUYA_ACCESS_ID,
-                    "command": command,
-                    "type": "device_control"
-                },
-                timeout=15.0
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                command_id = result.get('commandId', 'unknown')
-                log_message(f"OK ID:{command_id}", "MCP")
-                return f"OK: {command} (ID:{command_id})"
-            else:
-                log_message(f"ERR {response.status_code}", "MCP")
-                return f"ERROR: {response.text}"
-    except Exception as e:
-        log_message(f"ERR: {e}", "MCP")
-        return f"ERROR: {str(e)}"
-
-@mcp.tool
-async def health_check() -> str:
-    log_message("HEALTH CHECK", "MCP")
-    return "OK: Device Controller MCP Online"
-
-# ============================================================================
-# TUYA CLIENT
-# ============================================================================
-
-async def start_tuya_client():
-    """Start Tuya client"""
-    
-    try:
-        log_message("INIT TUYA CLIENT", "TUYA")
-        
-        from mcp_sdk import MCPSdkClient
-        log_message("SDK LOADED", "TUYA")
-        
-        TUYA_ENDPOINT = os.getenv('MCP_ENDPOINT')
-        TUYA_ACCESS_ID_SDK = os.getenv('MCP_ACCESS_ID')
-        TUYA_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
-        MCP_SERVER_URL = "http://localhost:7860/mcp"
-        
-        log_message(f"EP: {TUYA_ENDPOINT}", "TUYA")
-        log_message(f"ID: {TUYA_ACCESS_ID_SDK[:20]}..." if TUYA_ACCESS_ID_SDK else "ID: NULL", "TUYA")
-        
-        if not all([TUYA_ENDPOINT, TUYA_ACCESS_ID_SDK, TUYA_ACCESS_SECRET]):
-            log_message("ERR: MISSING CREDS", "TUYA")
-            return
-        
-        log_message("CREATING CLIENT...", "TUYA")
-        tuya_client = MCPSdkClient(
-            endpoint=TUYA_ENDPOINT,
-            access_id=TUYA_ACCESS_ID_SDK,
-            access_secret=TUYA_ACCESS_SECRET,
-            custom_mcp_server_endpoint=MCP_SERVER_URL
-        )
-        
-        log_message("CONNECTING...", "TUYA")
-        await tuya_client.connect()
-        
-        # Update session state
-        st.session_state.tuya_client_connected = True
-        st.session_state.tuya_connection_time = datetime.now()
-        
-        log_message("CONNECTED!", "TUYA")
-        log_message("LISTENING...", "TUYA")
-        
-        await tuya_client.start_listening()
-        
-    except Exception as e:
-        log_message(f"ERR: {e}", "TUYA")
-        st.session_state.tuya_client_connected = False
-
-def start_tuya_client_background():
-    """Background thread"""
-    log_message("START THREAD", "TUYA")
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(start_tuya_client())
-
-# Initialize once
-if not st.session_state.initialized:
-    log_message("=" * 40, "SYS")
-    log_message("DEVICE CONTROLLER MCP", "SYS")
-    log_message("=" * 40, "SYS")
-    st.session_state.mcp_server_running = True
-    
-    tuya_thread = threading.Thread(target=start_tuya_client_background, daemon=True)
-    tuya_thread.start()
-    
-    st.session_state.initialized = True
-    log_message("INIT COMPLETE", "SYS")
-
-# ============================================================================
-# RETRO PIXEL UI
+# RETRO UI
 # ============================================================================
 
 st.set_page_config(
@@ -168,7 +43,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Retro Terminal CSS
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
@@ -184,7 +58,6 @@ st.markdown("""
         color: #ffffff;
     }
     
-    /* Scanline effect */
     .stApp::before {
         content: " ";
         display: block;
@@ -281,24 +154,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header
 st.markdown("<h1>[ DEVICE MCP ]</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>// TUYA BRIDGE v1.0 //</p>", unsafe_allow_html=True)
 
-# Status
+tuya_status = read_tuya_status()
+
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
     
-    mcp_status = '<span class="ok">[ ONLINE ]</span>' if st.session_state.mcp_server_running else '<span class="err">[ OFFLINE ]</span>'
+    mcp_status = '<span class="ok">[ ONLINE ]</span>'
     
-    if st.session_state.tuya_client_connected and st.session_state.tuya_connection_time:
-        uptime = datetime.now() - st.session_state.tuya_connection_time
-        uptime_str = str(uptime).split('.')[0]
-        tuya_status = f'<span class="ok">[ ONLINE ] {uptime_str}</span>'
+    if tuya_status['connected']:
+        status_display = '<span class="ok">[ ONLINE ]</span>'
     else:
-        tuya_status = '<span class="err">[ OFFLINE ]</span>'
+        status_display = f'<span class="err">[ OFFLINE ]</span><br><small>{tuya_status["message"]}</small>'
     
     st.markdown(f"""
     <div class='status-line'>
@@ -307,7 +178,7 @@ with col1:
     </div>
     <div class='status-line'>
         <span class='label'>TUYA_CLIENT:</span>
-        <span class='value'>{tuya_status}</span>
+        <span class='value'>{status_display}</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -342,17 +213,14 @@ with col2:
     
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Logs
 st.markdown("<div class='pixel-box'>", unsafe_allow_html=True)
-logs_text = "\n".join(list(st.session_state.status_log))
-st.text_area("[ SYSTEM LOG ]", logs_text, height=350, label_visibility="visible")
+logs_text = read_logs()
+st.text_area("[ TUYA CLIENT LOG ]", logs_text, height=350, label_visibility="visible")
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Refresh
 if st.button("[ REFRESH ]", use_container_width=True):
     st.rerun()
 
-# Auto-refresh
 import time
 time.sleep(5)
 st.rerun()
