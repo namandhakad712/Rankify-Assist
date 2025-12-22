@@ -1,6 +1,6 @@
 """
 MCP Server - Browser Automation Tools
-Runs FastMCP HTTP server with actual tools
+Runs FastMCP server with tools
 """
 
 import logging
@@ -21,11 +21,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Request tracking
 REQUESTS_FILE = '/tmp/mcp_requests.json'
 
 def log_request(tool_name, args, result):
-    """Log request for UI visualization"""
+    """Log request for UI"""
     try:
         requests = []
         try:
@@ -42,15 +41,13 @@ def log_request(tool_name, args, result):
             'flow': 'TUYA→MCP→BRIDGE→EXT'
         })
         
-        # Keep last 50 requests
         requests = requests[-50:]
         
         with open(REQUESTS_FILE, 'w') as f:
             json.dump(requests, f)
     except Exception as e:
-        logger.error(f"Failed to log request: {e}")
+        logger.error(f"Failed to log: {e}")
 
-# Environment
 CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL')
 MCP_API_KEY = os.getenv('MCP_API_KEY')
 TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID', 'tuya_mcp_user')
@@ -61,10 +58,10 @@ mcp = FastMCP("Browser Automation")
 
 @mcp.tool
 async def execute_browser_command(
-    command: Annotated[str, Field(description="Browser command to execute")]
+    command: Annotated[str, Field(description="Browser command")]
 ) -> str:
     """Execute browser command via Cloud Bridge"""
-    logger.info(f"TOOL CALLED: execute_browser_command('{command}')")
+    logger.info(f"TOOL: execute_browser_command('{command}')")
     
     try:
         async with httpx.AsyncClient() as client:
@@ -82,7 +79,7 @@ async def execute_browser_command(
             if response.status_code == 200:
                 result = response.json()
                 command_id = result.get('commandId', 'unknown')
-                logger.info(f"SUCCESS: Command sent! ID: {command_id}")
+                logger.info(f"SUCCESS: ID {command_id}")
                 
                 result_msg = f"OK: {command} (ID:{command_id})"
                 log_request('execute_browser_command', {'command': command}, result_msg)
@@ -102,17 +99,16 @@ async def execute_browser_command(
 @mcp.tool
 async def health_check() -> str:
     """Health check"""
-    logger.info("TOOL CALLED: health_check()")
+    logger.info("TOOL: health_check()")
     return "OK: Browser MCP Server is healthy!"
 
 if __name__ == "__main__":
     logger.info("=" * 60)
-    logger.info("STARTING FASTMCP HTTP SERVER")
+    logger.info("STARTING BROWSER MCP SERVER")
     logger.info("=" * 60)
     logger.info(f"CLOUD_BRIDGE_URL: {CLOUD_BRIDGE_URL}")
     logger.info(f"MCP_API_KEY: {'SET' if MCP_API_KEY else 'NOT SET'}")
     logger.info("=" * 60)
     
-    # Run FastMCP HTTP server
-    import uvicorn
-    uvicorn.run(mcp.app, host="0.0.0.0", port=7860)
+    # Run FastMCP server - correct way for 2.12.3
+    mcp.run(transport='stdio')

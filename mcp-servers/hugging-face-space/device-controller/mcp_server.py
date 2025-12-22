@@ -1,6 +1,5 @@
 """
-MCP Server - Device Controller Tools
-Runs FastMCP HTTP server with device control tools
+MCP Server - Device Controller
 """
 
 import logging
@@ -24,7 +23,6 @@ logger = logging.getLogger(__name__)
 REQUESTS_FILE = '/tmp/mcp_requests.json'
 
 def log_request(tool_name, args, result):
-    """Log request for UI"""
     try:
         requests = []
         try:
@@ -61,7 +59,7 @@ async def control_device(
     command: Annotated[str, Field(description="Device control command")]
 ) -> str:
     """Control smart devices"""
-    logger.info(f"TOOL CALLED: control_device('{command}')")
+    logger.info(f"TOOL: control_device('{command}')")
     
     try:
         async with httpx.AsyncClient() as client:
@@ -80,7 +78,7 @@ async def control_device(
             if response.status_code == 200:
                 result = response.json()
                 command_id = result.get('commandId', 'unknown')
-                logger.info(f"SUCCESS: ID: {command_id}")
+                logger.info(f"SUCCESS: ID {command_id}")
                 
                 result_msg = f"OK: {command} (ID:{command_id})"
                 log_request('control_device', {'command': command}, result_msg)
@@ -99,8 +97,7 @@ async def control_device(
 
 @mcp.tool
 async def health_check() -> str:
-    """Health check"""
-    logger.info("TOOL CALLED: health_check()")
+    logger.info("TOOL: health_check()")
     return "OK: Device Controller is healthy!"
 
 if __name__ == "__main__":
@@ -111,5 +108,5 @@ if __name__ == "__main__":
     logger.info(f"MCP_API_KEY: {'SET' if MCP_API_KEY else 'NOT SET'}")
     logger.info("=" * 60)
     
-    import uvicorn
-    uvicorn.run(mcp.app, host="0.0.0.0", port=7860)
+    # Run FastMCP server
+    mcp.run(transport='stdio')
