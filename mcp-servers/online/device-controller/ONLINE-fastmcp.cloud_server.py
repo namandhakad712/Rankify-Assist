@@ -15,7 +15,7 @@ from typing import Annotated
 # Environment variables (MUST be set in FastMCP Cloud dashboard)
 CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL')  # No default - MUST be set!
 MCP_API_KEY = os.getenv('MCP_API_KEY')  # No default - MUST be set!
-TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID')  # No default - MUST be set!
+TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID', 'tuya_mcp_user')  # Optional - just metadata for Cloud Bridge
 
 # Create FastMCP app (compatible with FastMCP 2.12.3)
 mcp = FastMCP("Device Controller")
