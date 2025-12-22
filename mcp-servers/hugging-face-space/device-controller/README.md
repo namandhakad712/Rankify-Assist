@@ -3,15 +3,13 @@ title: Device Controller MCP Bridge
 emoji: 🏠
 colorFrom: green
 colorTo: blue
-sdk: gradio
-sdk_version: 4.44.1
-app_file: app.py
+sdk: docker
 pinned: false
 ---
 
-# 🏠 Device Controller - Tuya MCP Bridge
+# 🏠 Device Controller - MCP Bridge
 
-Control smart devices via Tuya AI!
+Docker-based deployment for smart device control!
 
 ## Environment Variables
 
@@ -23,9 +21,11 @@ MCP_ACCESS_ID=your_tuya_id
 MCP_ACCESS_SECRET=your_tuya_secret
 ```
 
+Set in: Settings → Variables and secrets
+
 ## Controls
 
-✅ Lights  
-✅ Air Conditioners  
-✅ Fans  
-✅ And more!
+✅ Lights, AC, Fans, etc.  
+✅ Docker container (full control)  
+✅ Streamlit UI (stable)  
+✅ 24/7 persistent connection

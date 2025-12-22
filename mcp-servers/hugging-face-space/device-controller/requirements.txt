@@ -1,17 +1,14 @@
 # Device Controller Requirements
-# For Hugging Face Space deployment
+# Clean, minimal dependencies
 
-# Gradio web interface (latest version)
-gradio
+# Streamlit for web UI
+streamlit>=1.28.0
 
 # FastMCP framework
 fastmcp>=2.12.3
 
 # HTTP client
 httpx>=0.25.0
-
-# Environment variables
-python-dotenv>=1.0.0
 
 # Data validation
 pydantic>=2.0.0
