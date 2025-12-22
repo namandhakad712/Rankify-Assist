@@ -3,11 +3,13 @@ Tuya MCP Client - FastMCP Cloud Version (Device Controller)
 Connects Tuya IoT Platform to Device Controller MCP Server
 
 Deploy this as a server on FastMCP Cloud for 100% cloud device control!
+Compatible with FastMCP 2.12.3
 """
 
 import asyncio
 import logging
 import os
+import threading
 from fastmcp import FastMCP
 
 # Setup logging
@@ -26,14 +28,14 @@ FASTMCP_CLOUD_MCP_URL = os.getenv('FASTMCP_CLOUD_MCP_URL', 'https://device-contr
 # Create FastMCP app
 mcp = FastMCP("Tuya Device Client Bridge")
 
-async def connect_to_tuya_and_forward():
+async def connect_to_tuya():
     """
-    Background task that connects to Tuya Platform and forwards device control requests
+    Connect to Tuya Platform and forward device control requests
     """
     try:
         from mcp_sdk import MCPSdkClient
     except ImportError:
-        logger.error("MCP SDK not installed! Add 'tuya-mcp-sdk' to requirements.txt")
+        logger.error("MCP SDK not installed!")
         return
     
     logger.info("=" * 60)
@@ -45,7 +47,7 @@ async def connect_to_tuya_and_forward():
     logger.info("=" * 60)
     
     if not all([TUYA_ACCESS_ID, TUYA_ACCESS_SECRET]):
-        logger.error("Missing credentials! Set MCP_ACCESS_ID and MCP_ACCESS_SECRET")
+        logger.error("Missing credentials!")
         return
     
     try:
@@ -89,20 +91,27 @@ Controls lights, AC, fans, and all smart devices!
     """.strip()
     return status
 
-# Start background task when server starts
-@mcp.lifespan
-async def lifespan():
-    """Runs when the server starts and maintains Tuya connection"""
-    # Start Tuya client in background
-    task = asyncio.create_task(connect_to_tuya_and_forward())
+# Start Tuya client in background thread (compatible with FastMCP 2.12.3)
+def start_tuya_client_background():
+    """Start Tuya client in a separate thread"""
+    logger.info("🚀 Starting device control bridge in background...")
     
-    yield  # Server is running
+    # Create new event loop for this thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     
-    # Cleanup on shutdown
-    task.cancel()
+    # Run the Tuya client
     try:
-        await task
-    except asyncio.CancelledError:
-        pass
+        loop.run_until_complete(connect_to_tuya())
+    except Exception as e:
+        logger.error(f"Background client error: {e}")
+    finally:
+        loop.close()
 
-# No .run() call - FastMCP Cloud handles startup
+# Start background thread when module loads
+logger.info("📡 Initializing device control bridge...")
+tuya_thread = threading.Thread(target=start_tuya_client_background, daemon=True)
+tuya_thread.start()
+logger.info("✅ Background thread started")
+
+# FastMCP Cloud will run this as HTTP server

@@ -2,12 +2,14 @@
 Tuya MCP Client - FastMCP Cloud Version (Always Online)
 Connects Tuya IoT Platform to your MCP Server running on FastMCP Cloud
 
-Deploy this as a SECOND server on FastMCP Cloud to have 100% cloud architecture!
+Deploy this as a server on FastMCP Cloud - it will run 24/7!
+Compatible with FastMCP 2.12.3
 """
 
 import asyncio
 import logging
 import os
+import threading
 from fastmcp import FastMCP
 
 # Setup logging
@@ -23,17 +25,17 @@ TUYA_ACCESS_ID = os.getenv('MCP_ACCESS_ID')
 TUYA_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
 FASTMCP_CLOUD_MCP_URL = os.getenv('FASTMCP_CLOUD_MCP_URL', 'https://assist.fastmcp.app/mcp')
 
-# Create a FastMCP app (so it can be deployed to FastMCP Cloud)
+# Create FastMCP app
 mcp = FastMCP("Tuya Client Bridge")
 
-async def connect_to_tuya_and_forward():
+async def connect_to_tuya():
     """
-    Background task that connects to Tuya Platform and forwards requests to FastMCP Cloud MCP server
+    Connect to Tuya Platform and forward requests to FastMCP Cloud MCP server
     """
     try:
         from mcp_sdk import MCPSdkClient
     except ImportError:
-        logger.error("MCP SDK not installed! Add 'tuya-mcp-sdk' to requirements.txt")
+        logger.error("MCP SDK not installed!")
         return
     
     logger.info("=" * 60)
@@ -45,7 +47,7 @@ async def connect_to_tuya_and_forward():
     logger.info("=" * 60)
     
     if not all([TUYA_ACCESS_ID, TUYA_ACCESS_SECRET]):
-        logger.error("Missing credentials! Set MCP_ACCESS_ID and MCP_ACCESS_SECRET in FastMCP dashboard")
+        logger.error("Missing credentials! Set MCP_ACCESS_ID and MCP_ACCESS_SECRET")
         return
     
     try:
@@ -55,7 +57,7 @@ async def connect_to_tuya_and_forward():
             endpoint=TUYA_ENDPOINT,
             access_id=TUYA_ACCESS_ID,
             access_secret=TUYA_ACCESS_SECRET,
-            custom_mcp_server_endpoint=FASTMCP_CLOUD_MCP_URL  # Points to your MCP server!
+            custom_mcp_server_endpoint=FASTMCP_CLOUD_MCP_URL
         )
         
         # Connect to Tuya Platform
@@ -89,21 +91,28 @@ This bridge connects Tuya IoT Platform to your MCP Server.
     """.strip()
     return status
 
-# Start background task when server starts
-@mcp.lifespan
-async def lifespan():
-    """Runs when the server starts and keeps running"""
-    # Start Tuya client in background
-    task = asyncio.create_task(connect_to_tuya_and_forward())
+# Start Tuya client in background thread (compatible with FastMCP 2.12.3)
+def start_tuya_client_background():
+    """Start Tuya client in a separate thread"""
+    logger.info("🚀 Starting Tuya client in background...")
     
-    yield  # Server is running
+    # Create new event loop for this thread
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     
-    # Cleanup on shutdown
-    task.cancel()
+    # Run the Tuya client
     try:
-        await task
-    except asyncio.CancelledError:
-        pass
+        loop.run_until_complete(connect_to_tuya())
+    except Exception as e:
+        logger.error(f"Background client error: {e}")
+    finally:
+        loop.close()
 
-# Note: No .run() call - FastMCP Cloud handles startup
-# This will run as a FastMCP server AND maintain Tuya connection!
+# Start background thread when module loads
+logger.info("📡 Initializing Tuya client bridge...")
+tuya_thread = threading.Thread(target=start_tuya_client_background, daemon=True)
+tuya_thread.start()
+logger.info("✅ Background thread started")
+
+# FastMCP Cloud will run this as HTTP server
+# The Tuya client runs in background thread
