@@ -6,5 +6,5 @@ httpx>=0.25.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
 
-# Tuya MCP SDK from GitHub
-git+https://github.com/tuya/tuya-mcp-sdk.git@main#subdirectory=mcp-python
+# Tuya MCP SDK from GitHub (default branch)
+git+https://github.com/tuya/tuya-mcp-sdk.git#subdirectory=mcp-python

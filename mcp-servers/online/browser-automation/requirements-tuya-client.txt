@@ -13,8 +13,8 @@ python-dotenv>=1.0.0
 # Data validation
 pydantic>=2.0.0
 
-# Tuya MCP SDK - Install from GitHub (not on PyPI!)
-git+https://github.com/tuya/tuya-mcp-sdk.git@main#subdirectory=mcp-python
+# Tuya MCP SDK from GitHub (without branch ref - uses default)
+git+https://github.com/tuya/tuya-mcp-sdk.git#subdirectory=mcp-python
 
 # NOTE: The SDK line above installs directly from GitHub
 # FastMCP Cloud supports this format!
