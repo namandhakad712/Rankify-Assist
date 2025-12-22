@@ -1,242 +1,296 @@
-# 📦 Tuya MCP SDK - What We Actually Use
+# 📖 Tuya MCP SDK Usage Guide
 
-## ✅ **YES, IT'S STILL NEEDED!**
-
-The `tuya-mcp-sdk` is **REQUIRED** for connecting to Tuya Platform.
+Understanding the Tuya MCP SDK for offline deployments.
 
 ---
 
-## 🎯 **WHAT WE USE FROM THE SDK:**
-
-### **1. MCPSdkClient Class**
-
-**Location:** `tuya-mcp-sdk/mcp-python/src/mcp_sdk/client.py`
-
-**What it does:**
-- Connects to Tuya MCP Platform via WebSocket
-- Handles authentication with Access ID & Secret
-- Manages token refresh automatically
-- Forwards MCP requests to your local server
-- Sends responses back to Tuya Platform
-
-**Our usage:**
-```python
-from mcp_sdk import MCPSdkClient
-
-client = MCPSdkClient(
-    endpoint="https://mcp-in.iotbing.com",
-    access_id="your_access_id",
-    access_secret="your_access_secret",
-    custom_mcp_server_endpoint="http://localhost:8767/mcp"
-)
-
-await client.connect()
-await client.start_listening()
-```
-
-### **2. Authentication Manager**
-
-**Location:** `tuya-mcp-sdk/mcp-python/src/mcp_sdk/auth.py`
-
-**What it does:**
-- Handles token acquisition from Tuya
-- Manages token refresh
-- Signs requests with HMAC
-
-**We don't call it directly** - MCPSdkClient uses it internally.
-
-### **3. WebSocket Adapter**
-
-**Location:** `tuya-mcp-sdk/mcp-python/src/mcp_sdk/websocket_adapter.py`
-
-**What it does:**
-- Maintains WebSocket connection to Tuya Platform
-- Handles heartbeat/ping-pong
-- Manages reconnection logic
-- Routes messages between Tuya and your MCP server
-
-**We don't call it directly** - MCPSdkClient uses it internally.
-
----
-
-## ❌ **WHAT WE DON'T USE:**
-
-### **1. Example Scripts**
-
-**Location:** `tuya-mcp-sdk/mcp-python/examples/`
-
-**Why not:**
-- Too complex and buggy
-- Has encoding issues on Windows
-- Includes unnecessary features
-- We built simpler version (`tuya_client.py`)
-
-### **2. Mock MCP Server**
-
-**Location:** `tuya-mcp-sdk/mcp-python/examples/mcp/mock_mcp_server.py`
-
-**Why not:**
-- We use FastMCP instead
-- FastMCP is cleaner and more powerful
-- Better documentation and community
-
-### **3. Launcher Scripts**
-
-**Location:** `tuya-mcp-sdk/mcp-python/examples/__main__.py`
-
-**Why not:**
-- Overcomplicated with service managers
-- Has bugs (reconnect_config issue)
-- We built simple async client instead
-
----
-
-## 📁 **FILE STRUCTURE:**
+## 📁 Relevant For:
 
 ```
-tuya-mcp-sdk/
-├── mcp-python/
-│   ├── src/
-│   │   └── mcp_sdk/              ← WE USE THIS
-│   │       ├── __init__.py
-│   │       ├── client.py         ← MCPSdkClient
-│   │       ├── auth.py           ← Auth manager
-│   │       ├── websocket_adapter.py  ← WebSocket
-│   │       ├── models.py         ← Data models
-│   │       └── exceptions.py     ← Error classes
-│   ├── examples/                 ← WE DON'T USE THIS
-│   │   ├── __main__.py           (buggy launcher)
-│   │   ├── quick_start.py        (buggy)
-│   │   └── mcp/
-│   │       └── mock_mcp_server.py  (replaced by FastMCP)
-│   └── pyproject.toml
+mcp-servers/offline/   ← SDK needed here!
+                      (not needed for online/)
 ```
 
 ---
 
-## ⚙️ **INSTALLATION:**
+## 🎯 **What is Tuya MCP SDK?**
+
+The **Tuya MCP SDK** provides the `MCPSdkClient` class that connects your local MCP server to the Tuya IoT Platform.
+
+**GitHub:** https://github.com/tuya/tuya-mcp-sdk
+
+---
+
+## 📥 **Installation:**
 
 ```bash
-# Clone the SDK
+# Clone the repository
 cd c:\TUYA
 git clone https://github.com/tuya/tuya-mcp-sdk.git
 
-# Install it
+# Install for Python
 cd tuya-mcp-sdk/mcp-python
 pip install -e .
+```
 
-# This makes mcp_sdk available:
-python -c "from mcp_sdk import MCPSdkClient; print('✅ Installed!')"
+**Why `-e` (editable mode)?**
+- Allows you to modify SDK if needed
+- Changes reflect immediately without reinstall
+
+---
+
+## 🏗️ **How It Works:**
+
+```
+├── Tuya IoT Platform (Cloud)
+│   ↓ WebSocket connection
+├── MCPSdkClient (tuya-mcp-sdk)
+│   ├─ Authenticates with Access ID/Secret
+│   ├─ Maintains persistent connection
+│   └─ Forwards requests to your MCP server
+│       ↓ HTTP requests
+└── Your FastMCP Server (localhost:8767)
+    └─ Executes tools and returns results
 ```
 
 ---
 
-## 🔌 **HOW WE USE IT:**
+## 💻 **Usage in Your Code:**
 
-### **Our Simple Client (`tuya_client.py`):**
+### Basic Example:
+
+**File:** `offline/browser-automation/tuya_client.py`
 
 ```python
-from mcp_sdk import MCPSdkClient  # ← Only thing we import!
+import asyncio
+from mcp_sdk import MCPSdkClient
 
 async def main():
     # Create client
     client = MCPSdkClient(
-        endpoint=os.getenv('MCP_ENDPOINT'),
-        access_id=os.getenv('MCP_ACCESS_ID'),
-        access_secret=os.getenv('MCP_ACCESS_SECRET'),
+        endpoint="https://mcp-in.iotbing.com",
+        access_id="your_access_id",
+        access_secret="your_access_secret",
         custom_mcp_server_endpoint="http://localhost:8767/mcp"
     )
     
-    # Connect to Tuya
+    # Connect to Tuya Platform
     await client.connect()
+    print("✅ Connected!")
     
-    # Listen for requests
+    # Start listening for requests
     await client.start_listening()
-```
 
-**That's it!** Simple and works perfectly! ✅
-
----
-
-## 🆚 **SDK vs FastMCP:**
-
-| Component | Purpose | What We Use |
-|-----------|---------|-------------|
-| **Tuya Connection** | Connect to Tuya Platform | `tuya-mcp-sdk` ✅ |
-| **MCP Server** | Define tools & handle requests | `FastMCP` ✅ |
-| **Tool Definitions** | Create MCP tools | `FastMCP @mcp.tool` ✅ |
-| **HTTP Server** | Run MCP protocol server | `FastMCP` ✅ |
-| **Example Code** | Reference implementation | **NOT USED** ❌ |
-
----
-
-## 🎯 **SUMMARY:**
-
-### **tuya-mcp-sdk:**
-- ✅ Install it: `pip install -e .`
-- ✅ Use `MCPSdkClient` class
-- ✅ Connects your server to Tuya Platform
-- ❌ Don't use example scripts (buggy)
-
-### **FastMCP:**
-- ✅ Install it: `pip install fastmcp`
-- ✅ Build your MCP server
-- ✅ Define tools with decorators
-- ✅ Clean, simple, works great
-
-### **Your Code:**
-- `server.py` - FastMCP server with tools
-- `tuya_client.py` - Simple SDK client (bridges Tuya to your server)
-- `.env` - Configuration
-
----
-
-## 🔄 **THE FLOW:**
-
-```
-Tuya Platform
-    ↓ (WebSocket)
-tuya-mcp-sdk (MCPSdkClient)
-    ↓ (HTTP/SSE)
-FastMCP Server (your server.py)
-    ↓ (Your logic)
-Tool Execution
-```
-
-**Both are needed! They work together!** 🤝
-
----
-
-## 📝 **DEPENDENCIES:**
-
-**Your `requirements.txt`:**
-```
-# For building MCP servers
-fastmcp>=2.14.0
-httpx>=0.27.0
-python-dotenv>=1.0.0
-
-# Note: tuya-mcp-sdk installed separately via:
-# cd tuya-mcp-sdk/mcp-python && pip install -e .
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ---
 
-## ✅ **CONCLUSION:**
+## 🔑 **Key Methods:**
 
-**Keep tuya-mcp-sdk:**
-- It's the ONLY way to connect to Tuya Platform
-- MCPSdkClient is essential
-- The core SDK works fine
+### `MCPSdkClient()` - Initialize client
 
-**Ignore examples:**
-- Full of bugs and complexity
-- We built better alternatives
-- Use our simple `tuya_client.py` instead
+**Parameters:**
+- `endpoint`: Tuya MCP endpoint URL (from platform)
+- `access_id`: Your Access ID (from platform)
+- `access_secret`: Your Access Secret (from platform)
+- `custom_mcp_server_endpoint`: Your local FastMCP server URL
 
-**Use FastMCP:**
-- For building your MCP server
-- Much cleaner than SDK examples
-- Better documentation
+**Example:**
+```python
+client = MCPSdkClient(
+    endpoint="https://mcp-in.iotbing.com",
+    access_id="9dddfe970174516512ff...",
+    access_secret="supersecret123",
+    custom_mcp_server_endpoint="http://localhost:8767/mcp"
+)
+```
 
-**Result:** Best of both worlds! 🎉
+### `await client.connect()` - Connect to Tuya
+
+**What it does:**
+1. Establishes WebSocket connection
+2. Authenticates with access credentials
+3. Registers your MCP server
+
+**Returns:** None (raises exception on failure)
+
+### `await client.start_listening()` - Listen for requests
+
+**What it does:**
+1. Keeps connection alive
+2. Receives tool call requests from Tuya
+3. Forwards to your MCP server
+4. Returns results to Tuya
+
+**Blocks forever** - use in main async function
+
+---
+
+## 📂 **File Structure:**
+
+### Where SDK is Used:
+
+```
+mcp-servers/
+└── offline/
+    ├── browser-automation/
+    │   └── tuya_client.py    ← Uses SDK here!
+    └── device-controller/
+        └── tuya_client.py    ← And here!
+```
+
+### Where SDK is NOT Used:
+
+```
+mcp-servers/
+├── offline/
+│   ├── browser-automation/
+│   │   └── server.py         ← No SDK needed
+│   └── device-controller/
+│       └── server.py         ← No SDK needed
+└── online/                   ← No SDK needed (GitHub install)
+```
+
+---
+
+## 🔍 **SDK vs FastMCP:**
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| **Tuya MCP SDK** | Connects TO Tuya Platform | `tuya_client.py` |
+| **FastMCP** | Builds MCP server | `server.py` |
+
+**They work together:**
+1. FastMCP server defines and executes tools
+2. Tuya SDK client connects server to Tuya Platform
+
+---
+
+## ⚙️ **Environment Configuration:**
+
+**In `.env` file:**
+```env
+# For tuya_client.py (uses SDK)
+MCP_ENDPOINT=https://mcp-in.iotbing.com
+MCP_ACCESS_ID=your_access_id
+MCP_ACCESS_SECRET=your_access_secret
+
+# For server.py (no SDK)
+CLOUD_BRIDGE_URL=https://tuya-cloud-bridge.vercel.app
+MCP_API_KEY=your_api_key
+```
+
+---
+
+## 🐛 **Troubleshooting:**
+
+### Import Error: No module named 'mcp_sdk'
+
+**Fix:**
+```bash
+cd c:\TUYA\tuya-mcp-sdk\mcp-python
+pip install -e .
+```
+
+### Connection Failed
+
+**Check:**
+1. ✅ Endpoint URL correct
+2. ✅ Access ID valid
+3. ✅ Access Secret correct
+4. ✅ Network allows WebSocket connections
+5. ✅ FastMCP server running on specified port
+
+### Server Shows Offline on Tuya Platform
+
+**Solutions:**
+1. Restart `tuya_client.py`
+2. Check FastMCP server is running
+3. Verify credentials in `.env`
+4. Check firewall settings
+
+---
+
+## 📚 **Full Example:**
+
+**File:** `offline/browser-automation/tuya_client.py`
+
+```python
+import asyncio
+import logging
+import os
+from dotenv import load_dotenv
+from mcp_sdk import MCPSdkClient
+
+# Load environment variables
+load_dotenv()
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+async def main():
+    """Connect Tuya to FastMCP Server"""
+    
+    # Get credentials
+    TUYA_ENDPOINT = os.getenv('MCP_ENDPOINT')
+    TUYA_ACCESS_ID = os.getenv('MCP_ACCESS_ID')
+    TUYA_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
+    LOCAL_MCP_SERVER = "http://localhost:8767/mcp"
+    
+    logger.info("=" * 60)
+    logger.info("Tuya MCP SDK Client")
+    logger.info("=" * 60)
+    logger.info(f"Tuya Endpoint: {TUYA_ENDPOINT}")
+    logger.info(f"Local MCP Server: {LOCAL_MCP_SERVER}")
+    logger.info("=" * 60)
+    
+    try:
+        # Create SDK client
+        client = MCPSdkClient(
+            endpoint=TUYA_ENDPOINT,
+            access_id=TUYA_ACCESS_ID,
+            access_secret=TUYA_ACCESS_SECRET,
+            custom_mcp_server_endpoint=LOCAL_MCP_SERVER
+        )
+        
+        # Connect to Tuya Platform
+        await client.connect()
+        logger.info("✅ Connected to Tuya Platform!")
+        logger.info("✅ MCP Server is now ONLINE!")
+        logger.info("🎧 Listening for AI Workflow requests...")
+        
+        # Keep running
+        await client.start_listening()
+        
+    except Exception as e:
+        logger.error(f"❌ Error: {e}")
+        raise
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+---
+
+## ✅ **Summary:**
+
+**Tuya MCP SDK:**
+- ✅ Required for **offline** deployments
+- ✅ Installed from GitHub
+- ✅ Used in `tuya_client.py` files
+- ✅ Connects Tuya Platform → Your server
+- ❌ Not needed for online deployments (installed automatically)
+
+**Location:** `mcp-servers/offline/` folders only
+
+---
+
+**Last Updated:** 2025-12-22  
+**SDK Version:** Latest from GitHub  
+**Status:** Working perfectly! ✨

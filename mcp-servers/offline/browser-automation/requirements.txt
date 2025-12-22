@@ -1,0 +1,23 @@
+# Requirements for LOCAL development/testing
+# Use this for: Running locally (offline mode)
+
+# FastMCP framework
+fastmcp>=2.12.3
+
+# HTTP client for API calls
+httpx>=0.25.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Data validation
+pydantic>=2.0.0
+
+# Legacy/optional
+requests>=2.31.0
+
+# For local Tuya client testing:
+# Clone and install Tuya MCP SDK manually:
+# 1. git clone https://github.com/tuya/tuya-mcp-sdk.git
+# 2. cd tuya-mcp-sdk/mcp-python
+# 3. pip install -e .

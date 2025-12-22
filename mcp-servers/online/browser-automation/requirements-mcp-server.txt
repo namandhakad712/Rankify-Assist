@@ -1,15 +1,11 @@
-# Universal requirements for all MCP deployments
-# Works for: Local (offline) AND FastMCP Cloud (online)
-# Compatible with both browser-automation and device-controller
+# Requirements for MCP Server ONLY (browser/device control)
+# Use this for: ONLINE-fastmcp.cloud_server.py
 
 # FastMCP framework (compatible with Cloud version 2.12.3)
 fastmcp>=2.12.3
 
 # HTTP client for API calls
 httpx>=0.25.0
-
-# Tuya MCP SDK (for Tuya IoT Platform connection)
-tuya-mcp-sdk>=1.0.0
 
 # Environment variable management
 python-dotenv>=1.0.0
@@ -19,3 +15,6 @@ pydantic>=2.0.0
 
 # Legacy/optional (for local testing)
 requests>=2.31.0
+
+# NOTE: tuya-mcp-sdk is NOT needed for MCP server!
+# It's only needed for Tuya client (separate deployment)

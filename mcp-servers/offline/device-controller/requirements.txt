@@ -1,0 +1,13 @@
+# Local development requirements
+# Same as browser-automation
+
+fastmcp>=2.12.3
+httpx>=0.25.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+requests>=2.31.0
+
+# For Tuya client: Install SDK manually from GitHub
+# git clone https://github.com/tuya/tuya-mcp-sdk.git
+# cd tuya-mcp-sdk/mcp-python
+# pip install -e .

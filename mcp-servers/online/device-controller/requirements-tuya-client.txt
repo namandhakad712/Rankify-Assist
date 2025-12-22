@@ -1,0 +1,10 @@
+# Requirements for Tuya Client
+# Install SDK from GitHub
+
+fastmcp>=2.12.3
+httpx>=0.25.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# Tuya MCP SDK from GitHub
+git+https://github.com/tuya/tuya-mcp-sdk.git@main#subdirectory=mcp-python

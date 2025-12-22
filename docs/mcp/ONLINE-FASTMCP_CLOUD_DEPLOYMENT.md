@@ -1,575 +1,277 @@
-# Deploying MCP Server with FastMCP Cloud
+# 🌐 FastMCP Cloud Deployment Guide
 
-Complete guide to make your MCP server online and accessible 24/7.
+Deploy to FastMCP Cloud for 24/7 always-on operation!
 
-## 🎯 Current Situation
+---
 
-### What You Have (Local):
+## 📁 New Structure
+
 ```
-✅ Browser Automation MCP Server (server.py)
-✅ Tuya Client Bridge (tuya_client.py)
-✅ Cloud Bridge Integration (Vercel)
-✅ Rankify Extension (Browser automation)
-
-❌ Problem: Runs locally only
-❌ Drops connection when PC sleeps
-❌ Not accessible from anywhere
-```
-
-### What You Want (Online):
-```
-✅ MCP Server hosted 24/7
-✅ No connection drops
-✅ Always accessible to Tuya AI
-✅ Automatic reconnection
-✅ Scalable and reliable
+mcp-servers/
+└── online/               ← Deploy these files!
+    ├── browser-automation/
+    │   ├── mcp_server.py
+    │   ├── tuya_client.py
+    │   ├── requirements.txt
+    │   └── requirements-client.txt
+    └── device-controller/
+        ├── mcp_server.py
+        ├── tuya_client.py
+        ├── requirements.txt
+        └── requirements-client.txt
 ```
 
 ---
 
-## 🌐 Solution: FastMCP Cloud
+## 🚀 **4 Servers to Deploy:**
 
-**FastMCP Cloud** (https://fastmcp.cloud) is a hosted platform for MCP servers.
-
-### Benefits:
-- ✅ **Always Online** - No downtime
-- ✅ **Automatic Scaling** - Handles any load  
-- ✅ **Simple Deployment** - One command deploy
-- ✅ **Free Tier** - Start at no cost
-- ✅ **HTTPS by default** - Secure connections
-- ✅ **Logs & Monitoring** - Built-in observability
+| # | Name | File Path | Requirements | Purpose |
+|---|------|-----------|--------------|---------|
+| 1 | `assist` | `mcp-servers/online/browser-automation/mcp_server.py` | `online/browser-automation/requirements.txt` | Browser MCP Server |
+| 2 | `tuya-browser-bridge` | `mcp-servers/online/browser-automation/tuya_client.py` | `online/browser-automation/requirements-client.txt` | Browser Tuya Client |
+| 3 | `device-control` | `mcp-servers/online/device-controller/mcp_server.py` | `online/device-controller/requirements.txt` | Device MCP Server |
+| 4 | `tuya-device-bridge` | `mcp-servers/online/device-controller/tuya_client.py` | `online/device-controller/requirements-client.txt` | Device Tuya Client |
 
 ---
 
-## 📋 Migration Plan
+## 📝 **STEP-BY-STEP DEPLOYMENT:**
 
-### Option 1: FastMCP Cloud (Recommended) ✅
-**Best for:** Production deployment, reliability
+### **Prerequisites:**
 
-### Option 2: Self-Hosted (Advanced)
-**Best for:** Full control, custom infrastructure
-
-Let's go with **FastMCP Cloud** (easier and more reliable!)
+1. ✅ FastMCP Cloud account (free): https://fastmcp.cloud
+2. ✅ Code pushed to GitHub
+3. ✅ Tuya MCP credentials ready
 
 ---
 
-## 🚀 Step-by-Step: Deploy to FastMCP Cloud
+### **Server 1: Browser MCP (assist)**
 
-### **STEP 1: Refactor for FastMCP Cloud**
-
-Your current `server.py` is almost ready! Just need small updates.
-
-#### Create: `mcp_server_cloud.py`
-
-```python
-"""
-Browser Automation MCP Server - FastMCP Cloud Version
-Runs 24/7 in the cloud, accessible from anywhere
-"""
-
-import os
-import httpx
-from fastmcp import FastMCP
-from pydantic import Field
-from typing import Annotated
-
-# Environment variables (set in FastMCP Cloud dashboard)
-CLOUD_BRIDGE_URL = os.getenv('CLOUD_BRIDGE_URL', 'https://tuya-cloud-bridge.vercel.app')
-MCP_API_KEY = os.getenv('MCP_API_KEY')
-TUYA_ACCESS_ID = os.getenv('TUYA_ACCESS_ID')
-
-# Create FastMCP app
-mcp = FastMCP(
-    "Browser Automation",
-    description="Control browser automation via Tuya AI through Rankify Extension"
-)
-
-@mcp.tool
-async def execute_browser_command(
-    command: Annotated[str, Field(
-        description="Natural language command to execute in browser (e.g., 'open google', 'check my email')"
-    )]
-) -> str:
-    """
-    Execute a browser command via Rankify extension.
-    The extension's AI agent will interpret and execute the command.
-    """
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{CLOUD_BRIDGE_URL}/api/execute",
-                json={
-                    "userId": "tuya_ai",
-                    "apiKey": MCP_API_KEY,
-                    "accessId": TUYA_ACCESS_ID,
-                    "command": command
-                },
-                timeout=15.0
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                command_id = result.get('commandId')
-                return f"✅ Command sent! The browser extension will execute it shortly. (ID: {command_id})"
-            else:
-                return f"❌ Failed: {response.text}"
-                
-    except Exception as e:
-        return f"❌ Error: {str(e)}"
-
-# Health check endpoint
-@mcp.tool
-async def health_check() -> str:
-    """Check if the MCP server is running and healthy."""
-    return "✅ MCP Server is online and ready!"
-
-# This is the key difference for cloud deployment!
-# No .run() call here - FastMCP Cloud handles that
-```
-
----
-
-### **STEP 2: Create FastMCP Cloud Account**
-
-1. **Go to:** https://fastmcp.cloud
-2. **Click:** "Get Started" or "Sign Up"
-3. **Sign in with:** GitHub (recommended)
-4. **Verify email** if needed
-
----
-
-### **STEP 3: Install FastMCP CLI**
-
-```bash
-# Install FastMCP CLI
-pip install "fastmcp[cli]"
-
-# Verify installation
-fastmcp --version
-```
-
----
-
-### **STEP 4: Login to FastMCP Cloud**
-
-```bash
-# Login from terminal
-fastmcp login
-
-# Follow prompts:
-# 1. Opens browser
-# 2. Authorize CLI
-# 3. Returns to terminal
-# 4. Shows: "✅ Logged in successfully!"
-```
-
----
-
-### **STEP 5: Deploy Your Server**
-
-#### Create `requirements.txt`:
-
-```txt
-fastmcp>=2.0.0
-httpx>=0.25.0
-pydantic>=2.0.0
-```
-
-#### Deploy Command:
-
-```bash
-cd c:\TUYA\RankifyAssist\mcp-servers\browser-automation
-
-# Deploy to FastMCP Cloud
-fastmcp deploy mcp_server_cloud.py
-
-# Follow prompts:
-# Name: browser-automation
-# Description: Browser automation for Tuya AI
-# Public: No (keep private)
-```
-
-**Output:**
-```
-🚀 Deploying browser-automation...
-📦 Building deployment package...
-☁️  Uploading to FastMCP Cloud...
-✅ Deployed successfully!
-
-Your server is live at:
-https://browser-automation-xxxxx.fastmcp.cloud/mcp
-
-Server ID: srv_abc123xyz
-Status: Running ✅
-```
-
----
-
-### **STEP 6: Set Environment Variables**
-
-**In FastMCP Cloud Dashboard:**
-
+#### Deploy:
 ```
 1. Go to: https://fastmcp.cloud/dashboard
-2. Select: browser-automation server
-3. Click: "Settings" → "Environment Variables"
-4. Add:
-   CLOUD_BRIDGE_URL = https://tuya-cloud-bridge.vercel.app
-   MCP_API_KEY = your-api-key-from-env
-   TUYA_ACCESS_ID = your-tuya-access-id
-5. Save
-6. Restart server (auto-restarts with new env vars)
+2. Click: "New Deployment"
+3. Configure:
+   Repository: namandhakad712/Rankify-Assist
+   Branch: main
+   Entrypoint: mcp-servers/online/browser-automation/mcp_server.py
+   Requirements: mcp-servers/online/browser-automation/requirements.txt
+   Name: assist
 ```
 
----
-
-### **STEP 7: Update Tuya Client**
-
-Now your MCP server is online! Update Tuya client to connect to cloud URL:
-
-#### Update `tuya_client.py`:
-
-```python
-"""
-Tuya MCP SDK Client - Cloud Version
-Connects Tuya Platform to FastMCP Cloud server
-"""
-
-import asyncio
-import logging
-import os
-from dotenv import load_dotenv
-from mcp_sdk import MCPSdkClient
-
-load_dotenv()
-
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-async def main():
-    """Connect Tuya to FastMCP Cloud Server"""
-    
-    # Tuya credentials
-    TUYA_ENDPOINT = os.getenv('MCP_ENDPOINT', 'https://mcp-in.iotbing.com')
-    TUYA_ACCESS_ID = os.getenv('MCP_ACCESS_ID')
-    TUYA_ACCESS_SECRET = os.getenv('MCP_ACCESS_SECRET')
-    
-    # FastMCP Cloud URL (UPDATED!)
-    CLOUD_MCP_SERVER = os.getenv('FASTMCP_CLOUD_URL', 
-                                   'https://browser-automation-xxxxx.fastmcp.cloud/mcp')
-    
-    logger.info("=" * 60)
-    logger.info("Tuya MCP SDK Client - Cloud Version")
-    logger.info("=" * 60)
-    logger.info(f"Tuya Endpoint: {TUYA_ENDPOINT}")
-    logger.info(f"FastMCP Cloud: {CLOUD_MCP_SERVER}")
-    logger.info("=" * 60)
-    
-    try:
-        # Create SDK client
-        client = MCPSdkClient(
-            endpoint=TUYA_ENDPOINT,
-            access_id=TUYA_ACCESS_ID,
-            access_secret=TUYA_ACCESS_SECRET,
-            custom_mcp_server_endpoint=CLOUD_MCP_SERVER  # ← Cloud URL!
-        )
-        
-        # Connect to Tuya Platform
-        await client.connect()
-        logger.info("✅ Connected to Tuya Platform!")
-        logger.info("✅ MCP Server is now ONLINE 24/7 in the cloud!")
-        logger.info("🎧 Listening for AI Workflow requests...")
-        
-        # Keep running
-        await client.start_listening()
-        
-    except KeyboardInterrupt:
-        logger.info("\n👋 Shutting down...")
-    except Exception as e:
-        logger.error(f"❌ Error: {e}")
-        import traceback
-        traceback.print_exc()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
----
-
-### **STEP 8: Update .env**
-
-Add FastMCP Cloud URL:
-
+#### Environment Variables:
 ```env
-# Existing variables
-MCP_ENDPOINT=https://mcp-in.iotbing.com
-MCP_ACCESS_ID=your_access_id
-MCP_ACCESS_SECRET=your_secret
-MCP_API_KEY=your_api_key
 CLOUD_BRIDGE_URL=https://tuya-cloud-bridge.vercel.app
+MCP_API_KEY=your_api_key
+TUYA_ACCESS_ID=your_tuya_access_id
+```
 
-# NEW: FastMCP Cloud URL (from deployment)
-FASTMCP_CLOUD_URL=https://browser-automation-xxxxx.fastmcp.cloud/mcp
+#### Expected URL:
+```
+https://assist.fastmcp.app/mcp
 ```
 
 ---
 
-### **STEP 9: Test Everything**
+### **Server 2: Browser Tuya Client (tuya-browser-bridge)**
 
-#### Test 1: Health Check
-
-```bash
-# Test cloud server
-curl https://browser-automation-xxxxx.fastmcp.cloud/mcp/health
-
-# Should return: {"status": "ok"}
+#### Deploy:
+```
+1. FastMCP Dashboard → New Deployment
+2. Configure:
+   Repository: namandhakad712/Rankify-Assist
+   Branch: main
+   Entrypoint: mcp-servers/online/browser-automation/tuya_client.py
+   Requirements: mcp-servers/online/browser-automation/requirements-client.txt
+   Name: tuya-browser-bridge
 ```
 
-#### Test 2: Run Tuya Client
-
-```bash
-# Run updated client
-python tuya_client.py
-
-# Should see:
-# ✅ Connected to Tuya Platform!
-# ✅ MCP Server is now ONLINE 24/7 in the cloud!
+#### Environment Variables:
+```env
+MCP_ENDPOINT=https://mcp-in.iotbing.com
+MCP_ACCESS_ID=your_tuya_access_id
+MCP_ACCESS_SECRET=your_tuya_secret
+FASTMCP_CLOUD_MCP_URL=https://assist.fastmcp.app/mcp
 ```
 
-#### Test 3: Full Flow
+⚠️ **IMPORTANT:** `FASTMCP_CLOUD_MCP_URL` must point to Server 1's URL!
 
+---
+
+### **Server 3: Device MCP (device-control)**
+
+#### Deploy:
 ```
-1. Say to Tuya AI: "Open Google"
-2. Tuya → FastMCP Cloud → Cloud Bridge → Extension
-3. Browser opens Google!
+1. FastMCP Dashboard → New Deployment
+2. Configure:
+   Repository: namandhakad712/Rankify-Assist
+   Branch: main
+   Entrypoint: mcp-servers/online/device-controller/mcp_server.py
+   Requirements: mcp-servers/online/device-controller/requirements.txt
+   Name: device-control
+```
+
+#### Environment Variables:
+```env
+CLOUD_BRIDGE_URL=https://tuya-cloud-bridge.vercel.app
+MCP_API_KEY=your_api_key  
+TUYA_ACCESS_ID=your_tuya_access_id
+```
+
+#### Expected URL:
+```
+https://device-control.fastmcp.app/mcp
 ```
 
 ---
 
-## 📊 Architecture (After Migration)
+### **Server 4: Device Tuya Client (tuya-device-bridge)**
 
-### Before (Local):
+#### Deploy:
 ```
-Tuya AI
+1. FastMCP Dashboard → New Deployment
+2. Configure:
+   Repository: namandhakad712/Rankify-Assist
+   Branch: main
+   Entrypoint: mcp-servers/online/device-controller/tuya_client.py
+   Requirements: mcp-servers/online/device-controller/requirements-client.txt
+   Name: tuya-device-bridge
+```
+
+#### Environment Variables:
+```env
+MCP_ENDPOINT=https://mcp-in.iotbing.com
+MCP_ACCESS_ID=your_tuya_access_id
+MCP_ACCESS_SECRET=your_tuya_secret
+FASTMCP_CLOUD_MCP_URL=https://device-control.fastmcp.app/mcp
+```
+
+⚠️ **IMPORTANT:** `FASTMCP_CLOUD_MCP_URL` must point to Server 3's URL!
+
+---
+
+## 🔍 **Verify Deployments:**
+
+### Check Logs:
+
+**For each server:**
+1. Go to FastMCP Dashboard
+2. Click on server name
+3. Click "Logs"
+
+**Expected Logs:**
+
+**MCP Server (assist/device-control):**
+```
+✅ Server running
+Listening on port 8080
+```
+
+**Tuya Client (tuya-browser-bridge/tuya-device-bridge):**
+```
+✅ Connected to Tuya Platform!
+✅ Forwarding to MCP Server: https://assist.fastmcp.app/mcp
+🎧 Listening for AI Workflow requests...
+```
+
+---
+
+## 📊 **Architecture (After Deployment):**
+
+```
+Tuya AI (Cloud)
   ↓
-Tuya Client (Local PC) ← ❌ Drops when PC sleeps
+Tuya Client Bridge (FastMCP Cloud) ← Server 2 & 4
   ↓
-FastMCP Server (Local) ← ❌ Not accessible
+MCP Server (FastMCP Cloud) ← Server 1 & 3
   ↓
-Cloud Bridge (Vercel) ← ✅ Always online
+Cloud Bridge (Vercel)
   ↓
-Rankify Extension ← ✅ Always ready
+Browser Extension / Smart Devices
 ```
 
-### After (Cloud):
+**Result: 100% CLOUD! No local PC needed!** 🎉
+
+---
+
+## 🔧 **Troubleshooting:**
+
+### Deployment Failed with SDK Error:
+
+**Error:** `tuya-mcp-sdk not found in package registry`
+
+**Fix:** Use `requirements-client.txt` for Tuya clients (not `requirements.txt`)
+- **MCP Server:** Use `requirements.txt` (no SDK needed)
+- **Tuya Client:** Use `requirements-client.txt` (has GitHub SDK)
+
+### Server Not Connecting:
+
+1. Check environment variables are set
+2. Check URLs point to correct servers
+3. Check logs for specific errors
+4. Restart deployment
+
+### Tools Not Showing:
+
+1. Check MCP server deployed successfully
+2. Check Tuya client connected
+3. Restart Tuya client deployment
+
+---
+
+## 📋 **Requirements Files Explained:**
+
+### `requirements.txt` (for MCP servers):
+```txt
+fastmcp>=2.12.3
+httpx>=0.25.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+requests>=2.31.0
+# No Tuya SDK - not needed!
 ```
-Tuya AI
-  ↓
-Tuya Client (Still local, but lightweight)
-  ↓
-FastMCP Server (FastMCP Cloud) ← ✅ Always online!
-  ↓
-Cloud Bridge (Vercel) ← ✅ Always online
-  ↓
-Rankify Extension ← ✅ Always ready
+
+### `requirements-client.txt` (for Tuya clients):
+```txt
+fastmcp>=2.12.3
+httpx>=0.25.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+# Tuya SDK from GitHub:
+git+https://github.com/tuya/tuya-mcp-sdk.git@main#subdirectory=mcp-python
 ```
 
 ---
 
-## 🎯 Alternative: Self-Hosted
+## ✅ **Success Checklist:**
 
-If you want full control, host on your own server:
+After all 4 deployments:
 
-### Option A: VPS (Recommended)
-
-**Services:** DigitalOcean, AWS, Google Cloud, Azure
-
-```bash
-# On VPS:
-git clone your-repo
-cd mcp-servers/browser-automation
-pip install -r requirements.txt
-
-# Run with supervisor/systemd
-fastmcp run server.py --host 0.0.0.0 --port 8767
-
-# Expose via nginx with HTTPS
-```
-
-### Option B: Docker
-
-```dockerfile
-# Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY mcp_server_cloud.py .
-CMD ["fastmcp", "run", "mcp_server_cloud.py", "--host", "0.0.0.0", "--port", "8767"]
-```
-
-```bash
-# Deploy to any cloud
-docker build -t mcp-server .
-docker run -p 8767:8767 -e MCP_API_KEY=xxx mcp-server
-```
+- [ ] All 4 servers show "Running" status
+- [ ] MCP server logs show "Listening on port 8080"
+- [ ] Tuya client logs show "Connected to Tuya Platform"
+- [ ] Tuya Platform shows your MCP as "Online"
+- [ ] Can turn off your PC and test voice commands
+- [ ] Commands execute successfully
 
 ---
 
-## 📝 Deployment Checklist
+## 💰 **Cost:**
 
-### Before Deployment:
-- [ ] FastMCP Cloud account created
-- [ ] CLI installed (`pip install fastmcp[cli]`)
-- [ ] Logged in (`fastmcp login`)
-- [ ] `mcp_server_cloud.py` created
-- [ ] `requirements.txt` updated
-- [ ] Environment variables ready
-
-### During Deployment:
-- [ ] `fastmcp deploy mcp_server_cloud.py` executed
-- [ ] Deployment successful
-- [ ] Server URL obtained
-- [ ] Environment variables set in dashboard
-- [ ] Server restarted with new env vars
-
-### After Deployment:
-- [ ] Health check passes
-- [ ] `.env` updated with cloud URL
-- [ ] Tuya client updated
-- [ ] Full flow tested
-- [ ] Logs monitored
+**All 4 servers:** FREE tier!  
+**Monthly cost:** $0  
+**Uptime:** 24/7  
 
 ---
 
-## 🔍 Monitoring & Logs
+## 🎊 **After Deployment:**
 
-### View Logs:
-
-```bash
-# From CLI
-fastmcp logs browser-automation
-
-# Or in dashboard
-https://fastmcp.cloud/dashboard → Logs
-```
-
-### Check Status:
-
-```bash
-# List all deployments
-fastmcp list
-
-# Get server info
-fastmcp info browser-automation
-```
-
----
-
-## 🎓 Key Differences: Local vs Cloud
-
-| Aspect | Local | FastMCP Cloud |
-|--------|-------|---------------|
-| **Availability** | ❌ PC must be on | ✅ Always on 24/7 |
-| **Reliability** | ❌ Drops on sleep | ✅ Auto-restart |
-| **Scalability** | ❌ Limited | ✅ Auto-scales |
-| **Monitoring** | ❌ Manual | ✅ Built-in |
-| **HTTPS** | ❌ Need setup | ✅ Automatic |
-| **Cost** | Free | Free tier available |
-| **Setup Time** | 5 mins | 10 mins |
-| **Maintenance** | Manual | Automatic |
-
----
-
-## 🚀 Quick Start Commands
-
-```bash
-# 1. Install CLI
-pip install "fastmcp[cli]"
-
-# 2. Login
-fastmcp login
-
-# 3. Deploy
-cd c:\TUYA\RankifyAssist\mcp-servers\browser-automation
-fastmcp deploy mcp_server_cloud.py
-
-# 4. Set env vars (in dashboard)
-https://fastmcp.cloud/dashboard
-
-# 5. Update .env with cloud URL
-FASTMCP_CLOUD_URL=https://your-server.fastmcp.cloud/mcp
-
-# 6. Run client
-python tuya_client.py
-
-# 7. Test!
-# Say to Tuya AI: "Open Google"
-```
-
----
-
-## 🎊 Benefits After Migration
-
-### For You:
-```
-✅ No more keeping PC on 24/7
-✅ No connection dropouts
-✅ Access from anywhere
-✅ Professional deployment
-✅ Scalable infrastructure
-```
-
-###For Users:
-```
-✅ Reliable service
-✅ Faster response
-✅ No downtime
-✅ Better experience
-```
-
----
-
-## 📚 Resources
-
-### Documentation:
-- **FastMCP Docs:** https://gofastmcp.com
-- **FastMCP Cloud:** https://fastmcp.cloud
-- **GitHub:** https://github.com/jlowin/fastmcp
-
-### Support:
-- **Discord:** https://discord.gg/uu8dJCgttd
-- **GitHub Issues:** https://github.com/jlowin/fastmcp/issues
-
----
-
-## ✅ Summary
-
-**Your MCP Server:**
-- ✅ Currently: Working locally
-- ✅ After migration: Running 24/7 in cloud
-- ✅ Deployment: One command (`fastmcp deploy`)
-- ✅ Cost: Free tier available
-- ✅ Time: ~15 minutes total
-
-**Next Steps:**
-1. Create FastMCP Cloud account
-2. Deploy server
-3. Update Tuya client
-4. Test full flow
-5. **Enjoy always-online MCP!** 🎉
+1. **Turn off your PC**
+2. **Test voice command:** "Open Google"
+3. **Check logs** in FastMCP Dashboard
+4. **Celebrate!** You're 100% cloud! 🎉
 
 ---
 
 **Last Updated:** 2025-12-22  
-**Status:** Ready for deployment  
-**Deployment Target:** FastMCP Cloud  
-**Est. Time:** 15 minutes
-
-**Let's make your MCP server online!** 🚀
+**Files Location:** `mcp-servers/online/`  
+**Status:** Production ready! 🚀
