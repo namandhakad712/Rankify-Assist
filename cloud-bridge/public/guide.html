@@ -4,48 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rankify Assist - Documentation Hub</title>
+    <title>Rankify Assist - Documentation</title>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
 
-    <!-- GSAP & Lenis -->
+    <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-
-    <!-- Markdown Parser & Highlighter -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-
-    <!-- Mermaid JS -->
-    <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-
-        // Expose init to window for our script to use
-        window.initMermaid = async () => {
-            mermaid.initialize({
-                startOnLoad: false,
-                theme: 'neutral',
-                securityLevel: 'loose',
-            });
-            await mermaid.run({
-                querySelector: '.mermaid'
-            });
-        };
-    </script>
-
-    <!-- Docs Data Bundle -->
-    <script src="docs_data.js"></script>
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <style>
         :root {
+            /* Default Dark Mode */
             --bg-color: #030014;
             --text-primary: #ffffff;
             --text-secondary: #a1a1aa;
@@ -54,28 +31,47 @@
             --accent-green: #00ff9d;
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
+            --sidebar-bg: rgba(3, 0, 20, 0.6);
+            --nav-hover: rgba(255, 255, 255, 0.05);
             --font-display: 'Space Grotesk', sans-serif;
             --font-body: 'Inter', sans-serif;
-            --sidebar-width: 280px;
+            --sidebar-width: 300px;
+            --glass-surface: rgba(255, 255, 255, 0.03);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-primary: #6366f1;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --sidebar-bg: rgba(255, 255, 255, 0.8);
+            --nav-hover: rgba(0, 0, 0, 0.05);
+            --glass-surface: rgba(0, 0, 0, 0.03);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            cursor: none;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
             font-family: var(--font-body);
+            overflow: hidden;
+            opacity: 0;
             display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
+            height: 100vh;
         }
 
-        /* Ambient Background */
-        .ambient-light {
+        /* --- BACKGROUND --- */
+        .ambient-bg {
             position: fixed;
             top: 0;
             left: 0;
@@ -84,11 +80,283 @@
             pointer-events: none;
             z-index: -1;
             background:
-                radial-gradient(circle at 10% 20%, rgba(112, 66, 248, 0.08), transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.08), transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(112, 66, 248, 0.15), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.1), transparent 40%);
         }
 
-        /* Sidebar Navigation */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+            background-size: 50px 50px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        }
+    </style>
+    <script>
+        // --- THEME LOGIC ---
+        // Check saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeBtn = document.getElementById('themeBtn');
+            const root = document.documentElement;
+
+            // Initial Icon
+            updateIcon(savedTheme);
+
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    const current = root.getAttribute('data-theme');
+                    const next = current === 'dark' ? 'light' : 'dark';
+
+                    root.setAttribute('data-theme', next);
+                    localStorage.setItem('theme', next);
+                    updateIcon(next);
+                });
+            }
+        });
+
+        function updateIcon(theme) {
+            const themeBtn = document.getElementById('themeBtn');
+            if (!themeBtn) return;
+
+            if (theme === 'light') {
+                // Moon Icon
+                themeBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+            } else {
+                // Sun Icon
+                themeBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
+            }
+        }
+        // --- VIEW SWITCHING & NAV LOGIC ---
+        function switchView(viewName) {
+            // 1. Hide all views
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('active');
+            });
+
+            // 2. Show target view
+            const target = document.getElementById(`view-${viewName}`);
+            if (target) {
+                target.style.display = 'block';
+                void target.offsetWidth; // Trigger reflow
+                target.classList.add('active');
+
+                // Re-render Mermaid if needed (simple check)
+                if (viewName === 'architecture' && window.mermaid) {
+                    // small delay to ensure container is visible for sizing
+                    setTimeout(() => window.renderMermaid(), 50);
+                }
+            }
+
+            // 3. Update Sidebar & Auto-Expand Submenus
+            document.querySelectorAll('.menu-header').forEach(btn => btn.classList.remove('active-view'));
+
+            // Find the button (menu header) that controls this view
+            // We look for onclick="switchView('viewName')"
+            const activeBtn = Array.from(document.querySelectorAll('.menu-header')).find(
+                b => b.getAttribute('onclick')?.includes(viewName)
+            );
+
+            if (activeBtn) {
+                activeBtn.classList.add('active-view');
+
+                // Close all other submenus
+                document.querySelectorAll('.submenu').forEach(el => el.classList.remove('open'));
+
+                // Open this view's submenu (sibling UL)
+                const parentItem = activeBtn.closest('.menu-item');
+                const submenu = parentItem.querySelector('.submenu');
+                if (submenu) {
+                    submenu.classList.add('open');
+                }
+            }
+        }
+
+        // --- MERMAID CONTROLS ---
+        let currentZoom = 1;
+        let isDragging = false;
+        let startX, startY, translateX = 0, translateY = 0;
+
+        function zoomMermaid(delta) {
+            const container = document.querySelector('.mermaid div svg'); // Target the SVG inside
+            if (!container) return;
+
+            currentZoom += delta;
+            if (currentZoom < 0.5) currentZoom = 0.5;
+            if (currentZoom > 3) currentZoom = 3;
+
+            updateTransform(container);
+            updateZoomDisplay();
+        }
+
+        function resetMermaid() {
+            const container = document.querySelector('.mermaid div svg');
+            if (!container) return;
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform(container);
+            updateZoomDisplay();
+        }
+
+        function updateTransform(el) {
+            el.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            el.style.transformOrigin = 'center center';
+            el.style.transition = isDragging ? 'none' : 'transform 0.3s ease';
+        }
+
+        function updateZoomDisplay() {
+            const display = document.getElementById('zoomLevel');
+            if (display) display.innerText = Math.round(currentZoom * 100) + '%';
+        }
+
+        // Initialize default view
+        document.addEventListener('DOMContentLoaded', () => {
+            switchView('architecture');
+        });
+    </script>
+
+    <!-- Mermaid JS -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+        // Expose render function for dynamic updates
+        window.renderMermaid = async () => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'neutral' : 'dark';
+
+            // Re-initialize with new theme
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: theme,
+                securityLevel: 'loose',
+                themeVariables: {
+                    fontFamily: 'Inter',
+                    fontSize: '14px'
+                }
+            });
+
+            // Find all mermaid blocks
+            const element = document.querySelector('.mermaid');
+            if (element) {
+                // Reset content if it was already rendered to avoid duplicates or errors (basic reset)
+                element.removeAttribute('data-processed');
+                // Store original code if not stored
+                if (!element.getAttribute('data-original-code')) {
+                    element.setAttribute('data-original-code', element.textContent);
+                }
+
+                // Reset innerHTML to original code
+                element.innerHTML = element.getAttribute('data-original-code');
+
+                await mermaid.run({
+                    querySelector: '.mermaid'
+                });
+
+                // Add dragging listeners to the NEW svg
+                const svg = element.querySelector('svg');
+                if (svg) {
+                    svg.style.cursor = 'grab';
+
+                    svg.addEventListener('mousedown', e => {
+                        isDragging = true;
+                        startX = e.clientX - translateX;
+                        startY = e.clientY - translateY;
+                        svg.style.cursor = 'grabbing';
+                    });
+
+                    window.addEventListener('mousemove', e => {
+                        if (!isDragging) return;
+                        translateX = e.clientX - startX;
+                        translateY = e.clientY - startY;
+                        updateTransform(svg);
+                    });
+
+                    window.addEventListener('mouseup', () => {
+                        isDragging = false;
+                        if (svg) svg.style.cursor = 'grab';
+                    });
+                }
+            }
+        };
+
+        // Initial Run
+        window.renderMermaid();
+
+        // Hook into theme toggle for re-render
+        const originalUpdateIcon = window.updateIcon; // assume this is global or we hook differently
+        // We add a listener to the theme button specifically for mermaid
+        const themeBtn = document.getElementById('themeBtn');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                setTimeout(() => window.renderMermaid(), 100);
+            });
+        }
+    </script>
+    <style>
+        /* Mermaid Styling & Controls */
+        .mermaid-container {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 10000;
+            mix-blend-mode: difference;
+            filter: url('#liquid-filter');
+        }
+
+        [data-theme="light"] .cursor-wrapper {
+            mix-blend-mode: normal;
+        }
+
+        [data-theme="light"] .cursor-blob {
+            background: var(--accent-primary);
+            opacity: 0.1;
+            filter: blur(20px);
+        }
+
+        [data-theme="light"] .cursor-dot {
+            background: var(--accent-primary);
+        }
+
+        .cursor-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-blob {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            opacity: 0.8;
+            transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.3s;
+        }
+
+        /* --- SIDEBAR --- */
         .sidebar {
             width: var(--sidebar-width);
             height: 100vh;
@@ -96,340 +364,1165 @@
             top: 0;
             left: 0;
             padding: 40px 24px;
-            border-right: 1px solid var(--glass-border);
-            background: rgba(3, 0, 20, 0.5);
+            background: var(--sidebar-bg);
             backdrop-filter: blur(20px);
-            z-index: 100;
+            border-right: 1px solid var(--glass-border);
             overflow-y: auto;
+            z-index: 100;
+            transition: background 0.3s, border-color 0.3s;
         }
 
         .logo {
             font-family: var(--font-display);
             font-weight: 700;
-            font-size: 20px;
-            margin-bottom: 40px;
-            display: block;
-            color: #fff;
+            font-size: 24px;
+            color: var(--text-primary);
             text-decoration: none;
+            display: block;
+            margin-bottom: 48px;
+            pointer-events: auto;
         }
 
-        .nav-group {
-            margin-bottom: 32px;
+        .brand {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            padding-left: 10px;
         }
 
-        .nav-header {
+        .brand-subtitle {
             font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
             color: var(--text-secondary);
-            margin-bottom: 12px;
-            font-weight: 600;
+            padding-left: 10px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .nav-link {
             display: block;
-            padding: 8px 12px;
-            color: rgba(255, 255, 255, 0.7);
+            padding: 10px 12px;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 4px;
             transition: all 0.2s;
-            cursor: pointer;
+            pointer-events: auto;
+            border: 1px solid transparent;
         }
 
         .nav-link:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            background: var(--nav-hover);
+            border-color: var(--glass-border);
         }
 
         .nav-link.active {
-            color: #fff;
+            color: var(--accent-primary);
             background: rgba(112, 66, 248, 0.1);
-            border: 1px solid rgba(112, 66, 248, 0.2);
+            border-color: rgba(112, 66, 248, 0.2);
+            font-weight: 600;
         }
 
-        /* Main Content */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            flex: 1;
-            padding: 60px 80px;
-            max-width: 1200px;
+        [data-theme="light"] .nav-link.active {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.2);
         }
 
-        /* Markdown Styling */
-        #doc-renderer {
-            line-height: 1.7;
+        .back-link {
+            font-size: 13px;
             color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
         }
 
-        #doc-renderer h1,
-        #doc-renderer h2,
-        #doc-renderer h3 {
-            font-family: var(--font-display);
+        .back-link:hover {
             color: #fff;
-            margin-top: 2em;
-            margin-bottom: 0.8em;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        #doc-renderer h1 {
-            font-size: 48px;
-            margin-top: 0;
-            background: linear-gradient(to right, #fff, #a1a1aa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* Sidebar Menu */
+        .menu-item {
+            margin-bottom: 8px;
         }
 
-        #doc-renderer h2 {
-            font-size: 32px;
+        .menu-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            transition: all 0.2s;
+            cursor: none;
+        }
+
+        .menu-header:hover {
+            color: #fff;
+            background: var(--glass-surface);
+        }
+
+        .menu-header.active {
+            color: #fff;
+            background: rgba(112, 66, 248, 0.15);
+            border: 1px solid rgba(112, 66, 248, 0.3);
+        }
+
+        .menu-header i {
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+
+        .menu-header.active i {
+            transform: rotate(180deg);
+        }
+
+        .submenu {
+            list-style: none;
+            padding-left: 14px;
+            margin-top: 4px;
+            display: none;
+            /* JS will toggle */
+            overflow: hidden;
+        }
+
+        .submenu-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 13px;
+            border-left: 1px solid var(--glass-border);
+            transition: all 0.2s;
+        }
+
+        .submenu-link:hover {
+            color: #fff;
+            border-left-color: var(--accent-cyan);
+            padding-left: 16px;
+        }
+
+        .submenu-link.active {
+            color: var(--accent-cyan);
+            border-left-color: var(--accent-cyan);
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.05), transparent);
+        }
+
+
+        /* --- MAIN CONTENT --- */
+        .main-wrapper {
+            flex: 1;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-scroll {
+            padding: 80px 10%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Headers */
+        .topic-header {
+            margin-bottom: 60px;
+            padding-bottom: 20px;
             border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 0.5em;
         }
 
-        #doc-renderer h3 {
+        .topic-title {
+            font-family: var(--font-display);
+            font-size: 42px;
+            color: #fff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topic-icon {
+            color: var(--accent-primary);
+        }
+
+        .topic-desc {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 600px;
+        }
+
+        /* Steps */
+        .step-block {
+            padding: 40px;
+            border-radius: 20px;
+            background: var(--glass-surface);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 80px;
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .step-block:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .step-marker {
+            position: absolute;
+            top: -20px;
+            left: 30px;
+            background: var(--bg-color);
+            padding: 8px 16px;
+            border-radius: 99px;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-cyan);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .step-title {
+            font-family: var(--font-display);
+            font-size: 26px;
+            color: #fff;
+            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+
+        .step-text {
+            color: #cbd5e1;
+            line-height: 1.8;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .step-text a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(0, 240, 255, 0.4);
+            transition: all 0.2s;
+        }
+
+        .step-text a:hover {
+            color: #fff;
+            border-bottom-color: #fff;
+        }
+
+        /* Image Display */
+        .image-frame {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            background: #000;
+            position: relative;
+        }
+
+        .image-frame img {
+            width: 100%;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .image-frame:hover img {
+            transform: scale(1.02);
+        }
+
+        /* Buttons Grid for Data Centers */
+        .dc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 30px;
+        }
+
+        .dc-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .dc-btn:hover {
+            background: rgba(112, 66, 248, 0.2);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(112, 66, 248, 0.2);
+        }
+
+        .dc-btn i {
+            color: var(--accent-cyan);
+        }
+
+        /* Reference Box */
+        .ref-box {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(0, 240, 255, 0.05);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ref-icon {
             font-size: 24px;
             color: var(--accent-cyan);
         }
 
-        #doc-renderer p {
-            margin-bottom: 1.2em;
-            font-size: 16px;
+        .ref-content {
+            flex: 1;
         }
 
-        #doc-renderer ul,
-        #doc-renderer ol {
-            margin-left: 1.5em;
-            margin-bottom: 1.5em;
+        .ref-label {
+            font-size: 11px;
+            color: var(--accent-cyan);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
         }
 
-        #doc-renderer li {
-            margin-bottom: 0.5em;
-        }
-
-        #doc-renderer code {
-            font-family: 'Courier New', monospace;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #ff79c6;
-            font-size: 0.9em;
-        }
-
-        #doc-renderer pre {
-            background: #0d0d16 !important;
-            padding: 1.5em;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            margin: 2em 0;
-            overflow-x: auto;
-        }
-
-        #doc-renderer pre code {
-            background: transparent;
-            padding: 0;
-            color: inherit;
-        }
-
-        #doc-renderer blockquote {
-            border-left: 4px solid var(--accent-primary);
-            padding-left: 1em;
-            margin-left: 0;
+        .ref-link {
             color: #fff;
-            background: rgba(112, 66, 248, 0.1);
-            padding: 1em;
-            border-radius: 0 8px 8px 0;
+            text-decoration: none;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* Mermaid Zoom Container */
-        .mermaid-wrapper {
-            width: 100%;
-            height: 600px;
-            /* Large view */
-            overflow: auto;
+        .ref-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Utilities */
+        /* Mermaid Styling & Controls */
+        .mermaid-container {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            background: #ffffff;
-            margin: 24px 0;
-            cursor: grab;
+            height: 600px;
+            /* Fixed height for panning */
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
-            padding: 40px;
-        }
-
-        .mermaid-wrapper:active {
-            cursor: grabbing;
         }
 
         .mermaid {
-            /* Let it grow */
-            min-width: 100%;
-        }
-
-        /* Tables */
-        table {
-            border-collapse: collapse;
             width: 100%;
-            margin: 2em 0;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow: hidden;
+            /* Hide scrollbars, we use pan */
         }
 
-        th,
-        td {
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--glass-border);
+        .mermaid-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+            background: var(--glass-surface);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
         }
 
-        th {
+        .m-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.05);
-            color: #fff;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .back-home {
+        .m-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .zoom-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            font-size: 12px;
+            font-family: var(--font-display);
+            color: var(--text-secondary);
+        }
+
+        /* Light Mode Adjustments */
+        [data-theme="light"] .mermaid-container {
+            background: #fff;
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .m-btn {
+            background: #f1f5f9;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        [data-theme="light"] .m-btn:hover {
+            background: #e2e8f0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Smooth reveal for submenus */
+        .submenu.open {
+            display: block;
+            animation: slideDown 0.3s ease forwards;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .theme-toggle {
             position: fixed;
-            bottom: 30px;
-            right: 40px;
-            padding: 12px 24px;
-            background: var(--accent-primary);
-            color: white;
-            border-radius: 99px;
-            text-decoration: none;
-            font-weight: 600;
-            box-shadow: 0 5px 20px rgba(112, 66, 248, 0.4);
-            transition: transform 0.2s;
+            top: 40px;
+            right: 180px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
             z-index: 50;
+            pointer-events: auto;
         }
 
-        .back-home:hover {
-            transform: scale(1.05);
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            transform: rotate(15deg);
+        }
+
+        [data-theme="light"] .theme-toggle {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
 
 <body>
-    <div class="ambient-light"></div>
+    <div class="ambient-bg"></div>
+    <div class="grid-overlay"></div>
 
-    <aside class="sidebar">
-        <a href="index.html" class="logo">Rankify Docs</a>
-        <div id="nav-container">
-            <!-- Dynamically populated -->
+    <div class="cursor-wrapper">
+        <div class="cursor-dot"></div>
+        <div class="cursor-ring"></div>
+    </div>
+
+    <button class="theme-toggle" id="themeBtn" aria-label="Toggle Theme">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+            </path>
+        </svg>
+    </button>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar hover-area">
+        <a href="index.html" class="brand">Rankify Assist</a>
+        <div class="brand-subtitle">Documentation Hub</div>
+
+        <a href="index.html" class="back-link hover-area">
+            <i class="ri-arrow-left-line"></i> Back to Home
+        </a>
+
+        <!-- Menu Item: Architecture (New) -->
+        <div class="menu-item">
+            <button class="menu-header hover-area active-view" onclick="switchView('architecture')">
+                <span>Architecture</span>
+                <i class="ri-flow-chart"></i>
+            </button>
+        </div>
+
+        <!-- Menu Item: Hardware -->
+        <div class="menu-item">
+            <button class="menu-header hover-area" onclick="switchView('hardware')">
+                <span>Hardware Guide</span>
+                <i class="ri-arrow-down-s-line"></i>
+            </button>
+        </div>
+
+        <!-- Menu Item: Software -->
+        <div class="menu-item">
+            <button class="menu-header hover-area" onclick="switchView('software')">
+                <span>Software Guide</span>
+                <i class="ri-arrow-down-s-line"></i>
+            </button>
         </div>
     </aside>
 
-    <main class="main-content">
-        <div id="doc-renderer">
-            <!-- Markdown content rendered here -->
+    <!-- CONTENT -->
+    <main class="main-wrapper">
+        <div class="content-scroll">
+
+            <!-- VIEW: ARCHITECTURE -->
+            <div id="view-architecture" class="view-section active">
+                <div class="topic-header">
+                    <h1 class="topic-title"><i class="ri-flow-chart topic-icon"></i> System Architecture</h1>
+                    <p class="topic-desc">High-level data flow between User, Tuya AI, MCP Servers, and the Rankify Cloud
+                        Bridge.</p>
+                </div>
+
+                <div class="step-block">
+                    <div class="mermaid-wrapper">
+                        <div class="mermaid">
+                            sequenceDiagram
+                            participant User as 👤 User (T5AI Board)
+                            participant Cloud as ☁️ Tuya AI Workflow
+                            participant MCP_Browser as 🐳 Browser MCP (Docker/HF)
+                            participant MCP_Device as 🐳 Device MCP (Docker/HF)
+                            participant Vercel as 🚀 Cloud Bridge (Vercel)
+                            participant Supabase as 💾 Supabase DB
+                            participant Extension as 🧩 Chrome Extension (Local)
+                            participant Browser as 🌐 Browser / Local PC
+
+                            rect rgb(230, 240, 255)
+                            Note over User, Cloud: 📢 PHASE 1: TRIGGER
+                            User->>Cloud: Voice: "Open YouTube"
+                            Cloud->>Cloud: Speech-to-Text (STT) & Intent Analysis
+                            end
+
+                            rect rgb(230, 255, 240)
+                            Note over Cloud, Browser: ⚡ PHASE 2: BROWSER AUTOMATION (Direct Execution)
+                            Note right of Cloud: Intent: Browser
+                            Cloud->>MCP_Browser: execute_browser_command(...)
+
+                            Note right of MCP_Browser: 📦 Docker Container<br />Tuya Client → localhost:7860 → FastAPI
+
+                            MCP_Browser->>Vercel: POST /api/execute
+                            Vercel->>Supabase: INSERT command (status=pending)
+
+                            loop Extension Polling (Every 3s)
+                            Extension->>Vercel: GET /api/poll
+                            Vercel->>Supabase: SELECT pending commands
+                            end
+
+                            Vercel-->>Extension: Return Command
+                            Extension->>Browser: Execute Script / Action
+                            Browser-->>Extension: Result
+
+                            Extension->>Vercel: POST /api/result
+                            Vercel->>Supabase: UPDATE command (result)
+                            Vercel-->>MCP_Browser: Return JSON Result
+                            MCP_Browser-->>Cloud: Action Success
+                            Cloud->>User: TTS: "Opened YouTube"
+                            end
+
+                            rect rgb(240, 255, 240)
+                            Note over Cloud, Browser: 🏠 PHASE 3: DEVICE CONTROL (Via Extension/Bridge)
+                            Note right of Cloud: Intent: IoT Control
+                            Cloud->>MCP_Device: control_device(...)
+
+                            Note right of MCP_Device: 📦 Docker Container<br />Tuya Client → localhost:7860 → FastAPI
+
+                            MCP_Device->>Vercel: POST /api/execute (type=device_control)
+                            Vercel->>Supabase: INSERT command
+
+                            Vercel-->>Extension: Return Command (via poll)
+                            Extension->>Browser: Local Device Control / API
+                            Browser-->>Extension: Success
+
+                            Extension->>Vercel: POST /api/result
+                            Vercel-->>MCP_Device: Result
+                            MCP_Device-->>Cloud: Action Success
+                            Cloud->>User: TTS: "Device turned on"
+                            end
+                        </div>
+                    </div>
+
+                    <div class="ref-box" style="margin-top: 30px;">
+                        <div class="ref-icon">💡</div>
+                        <div class="ref-content">
+                            <div class="ref-label">Did you know?</div>
+                            <div class="ref-text">
+                                You must have minimal knowledge of terms from Tuya platform, procedure of creating
+                                database, hosting site, etc.
+                                If no, just clone repo to an IDE with AI coder agent model, they will help you in
+                                everything just Vibe hijack.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: HARDWARE -->
+            <div id="view-hardware" class="view-section" style="display: none;">
+                <div class="topic-header">
+                    <h1 class="topic-title"><i class="ri-cpu-line topic-icon"></i> Hardware Setup</h1>
+                    <p class="topic-desc">Complete guide to flashing and authorizing your Tuya T5AI hardware device.</p>
+                </div>
+
+                <div class="step-block" id="hw-step1">
+                    <div class="step-marker">STEP 01</div>
+                    <h3 class="step-title">Download Firmware</h3>
+                    <p class="step-text">Download the official firmware file
+                        <code>rankify_assist_QIO_production_2.0.1.bin</code> from the repository.
+                    </p>
+                    <div class="image-frame hover-area">
+                        <img src="images/flash-guide/1.png" alt="Download Firmware">
+                    </div>
+                </div>
+
+                <div class="step-block" id="hw-step2">
+                    <div class="step-marker">STEP 02</div>
+                    <h3 class="step-title">Open Tuya Tools</h3>
+                    <p class="step-text">Navigate to <a href="https://tuyaopen.ai/tools/"
+                            target="_blank">tuyaopen.ai/tools/</a>. This is the official web interface for interacting
+                        with Tuya devices.</p>
+                    <div class="image-frame hover-area">
+                        <img src="images/flash-guide/2.png" alt="Tuya Tools Website">
+                    </div>
+                </div>
+
+                <div class="step-block" id="hw-step3">
+                    <div class="step-marker">STEP 03</div>
+                    <h3 class="step-title">Flash Configuration</h3>
+                    <p class="step-text">Select the <strong>"Firmware Flash"</strong> tab. Configure as follows:
+                        <br>• Target: <strong>T5AI</strong>
+                        <br>• Baud Rate: <strong>921600</strong>
+                        <br>• Data Bits: <strong>8</strong> | Stop Bits: <strong>1</strong> | Parity:
+                        <strong>None</strong>
+                    </p>
+                    <div class="image-frame hover-area">
+                        <img src="images/flash-guide/3.png" alt="Flash Config">
+                    </div>
+                </div>
+
+                <div class="step-block" id="hw-step4">
+                    <div class="step-marker">STEP 04</div>
+                    <h3 class="step-title">Browser Permissions</h3>
+                    <p class="step-text">Click Connect. A browser popup will appear. You must <strong>allow</strong>
+                        permission for the site to access your serial ports.</p>
+                    <div class="image-frame hover-area">
+                        <img src="images/flash-guide/4.png" alt="Permissions">
+                    </div>
+                </div>
+
+                <div class="step-block" id="hw-step5">
+                    <div class="step-marker">STEP 05</div>
+                    <h3 class="step-title">Select COM Port</h3>
+                    <p class="step-text">Choose the COM port your board is connected to.<br>
+                        <em>Tip: Use the "Serial Debug" tab to identify the active port by checking for logs.</em>
+                    </p>
+                    <div class="image-frame hover-area">
+                        <img src="images/flash-guide/5.png" alt="COM Port">
+                    </div>
+                </div>
+
+                <div class="step-block" id="hw-step6">
+                    <div class="step-marker">STEP 06</div>
+                    <h3 class="step-title">Select Firmware File</h3>
+                    <p class="step-text">Select the <code>.bin</code> file you downloaded in Step 1.</p>
+                </div>
+
+                <div class="step-block" id="hw-step7">
+                    <div class="step-marker">STEP 07</div>
+                    <h3 class="step-title">Execute Flash</h3>
+                    <p class="step-text">Click <strong>Flash</strong> and wait for the green progress bar to reach 100%.
+                        Your firmware is now installed.</p>
+                </div>
+
+                <div class="step-block" id="hw-step8">
+                    <div class="step-marker">STEP 08</div>
+                    <h3 class="step-title">Authorization (Important)</h3>
+                    <p class="step-text">
+                        The flashed firmware has no UUID/AuthKey. You must authorize it:
+                        <br>1. Go to the <strong>"TuyaOpen AUTH"</strong> tab.
+                        <br>2. Enter your credentials (UUID/AuthKey).
+                        <br>3. Select the port and click <strong>Authorize</strong>.
+                        <br><em>Note: If the flash port doesn't work, try other available COM ports.</em>
+                    </p>
+                    <div class="image-frame hover-area">
+                        <img src="images/flash-guide/6.png" alt="Auth Tab">
+                    </div>
+
+                    <div class="ref-box hover-area">
+                        <i class="ri-book-open-line ref-icon"></i>
+                        <div class="ref-content">
+                            <div class="ref-label">Tuya Documentation</div>
+                            <a href="https://developer.tuya.com/en/docs/iot/overview-of-download-firmware-and-authorization?id=Ka4zcqfo0eb5u"
+                                target="_blank" class="ref-link">
+                                Overview of Download Firmware and Authorization
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SOFTWARE SECTION -->
+            <div id="section-software" style="margin-top: 150px;">
+                <div class="topic-header">
+                    <h1 class="topic-title"><i class="ri-code-s-slash-line topic-icon"></i> Software Setup</h1>
+                    <p class="topic-desc">Configure your Tuya AI Workflow and Cloud Bridge environment.</p>
+                </div>
+
+                <div class="step-block" id="sw-workflow">
+                    <div class="step-marker">WORKFLOW</div>
+                    <h3 class="step-title">Workflow Copy</h3>
+                    <p class="step-text">Click the button below corresponding to your region to get an exact copy of the
+                        AI workflow. You will be redirected to the Tuya Platform.</p>
+
+                    <div class="image-frame hover-area" style="margin-bottom: 30px;">
+                        <!-- Assuming image is named for the step/section -->
+                        <img src="images/workflow-copy/1.png" alt="Workflow Page">
+                    </div>
+
+                    <div class="dc-grid">
+                        <a href="https://platform.tuya.com/exp/workflow/copy?copyId=F82FK28OOZ5S&type=1" target="_blank"
+                            class="dc-btn hover-area">
+                            <span>West America</span>
+                            <i class="ri-external-link-line"></i>
+                        </a>
+                        <a href="https://platform.tuya.com/exp/workflow/copy?copyId=F82FM8GGQFB4&type=1" target="_blank"
+                            class="dc-btn hover-area">
+                            <span>East America</span>
+                            <i class="ri-external-link-line"></i>
+                        </a>
+                        <a href="https://platform.tuya.com/exp/workflow/copy?copyId=F82FKTLOPHC0&type=1" target="_blank"
+                            class="dc-btn hover-area">
+                            <span>India Data Center</span>
+                            <i class="ri-external-link-line"></i>
+                        </a>
+                        <a href="https://platform.tuya.com/exp/workflow/copy?copyId=F82FLOQ0M2V4&type=1" target="_blank"
+                            class="dc-btn hover-area">
+                            <span>Singapore</span>
+                            <i class="ri-external-link-line"></i>
+                        </a>
+                    </div>
+
+                    <div class="ref-box hover-area">
+                        <i class="ri-book-open-line ref-icon"></i>
+                        <div class="ref-content">
+                            <div class="ref-label">Tuya Reference</div>
+                            <a href="https://developer.tuya.com/en/docs/iot/ai-agent-workflow?id=Keak4gh7rdhd2"
+                                target="_blank" class="ref-link">
+                                AI Agent Workflow Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: AI Product Development -->
+                <div class="step-block" id="sw-product">
+                    <div class="step-marker">AI PRODUCT</div>
+                    <h3 class="step-title">Create AI Product</h3>
+                    <p class="step-text">1. Go to <a href="https://platform.tuya.com/pmg/list" target="_blank">Tuya
+                            Product Management</a> and click <strong>"Create Product"</strong>.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-product/1.png" alt="Create Product">
+                    </div>
+
+                    <p class="step-text">2. Select <strong>"Audio Wearables"</strong> Category > <strong>"AI Companion
+                            Robot"</strong> Product.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-product/2.png" alt="Select Category">
+                    </div>
+
+                    <p class="step-text">3. Select <strong>"Tuya OS"</strong> and choose <strong>"AI companion
+                            robot"</strong> in Custom Solution.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-product/3.png" alt="Custom Solution">
+                    </div>
+
+                    <p class="step-text">4. Enter Product Name and choose <strong>WiFi + Bluetooth</strong> protocol.
+                    </p>
+
+                    <div class="highlight-box"
+                        style="margin: 30px 0; background: rgba(255, 77, 77, 0.1); border-left: 4px solid #ff4d4d; color: #ffcccc; padding: 15px;">
+                        <strong>⚠️ CRITICAL:</strong> Copy the <strong>Product ID (PID)</strong> you just created. You
+                        MUST paste this into your firmware code at <code>\firmware\include\tuya_config.h</code>
+                        replacing the existing PID.
+                    </div>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-product/4.png" alt="Product ID Code">
+                    </div>
+
+                    <p class="step-text">5. In the <strong>Function Definition</strong> tab, you can add standard
+                        functions (DPs).</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-product/5.png" alt="Product Functions">
+                    </div>
+
+                    <p class="step-text">6. On the <strong>AI Capabilities</strong> page, remember to add the Agent you
+                        will create in the next section.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 10px;">
+                        <img src="images/ai-product/6.png" alt="AI Capabilities">
+                    </div>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-product/7.png" alt="Agent Panel">
+                    </div>
+
+                    <p class="step-text">7. Configure <strong>Device Interaction</strong> panel.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-product/8.png" alt="Device Interaction">
+                    </div>
+
+                    <p class="step-text">8. In <strong>Hardware Development</strong>, select the T5AI chip. Click "Get 2
+                        Free Licenses". These contain the UUID and AuthKey needed if you haven't authorized via TuyaOpen
+                        tools.</p>
+                    <div class="image-frame hover-area">
+                        <img src="images/ai-product/9.png" alt="Hardware License">
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Project Management -->
+                <div class="step-block" id="sw-project">
+                    <div class="step-marker">PROJECT</div>
+                    <h3 class="step-title">Cloud Project Setup</h3>
+                    <p class="step-text">1. Go to <a href="https://platform.tuya.com/cloud/" target="_blank">Tuya Cloud
+                            Development</a>.</p>
+                    <p class="step-text">2. Click <strong>Create Cloud Project</strong>. Fill in the details and select
+                        your preferred Data Center.</p>
+                    <div class="image-frame hover-area">
+                        <img src="images/project-management/1.png" alt="Cloud Project">
+                    </div>
+
+                    <div class="ref-box hover-area">
+                        <i class="ri-book-open-line ref-icon"></i>
+                        <div class="ref-content">
+                            <div class="ref-label">Tuya Documentation</div>
+                            <a href="https://developer.tuya.com/en/cloud-development" target="_blank" class="ref-link">
+                                Cloud Development Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: AI Agents -->
+                <div class="step-block" id="sw-agents">
+                    <div class="step-marker">AGENTS</div>
+                    <h3 class="step-title">Create AI Agent</h3>
+                    <p class="step-text">1. Navigate to <a href="https://platform.tuya.com/exp/ai" target="_blank">Tuya
+                            AI Agents</a> page.</p>
+                    <p class="step-text">2. Click <strong>"Create Agent"</strong>. Fill in the name and upload an icon.
+                    </p>
+                    <p class="step-text">3. Select Data Centers. <strong>Crucial:</strong> Ensure the agent is available
+                        in the SAME data center you selected in the Cloud Project (Step 3).</p>
+                    <p class="step-text">4. Choose <strong>Workflow Mode</strong>. If you used the copy button in Step
+                        1, select that workflow. Otherwise, choose "Autonomous Mode".</p>
+
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/ai-agents/1.png" alt="Agent Creation">
+                    </div>
+
+                    <p class="step-text">5. Click <strong>Release</strong>, enter version, and Publish.</p>
+
+                    <div class="ref-box hover-area">
+                        <i class="ri-book-open-line ref-icon"></i>
+                        <div class="ref-content">
+                            <div class="ref-label">Tuya Documentation</div>
+                            <a href="https://developer.tuya.com/en/docs/iot/ai-agent-management?id=Kdxr4v7uv4fud"
+                                target="_blank" class="ref-link">
+                                AI Agent Management
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 6: MCP Management -->
+                <div class="step-block" id="sw-mcp">
+                    <div class="step-marker">MCP</div>
+                    <h3 class="step-title">MCP Service Setup</h3>
+                    <p class="step-text">1. Go to <a href="https://platform.tuya.com/exp/ai/mcp" target="_blank">Tuya
+                            MCP Management</a>.</p>
+                    <p class="step-text">2. Click <strong>"Custom MCP Service"</strong> tab > <strong>"Create Custom MCP
+                            Service"</strong>.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/mcp-management/1.png" alt="MCP Dashboard">
+                    </div>
+
+                    <p class="step-text">3. <strong>Browser Automation MCP:</strong> Add your browser automation
+                        service.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/mcp-management/2.png" alt="Browser Automation MCP">
+                    </div>
+
+                    <p class="step-text">4. <strong>Device Controller MCP:</strong> Add your device controller service.
+                    </p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/mcp-management/3.png" alt="Device Controller MCP">
+                    </div>
+
+                    <div class="highlight-box" style="margin-top: 30px;">
+                        <strong>🔑 ACCESS KEYS:</strong> You can add multiple data centers. The <strong>Access
+                            ID</strong> is shared, but each data center has a unique <strong>Access Secret</strong>.
+                        Copy these securely!
+                    </div>
+                </div>
+
+                <!-- SECTION 7: Database -->
+                <div class="step-block" id="sw-db">
+                    <div class="step-marker">DB</div>
+                    <h3 class="step-title">External Database</h3>
+                    <p class="step-text">This project uses <strong>Supabase</strong> (generous free tier).</p>
+                    <p class="step-text">1. Sign up/Login to Supabase and create a new project.</p>
+                    <p class="step-text">2. Go to the SQL Editor and paste the contents of <code>supabase.sql</code>
+                        (provided in the repo) to initialize table schema.</p>
+                    <p class="step-text">3. Set up Google Auth in Supabase, adding your custom server domain as a
+                        redirect URL.</p>
+                    <div class="image-frame hover-area">
+                        <img src="images/external-database/1.png" alt="Supabase Setup">
+                    </div>
+                </div>
+
+                <!-- SECTION 8: Hosting -->
+                <div class="step-block" id="sw-hosting">
+                    <div class="step-marker">HOSTING</div>
+                    <h3 class="step-title">Custom Server Hosting</h3>
+                    <p class="step-text">The custom server code is in the <code>Cloud-bridge</code> folder.</p>
+                    <p class="step-text">1. Deploy this folder to a provider like <strong>Vercel</strong> or
+                        <strong>Netlify</strong>.
+                    </p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/custom-server/1.png" alt="Deploy Server">
+                    </div>
+                    <p class="step-text">2. After login to your deployed site, add the MCP Access ID/Secret you
+                        generated in Step 6.</p>
+                </div>
+
+                <!-- SECTION 9: MCP Setup -->
+                <div class="step-block" id="sw-setup">
+                    <div class="step-marker">SETUP</div>
+                    <h3 class="step-title">MCP Client Setup</h3>
+                    <p class="step-text">Navigate to the <code>mcp-servers</code> folder.</p>
+                    <p class="step-text"><strong>Option A: OFFLINE</strong><br>
+                        Run <code>server.py</code> and <code>tuya_client.py</code> locally. Ensure your environment
+                        variables are set.</p>
+
+                    <p class="step-text"><strong>Option B: ONLINE (Hugging Face)</strong><br>
+                        Deploy to a Hugging Face Space for an always-online MCP server.</p>
+                    <div class="image-frame hover-area" style="margin-bottom: 20px;">
+                        <img src="images/mcp-setup/1.png" alt="MCP Code">
+                    </div>
+
+                    <div class="highlight-box">
+                        <strong>Check Status:</strong> Visit the <a href="https://platform.tuya.com/exp/ai/mcp"
+                            target="_blank">Tuya MCP Page</a> and refresh the status. It should show "Online" if
+                        your server is correctly connected.
+                    </div>
+                    <div class="image-frame hover-area" style="margin-top: 10px;">
+                        <img src="images/mcp-setup/2.png" alt="MCP Status Online">
+                    </div>
+                </div>
+
+                <!-- SECTION 10: Extension -->
+                <div class="step-block" id="sw-extension">
+                    <div class="step-marker">EXT</div>
+                    <h3 class="step-title">Browser Automation Extension</h3>
+                    <p class="step-text">1. Download the latest release <code>.zip</code> from <a
+                            href="https://github.com/namandhakad712/Rankify-Assist/releases" target="_blank">GitHub
+                            Releases</a>.</p>
+                    <p class="step-text">2. Unzip into a folder.</p>
+                    <p class="step-text">3. Open Chrome > Extensions > Enable <strong>Developer Mode</strong>.</p>
+                    <p class="step-text">4. Click <strong>Load Unpacked</strong> and select the unzipped folder.</p>
+                    <p class="step-text">5. Open the extension settings. In "Tuya Smart Home" tab, add the Access ID
+                        of your Browser Automation MCP (from Step 6).</p>
+                    <p class="step-text">6. Click <strong>Start Polling</strong> and <strong>Test
+                            Connection</strong> to verify communication with your custom server.</p>
+
+                    <div class="highlight-box"
+                        style="background: rgba(112, 66, 248, 0.1); border-color: var(--accent-primary);">
+                        <strong>💡 FACT:</strong> You can use this extension without Tuya MCP features! It functions
+                        as a standalone natural language browser agent (like Perplexity or ChatGPT Atlas) capable of
+                        controlling your browser via commands.
+                    </div>
+                </div>
+
+            </div>
+
         </div>
-        <div style="height: 100px;"></div>
     </main>
 
-    <a href="index.html" class="back-home">← Home</a>
-
     <script>
-        // Init Smooth Scroll
+        // --- 1. SMOOTH SCROLL ---
         const lenis = new Lenis({
+            wrapper: document.querySelector('.main-wrapper'),
+            content: document.querySelector('.content-scroll'),
             duration: 1.2,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            direction: 'vertical',
             smooth: true,
         });
+
         function raf(time) {
             lenis.raf(time);
             requestAnimationFrame(raf);
         }
         requestAnimationFrame(raf);
 
-        // --- DYNAMIC DOCS LOGIC ---
+        // --- 2. ACCORDION SIDEBAR ---
+        const menuHeaders = document.querySelectorAll('.menu-header');
 
-        const navContainer = document.getElementById('nav-container');
-        const docRenderer = document.getElementById('doc-renderer');
+        menuHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                // Toggle current
+                const targetId = header.getAttribute('data-target');
+                const targetMenu = document.getElementById(targetId);
+                const isOpen = targetMenu.classList.contains('open');
 
-        // Load content
-        async function loadDoc(category, docName) {
-            // Scroll to top
-            lenis.scrollTo(0, { immediate: true });
+                // Close all others (Verified "Accordion" behavior requested: "Topic selects expand to step")
+                document.querySelectorAll('.submenu').forEach(sub => sub.classList.remove('open'));
+                document.querySelectorAll('.menu-header').forEach(h => h.classList.remove('active'));
 
-            // Get content
-            const content = window.DOCS_DATA[category][docName];
-
-            // Parse & Render
-            docRenderer.innerHTML = marked.parse(content);
-
-            // Handle Mermaid
-            const mermaids = docRenderer.querySelectorAll('code.language-mermaid');
-            mermaids.forEach(block => {
-                const pre = block.parentElement; // marked wraps code in pre
-                const wrapper = document.createElement('div');
-                wrapper.className = 'mermaid-wrapper';
-
-                // Create actual mermaid div
-                const div = document.createElement('div');
-                div.className = 'mermaid';
-                div.textContent = block.textContent; // Using textContent to be safe
-
-                wrapper.appendChild(div);
-
-                // Replace the pre block
-                pre.replaceWith(wrapper);
+                if (!isOpen) {
+                    targetMenu.classList.add('open');
+                    header.classList.add('active');
+                }
             });
+        });
 
-            if (mermaids.length > 0 && window.initMermaid) {
-                // Wait for DOM
-                requestAnimationFrame(async () => {
-                    await window.initMermaid();
-                });
-            }
+        // --- 3. SCROLL HANDLING & ACTIVE LINKS ---
+        const sections = document.querySelectorAll('.step-block');
+        const navLinks = document.querySelectorAll('.submenu-link');
 
-            // Highlight Syntax
-            Prism.highlightAll();
+        lenis.on('scroll', () => {
+            let current = '';
+            // Basic scroll spy
+            const scrollPos = document.querySelector('.main-wrapper').scrollTop + 200;
 
-            // Update Active Link
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.dataset.cat === category && link.dataset.doc === docName) {
-                    link.classList.add('active');
+            sections.forEach(section => {
+                if (scrollPos >= section.offsetTop) {
+                    current = '#' + section.id;
                 }
             });
 
-            // Animate content in
-            gsap.fromTo("#doc-renderer", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 });
-        }
-
-        // Init Sidebar
-        if (window.DOCS_DATA) {
-            Object.keys(window.DOCS_DATA).forEach((category, index) => {
-
-                const group = document.createElement('div');
-                group.className = 'nav-group';
-
-                const header = document.createElement('div');
-                header.className = 'nav-header';
-                header.innerText = category;
-                group.appendChild(header);
-
-                Object.keys(window.DOCS_DATA[category]).forEach((docName, docIndex) => {
-                    const link = document.createElement('a');
-                    link.className = 'nav-link';
-                    link.innerText = docName;
-                    link.dataset.cat = category;
-                    link.dataset.doc = docName;
-
-                    link.addEventListener('click', () => loadDoc(category, docName));
-
-                    group.appendChild(link);
-                });
-
-                navContainer.appendChild(group);
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === current) {
+                    link.classList.add('active');
+                    // Ensure parent menu is open if we are in that section (Proactive UX)
+                    const parentMenu = link.closest('.submenu');
+                    if (parentMenu && !parentMenu.classList.contains('open')) {
+                        // We can optionally auto-expand sidebar here, but might be annoying.
+                        // Let's keep it strictly click-based as per user request.
+                        // But we should highlight the parent header if active.
+                        const headerId = parentMenu.id;
+                        const header = document.querySelector(`button[data-target="${headerId}"]`);
+                        if (header) header.classList.add('active');
+                    }
+                }
             });
+        });
 
-            // Load first doc by default
-            const firstCat = Object.keys(window.DOCS_DATA)[0];
-            const firstDoc = Object.keys(window.DOCS_DATA[firstCat])[0];
-            loadDoc(firstCat, firstDoc);
-        }
+        // Handle Anchor Clicks
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) {
+                    lenis.scrollTo(targetEl, { offset: -50, duration: 1.5 });
+                }
+            });
+        });
+
+        // --- 4. ANIMATIONS ---
+        window.addEventListener('load', () => {
+            gsap.to('body', { opacity: 1, duration: 1 });
+
+            // Intro Anims
+            gsap.from('.sidebar', { x: -50, opacity: 0, duration: 1, delay: 0.2, ease: 'power3.out' });
+            gsap.from('.topic-title', { y: 30, opacity: 0, duration: 1, delay: 0.4, stagger: 0.2 });
+            gsap.from('.step-block', {
+                y: 50,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.1,
+                scrollTrigger: {
+                    trigger: '.content-scroll',
+                    start: 'top 80%'
+                }
+            });
+        });
+
+        // --- 5. CUSTOM CURSOR ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0 });
+            gsap.to(cursorRing, { x: e.clientX, y: e.clientY, duration: 0.15 });
+        });
+
+        document.querySelectorAll('.hover-area, a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hover-active'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hover-active'));
+        });
 
     </script>
 </body>

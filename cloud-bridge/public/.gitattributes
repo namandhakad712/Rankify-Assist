@@ -1,0 +1,21 @@
+
+# Auto-detect text files and perform LF normalization
+* text=auto
+
+# Image files - treat as binary and prevent compression/filtering
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.svg binary
+
+# Firmware files - treat as binary
+*.bin binary
+*.hex binary
+*.elf binary
+
+# Documentation
+*.md text
+*.mmd text
