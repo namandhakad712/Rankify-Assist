@@ -101,14 +101,11 @@ static void __app_button_function_cb(char *name, TDL_BUTTON_TOUCH_EVENT_E event,
     case TDL_BUTTON_PRESS_SINGLE_CLICK:
         PR_NOTICE("🔘 Button pressed - Manual wake trigger!");
         
-        // Stop any current playback
-        ai_audio_player_stop();
-        
-        // Play wake confirmation
-        ai_audio_player_play_alert(AI_AUDIO_ALERT_WAKEUP);
-        
-        // Trigger wake manually (bypasses wake word)
+        // CRITICAL: Trigger wakeup FIRST, then the audio system handles the alert
+        // The wakeup function will internally stop playback and play the alert
         ai_audio_set_wakeup();
+        
+        PR_NOTICE("   Waiting for your command...");
         break;
         
     default:
@@ -168,6 +165,8 @@ OPERATE_RET app_chat_bot_init(void)
         return rt;
     }
     
+    PR_NOTICE("✅ AI audio engine initialized");
+    
 #if defined(ENABLE_BUTTON) && (ENABLE_BUTTON == 1)
     /* Initialize button */
     rt = __app_open_button();
@@ -177,12 +176,28 @@ OPERATE_RET app_chat_bot_init(void)
     }
 #endif
     
-    /* Start audio processing (REQUIRED for alerts!) */
-    ai_audio_set_open(true);
+    /* CRITICAL: Enable audio module (disabled by default per docs) */
+    PR_NOTICE("🎤 Enabling audio module...");
+    rt = ai_audio_set_open(true);
+    if (rt != OPRT_OK) {
+        PR_ERR("❌ ai_audio_set_open failed: %d", rt);
+        return rt;
+    }
+    
+    /* Set default microphone volume to 80% (recommended working value) */
+    PR_NOTICE("🔊 Setting microphone volume to 80%%...");
+    rt = ai_audio_set_volume(80);
+    if (rt != OPRT_OK) {
+        PR_WARN("⚠️  ai_audio_set_volume failed: %d (continuing anyway)", rt);
+    }
+    
+    /* Give microphone time to initialize and start capturing */
+    tal_system_sleep(500);
     
     PR_NOTICE("✅ Rankify Assist Voice Interface Ready");
     PR_NOTICE("   Wake word: 'Hi Tuya' or 'Ni Hao Tuya'");
     PR_NOTICE("   OR press User Button (P29) for manual wake");
+    PR_NOTICE("   Microphone volume: 80%%");
     
     return OPRT_OK;
 }
