@@ -19,7 +19,7 @@
 #endif
 
 // User should replace these with their own license keys or use Auth Token Management
-#define TUYA_OPENSDK_UUID    "uuid582a10704020bc22"             
-#define TUYA_OPENSDK_AUTHKEY "rHAgZwDa1ivUWCTyzSXeTJ1PhjybERa4" 
+#define TUYA_OPENSDK_UUID    "uuidxxxxxxxxxxxxxxxx"             
+#define TUYA_OPENSDK_AUTHKEY "keyxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" 
 
 #endif
