@@ -18,6 +18,39 @@
 
 ### 🎯 **Your Voice. Your Browser. Your Smart Home. One Command.**
 
+**Tuya AI Innovators Hackathon 2025 — AI Agent Development Track**
+
+</div>
+
+---
+
+## 🎬 **Demo Video**
+
+<div align="center">
+
+### 📺 [**▶️ Watch the Full Demo on YouTube**](https://youtu.be/MiwAOD4Cc2s)
+
+> *1–3 minute walkthrough of Rankify Assist: voice commands, browser automation, smart home control, and the safety-first confirmation system.*
+
+`#TuyaOpen` `#TuyaAI` `#HackWithTuya` `#TuyaHackathon` `#TuyaDevelopers` `#TuyaGlobal`
+
+</div>
+
+---
+
+## 👨‍💻 **Team Introduction**
+
+| | Details |
+|:--|:--|
+| **Team Name** | Rankify AI |
+| **Project Name** | Rankify Assist |
+| **Track** | AI Agent Development |
+| **Developer** | **Naman Dhakad** — Solo developer, full-stack AI & IoT engineer |
+
+---
+
+<div align="center">
+
 <img src="https://img.shields.io/badge/Voice--to--Action-AI%20Powered-blueviolet?style=for-the-badge&logo=openai" />
 <img src="https://img.shields.io/badge/Safety-100%25%20Confirmed-success?style=for-the-badge&logo=shield" />
 <img src="https://img.shields.io/badge/Cost-FREE%20Forever-brightgreen?style=for-the-badge&logo=pricetag" />
@@ -31,9 +64,32 @@
 [🚀 Quick Start](#-quick-start-30-minutes) •
 [📖 Documentation](docs/) •
 [🏗️ Architecture](#-architecture) •
-[🎬 Demo](#-demo)
+[🎬 Demo](#-demo-video)
 
 </div>
+
+---
+
+## 🎯 **Problems Addressed & Target Users**
+
+### **The Problem**
+Today's voice assistants (Alexa, Google Home, Siri) are limited to predefined skills and cannot:
+- ❌ Automate **real browser tasks** (checking emails, filling forms, web searches)
+- ❌ Provide **safety confirmation** before executing critical actions
+- ❌ Bridge **IoT device control** with **web automation** in a single unified interface
+- ❌ Let users add **custom automation** without programming knowledge
+
+### **Our Solution**
+Rankify Assist is the **first voice AI system** that combines browser automation, smart home control, and conversational AI with a **mandatory safety-first confirmation protocol** — all powered by the Tuya T5-E1 development board and TuyaOpen platform.
+
+### **Target Users**
+| User Segment | Use Case |
+|:--|:--|
+| 🧑‍💻 **Productivity Workers** | Hands-free email checking, web searches, form filling |
+| 🏠 **Smart Home Owners** | Unified voice control for all Tuya-compatible devices |
+| ♿ **Accessibility Users** | Voice-first interface for differently-abled individuals |
+| 🔧 **Developers & Makers** | Extensible open-source platform to build custom AI hardware |
+| 🏢 **Enterprise Teams** | Secure, confirmation-based automation for sensitive operations |
 
 ---
 
@@ -432,6 +488,72 @@ Watch Magic!
 
 ---
 
+## 🔧 **Hardware List**
+
+<div align="center">
+
+| # | Component | Exact Model | Purpose | Status |
+|:-:|:----------|:------------|:--------|:------:|
+| 1 | **AI Core Board** | Tuya T5-E1 AI Core Development Board | Voice capture, STT/TTS, cloud connectivity, DP management | ✅ |
+| 2 | **Microphone** | Built-in 2-mic array (on T5-E1) | Voice input capture | ✅ |
+| 3 | **Speaker** | Built-in 3W speaker (on T5-E1) | TTS audio output | ✅ |
+| 4 | **USB Cable** | USB-C data cable | Firmware flashing & power | ✅ |
+| 5 | **Wi-Fi Router** | Any 2.4GHz WPA2 router | Cloud connectivity | ✅ |
+| 6 | **Development PC** | Windows 11 laptop | MCP servers, Chrome Extension, firmware build | ✅ |
+| 7 | **Smart Bulb** *(optional)* | Any Tuya-compatible Wi-Fi LED bulb | IoT control demonstration | Optional |
+| 8 | **Smart Plug** *(optional)* | Any Tuya-compatible Wi-Fi smart socket | Generic device control testing | Optional |
+
+</div>
+
+### **Hardware Connection Diagram**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    👤 USER (Voice)                          │
+└───────────────────────┬─────────────────────────────────────┘
+                        │ speaks
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│              🎙️ TUYA T5-E1 AI CORE BOARD                    │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐   │
+│  │ 2-Mic Array │→ │ Audio DSP    │→ │ Wi-Fi 2.4/5GHz   │   │
+│  │ (Voice In)  │  │ (Processing) │  │ (Cloud Connect)  │   │
+│  └─────────────┘  └──────────────┘  └────────┬─────────┘   │
+│  ┌─────────────┐                              │             │
+│  │ 3W Speaker  │← TTS Output                 │             │
+│  │ (Audio Out) │                              │             │
+│  └─────────────┘                              │             │
+│  ┌─────────────┐                              │             │
+│  │ USB-C Port  │← Firmware Flash / Power      │             │
+│  └──────┬──────┘                              │             │
+└─────────┼─────────────────────────────────────┼─────────────┘
+          │                                     │
+          │ USB-C Cable                         │ Wi-Fi (2.4GHz)
+          ▼                                     ▼
+┌──────────────────┐              ┌──────────────────────────┐
+│ 💻 DEVELOPMENT PC │              │    🌐 WI-FI ROUTER       │
+│ • MCP Servers    │              │    (Internet Gateway)    │
+│ • Chrome + Ext   │              └────────────┬─────────────┘
+│ • Firmware Build │                           │
+└──────────────────┘                           ▼
+                                  ┌──────────────────────────┐
+                                  │   ☁️ TUYA CLOUD PLATFORM  │
+                                  │  • AI Workflow Engine    │
+                                  │  • STT/TTS Services      │
+                                  │  • Device Management     │
+                                  │  • MCP Gateway           │
+                                  └────────────┬─────────────┘
+                                               │
+                                  ┌────────────┴─────────────┐
+                                  ▼                          ▼
+                        ┌──────────────────┐    ┌──────────────────┐
+                        │ 💡 Smart Bulb     │    │  🔌 Smart Plug    │
+                        │ (Tuya Wi-Fi)     │    │  (Tuya Wi-Fi)    │
+                        └──────────────────┘    └──────────────────┘
+```
+
+---
+
 ## 📊 **Project Stats**
 
 <div align="center">
@@ -514,6 +636,74 @@ Watch Magic!
 | 🔓 **Open Source** | Full code transparency | ✅ |
 
 </div>
+
+---
+
+## 📐 **Design Principles**
+
+### **1. Safety-First Architecture**
+Every browser action requires explicit voice confirmation before execution. The system announces its plan ("I plan to open Gmail. Proceed?") and waits for the user to say "Yes" or "No". This prevents accidental or misinterpreted voice commands from causing unwanted actions.
+
+### **2. Hybrid Cloud-Edge Design**
+- **Edge (T5-E1 Board):** Voice I/O, local keyword detection, TTS playback
+- **Cloud (Tuya Platform):** AI intent classification, workflow orchestration, LLM processing
+- **Client (Chrome Extension):** Browser automation execution via Eko Agent
+- **MCP Servers (Local PC):** Secure bridge between Tuya Cloud and local resources
+
+### **3. Zero-Cost Deployment**
+Designed to run entirely on free tiers: Supabase (database), Vercel (serverless API), Tuya Cloud (AI workflow), and local MCP servers — making it accessible to developers worldwide.
+
+### **4. Modular & Extensible**
+The visual workflow editor on Tuya Platform allows adding new intents (calendar, e-commerce, file management) without code changes. Each component (firmware, extension, MCP server) is independently deployable.
+
+### **System Architecture Diagram**
+
+```mermaid
+graph TB
+    subgraph USER["👤 User"]
+        Voice["🎤 Voice Command"]
+    end
+    
+    subgraph HARDWARE["🎙️ Tuya T5-E1 Board"]
+        Mic["Mic Array"] --> DSP["Audio DSP"]
+        DSP --> WiFi["Wi-Fi Module"]
+        TTS["TTS Speaker"]
+    end
+    
+    subgraph CLOUD["☁️ Tuya Cloud Platform"]
+        STT["STT Engine"] --> Workflow["AI Workflow"]
+        Workflow --> Intent{"Intent Router"}
+        Intent -->|Browser| BrowserLLM["Browser LLM"]
+        Intent -->|IoT| IoTCtrl["IoT Controller"]
+        Intent -->|Chat| ChatLLM["Chat LLM"]
+        MCP_GW["MCP Gateway"]
+    end
+    
+    subgraph LOCAL["💻 Developer PC"]
+        BrowserMCP["🐍 Browser MCP Server"]
+        DeviceMCP["🐍 Device MCP Server"]
+        Bridge["🚀 Vercel Cloud Bridge"]
+        Ext["🧩 Chrome Extension"]
+    end
+    
+    subgraph DEVICES["🏠 Smart Devices"]
+        Bulb["💡 Smart Bulb"]
+        Plug["🔌 Smart Plug"]
+    end
+    
+    Voice --> Mic
+    WiFi --> STT
+    BrowserLLM --> MCP_GW
+    MCP_GW <--> BrowserMCP
+    MCP_GW <--> DeviceMCP
+    BrowserMCP --> Bridge --> Ext
+    DeviceMCP --> IoTCtrl
+    IoTCtrl --> Bulb
+    IoTCtrl --> Plug
+    ChatLLM --> TTS
+    Ext -->|Result| Bridge --> BrowserMCP --> MCP_GW --> TTS
+    TTS --> Voice
+```
 
 ---
 
