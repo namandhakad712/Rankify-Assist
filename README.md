@@ -421,7 +421,7 @@ Watch Magic!
 | 🗄️ Supabase | 500MB DB, ∞ Requests | ~10MB | **$0** |
 | 🚀 Vercel | 100k Serverless Calls | ~1k | **$0** |
 | 🔌 Tuya IoT | 1000 API Calls/Day | ~50/day | **$0** |
-| 🐍 MCP Servers | Runs on Your PC | Local | **$0** |
+| 🐍 MCP Servers | Offline & Online | ~ no limit | **$0** |
 | 🧩 Extension | Chrome Only | Browser | **$0** |
 | **💎 TOTAL** | | | **$0/month** |
 
@@ -451,8 +451,6 @@ Watch Magic!
 ✅ "Go to Twitter"
 ✅ "Find pizza near me"
 ```
-
-*All require YOUR approval! 🔒*
 
 </td>
 <td>
@@ -580,7 +578,7 @@ Watch Magic!
 │  ├─ public/               └─ Admin UI (config management)
 │  └─ supabase-schema.sql   📝 Database schema
 │
-├─📁 mcp-servers/           🐍 Python MCP servers (local)
+├─📁 mcp-servers/           🐍 Python MCP servers (local files & HuggingFace online)
 │  ├─ browser-automation/   ├─ WebSocket to Tuya Gateway
 │  └─ device-controller/    └─ Calls Tuya OpenAPI
 │
@@ -588,7 +586,7 @@ Watch Magic!
 │  ├─ chrome-extension/     ├─ Background scripts
 │  └─ pages/                └─ Options UI, Side panel
 │
-├─📁 firmware/              💻 T5 AI Core firmware (optional)
+├─📁 firmware/              💻 T5 AI Core firmware (optional if u want own modification)
 │  ├─ src/                  ├─ Voice input, TTS output
 │  └─ include/              └─ Device configuration
 │
@@ -611,7 +609,7 @@ Watch Magic!
 | 📚 Topic | 🔗 Link | ⏱️ Time |
 |:--------|:--------|:-------:|
 | **Quick Start** | [Deploy in 30 mins](docs/deployment/00-QUICK-START.md) | 30m |
-| **Architecture** | [System Design](FINAL-ARCHITECTURE.md) | 15m |
+| **Architecture** | [System Design](PROJECT_ARCHITECTURE_DIAGRAM.mmd) | 15m |
 | **MCP Setup** | [Configure MCPs](docs/mcp/SETUP-GUIDE.md) | 20m |
 | **Extension** | [Build Guide](docs/extension/BUILD-GUIDE.md) | 10m |
 | **Workflow** | [Tuya Configuration](docs/workflow/COMPLETE-GUIDE.md) | 25m |
@@ -629,7 +627,7 @@ Watch Magic!
 
 | Feature | Implementation | Status |
 |:--------|:--------------|:------:|
-| 🔐 **Browser Confirmation** | User approval required for ALL browser actions | ✅ |
+| 🔐 **Single ID Access** | A single MCP Access ID connects whole mcp->server->database->extension | ✅ |
 | 🔑 **OAuth Authentication** | Google OAuth 2.0 for secure login | ✅ |
 | 🗄️ **Encrypted Storage** | Supabase RLS policies + encrypted credentials | ✅ |
 | 🚫 **No Data Collection** | Zero telemetry, zero tracking | ✅ |
@@ -764,8 +762,8 @@ graph LR
 <b>Serverless Platform</b>
 </td>
 <td align="center">
-<img src="https://img.shields.io/badge/Google-Gemini%20AI-4285F4?style=flat-square" /><br/>
-<b>Language Model</b>
+<img src="https://img.shields.io/badge/TuyaOpen%20OS-4285F4?style=flat-square" /><br/>
+<b>Firmware Framework</b>
 </td>
 </tr>
 </table>
@@ -780,7 +778,7 @@ graph LR
 
 ### **Transform Your Voice Into Action Today!**
 
-**[📖 Quick Start Guide](docs/deployment/00-QUICK-START.md)** • **[🏗️ Architecture](FINAL-ARCHITECTURE.md)** • **[📚 Full Docs](docs/)**
+**[📖 Quick Start Guide](docs/deployment/00-QUICK-START.md)** • **[🏗️ Architecture](PROJECT_ARCHITECTURE_DIAGRAM.mmd)** • **[📚 Full Docs](docs/)**
 
 ---
 
